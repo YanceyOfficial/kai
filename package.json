@@ -10,9 +10,12 @@
     "test": "jest"
   },
   "dependencies": {
+    "classnames": "^2.5.1",
     "nativewind": "^2.0.11",
     "react": "18.2.0",
-    "react-native": "0.74.2"
+    "react-native": "0.74.2",
+    "react-native-device-info": "^11.1.0",
+    "react-native-haptic-feedback": "^2.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -27,7 +30,7 @@
     "babel-jest": "^29.6.3",
     "eslint": "^8.19.0",
     "jest": "^29.6.3",
-    "prettier": "2.8.8",
+    "prettier": "3.3.2",
     "react-test-renderer": "18.2.0",
     "tailwindcss": "^3.3.2",
     "typescript": "5.0.4"

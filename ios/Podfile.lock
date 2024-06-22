@@ -1168,6 +1168,32 @@ PODS:
     - React-Core
   - RNReactNativeHapticFeedback (2.2.0):
     - React-Core
+  - RNReanimated (3.12.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Codegen
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
+  - RNSound (0.11.2):
+    - React-Core
+    - RNSound/Core (= 0.11.2)
+  - RNSound/Core (0.11.2):
+    - React-Core
   - SocketRocket (0.7.0)
   - Yoga (0.0.0)
 
@@ -1229,6 +1255,8 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - RNDeviceInfo (from `../node_modules/react-native-device-info`)
   - RNReactNativeHapticFeedback (from `../node_modules/react-native-haptic-feedback`)
+  - RNReanimated (from `../node_modules/react-native-reanimated`)
+  - RNSound (from `../node_modules/react-native-sound`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -1347,6 +1375,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-device-info"
   RNReactNativeHapticFeedback:
     :path: "../node_modules/react-native-haptic-feedback"
+  RNReanimated:
+    :path: "../node_modules/react-native-reanimated"
+  RNSound:
+    :path: "../node_modules/react-native-sound"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -1406,6 +1438,8 @@ SPEC CHECKSUMS:
   ReactCommon: ecad995f26e0d1e24061f60f4e5d74782f003f12
   RNDeviceInfo: b899ce37a403a4dea52b7cb85e16e49c04a5b88e
   RNReactNativeHapticFeedback: ec56a5f81c3941206fd85625fa669ffc7b4545f9
+  RNReanimated: 8978449b2a511388ea71faf1e66f669134e87658
+  RNSound: 6c156f925295bdc83e8e422e7d8b38d33bc71852
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: ae3c32c514802d30f687a04a6a35b348506d411f
 

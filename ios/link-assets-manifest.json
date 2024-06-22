@@ -1,0 +1,21 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/DINNextRoundedLTW01-Bold.otf",
+      "sha1": "92a0c19f0aa3a383ea79847613e33e3ac69a2a36"
+    },
+    {
+      "path": "assets/fonts/DINNextRoundedLTW01-Light.otf",
+      "sha1": "d92d53c04eec2d8705362ddb0068ee7ff0034fa5"
+    },
+    {
+      "path": "assets/fonts/DINNextRoundedLTW01-Medium.otf",
+      "sha1": "2809d0de0e4c9a72e5fd4f307b6a0760581e2a1d"
+    },
+    {
+      "path": "assets/fonts/DINNextRoundedLTW01-Regular.otf",
+      "sha1": "1ea8c836c1a65a6a0b5509e7945c450bbf5a729b"
+    }
+  ]
+}

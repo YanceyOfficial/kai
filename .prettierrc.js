@@ -5,4 +5,5 @@ module.exports = {
   proseWrap: 'preserve',
   semi: false,
   printWidth: 80,
-};
+  plugins: ['prettier-plugin-tailwindcss', 'prettier-plugin-organize-imports']
+}

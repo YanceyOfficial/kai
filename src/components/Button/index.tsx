@@ -4,8 +4,8 @@ import { trigger } from 'react-native-haptic-feedback'
 import classNames from 'classnames'
 
 interface Props {
-  color: 'green' | 'white' | 'blue'
   children: string
+  color?: 'green' | 'white' | 'blue'
   onPress?: () => void
   wrapperClassNames?: string
   textClassNames?: string
@@ -24,8 +24,8 @@ const textStyles = {
 }
 
 const Button: FC<Props> = ({
-  color,
-  children,
+  color = 'green',
+  children = '',
   onPress,
   wrapperClassNames,
   textClassNames
@@ -43,14 +43,18 @@ const Button: FC<Props> = ({
   return (
     <Pressable
       className={classNames(
-        'w-full rounded-xl py-4 flex justify-center items-center active:shadow-none active:translate-y-[4px]',
+        'w-full rounded-xl py-[11px] flex justify-center items-center active:shadow-none active:translate-y-[4px]',
         wrapperStyles[color],
         wrapperClassNames
       )}
       onPress={handlePress}
     >
       <Text
-        className={classNames('text-lg', textStyles[color], textClassNames)}
+        className={classNames(
+          'text-base leading-[22px]',
+          textStyles[color],
+          textClassNames
+        )}
         style={{ fontFamily: 'DINNextRoundedLTW01-Bold' }}
       >
         {children.toUpperCase()}

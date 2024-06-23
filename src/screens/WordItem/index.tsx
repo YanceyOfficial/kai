@@ -1,15 +1,13 @@
+import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import Button from '../../components/Button'
 import FlipWordCard from '../../components/FlipWordCard'
 import CloseIcon from '../../components/Icon/CloseIcon'
 import { GET } from '../../shared/axios'
-import { WordList } from '../../shared/types'
+import { RootStackParamList, WordList } from '../../shared/types'
 
-interface Props {
-  navigation: any
-  route: any
-}
+type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>
 
 const WordItemScreen: FC<Props> = ({ navigation, route }) => {
   const [idx, setIdx] = useState(0)

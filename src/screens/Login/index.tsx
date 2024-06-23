@@ -1,3 +1,4 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import classNames from 'classnames'
 import { FC } from 'react'
 import { Text, View, useColorScheme } from 'react-native'
@@ -5,10 +6,9 @@ import Button from '../../components/Button'
 import DuolingoLogoIcon from '../../components/Icon/DuolingoLogoIcon'
 import LoginIcon from '../../components/Icon/LoginIcon'
 import useAuth from '../../hooks/useAuth'
+import { RootStackParamList } from '../../shared/types'
 
-interface Props {
-  navigation: any
-}
+type Props = NativeStackScreenProps<RootStackParamList, 'Login'>
 
 const Login: FC<Props> = ({ navigation }) => {
   const toHomeScreen = () => {

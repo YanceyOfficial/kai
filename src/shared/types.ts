@@ -34,3 +34,9 @@ export interface WordList {
   title: string
   words: Word[]
 }
+
+export type RootStackParamList = {
+  Login: undefined
+  Home: undefined
+  Detail: { id: string }
+}

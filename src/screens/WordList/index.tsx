@@ -1,13 +1,12 @@
 import { useIsFocused } from '@react-navigation/native'
+import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { FC, useEffect, useState } from 'react'
-import { Text, View } from 'react-native'
+import { View } from 'react-native'
 import Button from '../../components/Button'
 import { GET } from '../../shared/axios'
-import { WordList as IWordList } from '../../shared/types'
+import { WordList as IWordList, RootStackParamList } from '../../shared/types'
 
-interface Props {
-  navigation: any
-}
+type Props = NativeStackScreenProps<RootStackParamList, 'Home'>
 
 const WordList: FC<Props> = ({ navigation }) => {
   const isFocused = useIsFocused()

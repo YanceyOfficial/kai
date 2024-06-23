@@ -9,8 +9,9 @@ import { Colors } from 'react-native/Libraries/NewAppScreen'
 import LoginScreen from './screens/Login'
 import WordItemScreen from './screens/WordItem'
 import WordListScreen from './screens/WordList'
+import { RootStackParamList } from './shared/types'
 
-const Stack = createNativeStackNavigator()
+const Stack = createNativeStackNavigator<RootStackParamList>()
 export const navigationRef = createNavigationContainerRef()
 
 const App = (): JSX.Element => {

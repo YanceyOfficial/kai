@@ -1,7 +1,7 @@
 import { FC } from 'react'
-import Button from '../Button'
 import Sound from 'react-native-sound'
 import { YOUDAO_VOICE_URL } from '../../shared/constants'
+import Button from '../Button'
 
 interface Props {
   word: string

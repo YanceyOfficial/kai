@@ -1,9 +1,9 @@
-import Config from 'react-native-config'
 import { useState } from 'react'
 import { authorize, logout } from 'react-native-app-auth'
-import { getData, storeData } from '../shared/utils'
+import Config from 'react-native-config'
 import { OAUTH_REDIRECT_URL } from '../shared/constants'
 import { TokenResponse } from '../shared/types'
+import { getData, storeData } from '../shared/utils'
 
 const config = {
   issuer: Config.KEYCLOAK_ISSUER as string,

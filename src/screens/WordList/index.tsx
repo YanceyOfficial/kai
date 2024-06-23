@@ -1,16 +1,16 @@
+import { useIsFocused } from '@react-navigation/native'
 import { FC, useEffect, useState } from 'react'
 import { Text, View } from 'react-native'
-import { useIsFocused } from '@react-navigation/native';
+import Button from '../../components/Button'
 import { GET } from '../../shared/axios'
 import { WordList as IWordList } from '../../shared/types'
-import Button from '../../components/Button'
 
 interface Props {
   navigation: any
 }
 
 const WordList: FC<Props> = ({ navigation }) => {
-  const isFocused = useIsFocused();
+  const isFocused = useIsFocused()
   const [dataSource, setDataSource] = useState<IWordList[] | null>(null)
   const fetchData = async () => {
     try {
@@ -30,7 +30,6 @@ const WordList: FC<Props> = ({ navigation }) => {
   }, [isFocused])
   return (
     <View className="p-4">
-      <Text>Hello</Text>
       {dataSource?.map((item) => (
         <Button
           onPress={() => goToItemPage(item._id)}

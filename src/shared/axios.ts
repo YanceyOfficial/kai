@@ -1,8 +1,8 @@
 import axios, { AxiosResponse } from 'axios'
-import { getData } from './utils'
-import { TokenResponse } from './types'
 import Config from 'react-native-config'
 import { navigationRef } from '../App'
+import { TokenResponse } from './types'
+import { getData } from './utils'
 
 axios.defaults.timeout = 5 * 10000
 axios.defaults.headers['Content-Type'] = 'application/json'

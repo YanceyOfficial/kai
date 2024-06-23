@@ -1,7 +1,7 @@
-import React, { FC, ReactNode } from 'react'
+import classNames from 'classnames'
+import React, { FC } from 'react'
 import { Pressable, Text } from 'react-native'
 import { trigger } from 'react-native-haptic-feedback'
-import classNames from 'classnames'
 
 interface Props {
   children: string

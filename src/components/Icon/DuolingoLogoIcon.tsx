@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import Svg, { G, Path, Defs, ClipPath, Rect } from 'react-native-svg'
+import Svg, { ClipPath, Defs, G, Path, Rect } from 'react-native-svg'
 
 interface Props {
   classNames?: string

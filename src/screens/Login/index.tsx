@@ -1,13 +1,10 @@
-import { FC } from 'react'
-import { View, Text, useColorScheme } from 'react-native'
-import LoginIcon from '../../components/Icon/LoginIcon'
-import DuolingoLogoIcon from '../../components/Icon/DuolingoLogoIcon'
-import Button from '../../components/Button'
 import classNames from 'classnames'
+import { FC } from 'react'
+import { Text, View, useColorScheme } from 'react-native'
+import Button from '../../components/Button'
+import DuolingoLogoIcon from '../../components/Icon/DuolingoLogoIcon'
+import LoginIcon from '../../components/Icon/LoginIcon'
 import useAuth from '../../hooks/useAuth'
-import axios from 'axios'
-import { TokenResponse } from '../../shared/types'
-import { getData } from '../../shared/utils'
 
 interface Props {
   navigation: any

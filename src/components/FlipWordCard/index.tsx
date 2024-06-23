@@ -1,15 +1,24 @@
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import { Pressable, Text } from 'react-native'
 import { useSharedValue } from 'react-native-reanimated'
+import { Word } from '../../shared/types'
 import Card from '../Card'
 import FlipCard from '../FlipCard'
 
-const FlipWordCard: FC = () => {
+interface Props {
+  wordInfo: Word
+}
+
+const FlipWordCard: FC<Props> = ({ wordInfo }) => {
   const isFlipped = useSharedValue(false)
 
   const handlePress = () => {
     isFlipped.value = !isFlipped.value
   }
+
+  useEffect(() => {
+    isFlipped.value = false
+  }, [wordInfo])
 
   return (
     <Pressable className="relative mt-4" onPress={handlePress}>
@@ -18,7 +27,7 @@ const FlipWordCard: FC = () => {
         cardStyle="w-full"
         FlippedContent={
           <Card wrapperClassNames="w-full h-[500px]">
-            <Text className="text-lg font-bold">n. 逆境, 不幸, 灾祸, 灾难</Text>
+            <Text className="text-lg font-bold">{wordInfo.explanation}</Text>
           </Card>
         }
         RegularContent={
@@ -27,7 +36,7 @@ const FlipWordCard: FC = () => {
               className="text-lg"
               style={{ fontFamily: 'DINNextRoundedLTW01-Bold' }}
             >
-              adversity
+              {wordInfo.word}
             </Text>
           </Card>
         }

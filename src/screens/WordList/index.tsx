@@ -12,10 +12,12 @@ const WordList: FC<Props> = ({ navigation }) => {
   const isFocused = useIsFocused()
   const [dataSource, setDataSource] = useState<IWordList[] | null>(null)
   const fetchData = async () => {
+    console.log('xxx')
     try {
       const { data } = await GET<IWordList[]>('/word')
       setDataSource(data)
-    } catch {
+    } catch(e) {
+      console.log(e)
       navigation.navigate('Login')
     }
   }

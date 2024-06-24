@@ -32,6 +32,8 @@ const useAuth = (onSuccessCallback?: () => void) => {
     }
   }
 
+
+
   const handleLogout = async () => {
     try {
       const token = await getData<TokenResponse>('token')

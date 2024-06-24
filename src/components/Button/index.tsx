@@ -13,7 +13,7 @@ interface Props {
 
 const wrapperStyles = {
   green: 'bg-[#58cc02] shadow-duolingoGreen',
-  white: 'bg-white shadow-duolingoWhite',
+  white: 'bg-white shadow-duolingoWhite border-2 border-b-0 border-[#E5E5E5]',
   blue: 'bg-[#49c0f8] shadow-duolingoBlue'
 }
 

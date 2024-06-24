@@ -32,7 +32,7 @@ const Login: FC<Props> = ({ navigation }) => {
           className="text-[#777] text-lg text-center"
           style={{ fontFamily: 'DINNextRoundedLTW01-Medium' }}
         >
-          The free, fun, and effective way to learn a language!
+          Learn for free. Forever.
         </Text>
       </View>
       <View>

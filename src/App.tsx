@@ -1,4 +1,6 @@
 import {
+  DarkTheme,
+  DefaultTheme,
   NavigationContainer,
   createNavigationContainerRef
 } from '@react-navigation/native'
@@ -20,9 +22,11 @@ const App = (): JSX.Element => {
   return (
     <SafeAreaView
       style={isDarkMode ? Colors.darker : Colors.lighter}
-      className="flex-1 bg-white"
+      className="flex-1"
     >
-      <NavigationContainer ref={navigationRef}>
+      <NavigationContainer
+        ref={navigationRef}
+      >
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Home" component={WordListScreen} />
           <Stack.Screen name="Detail" component={WordItemScreen} />

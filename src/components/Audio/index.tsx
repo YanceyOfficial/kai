@@ -1,13 +1,14 @@
 import { FC } from 'react'
+import { Pressable, TouchableOpacity } from 'react-native'
 import Sound from 'react-native-sound'
 import { YOUDAO_VOICE_URL } from '../../shared/constants'
-import Button from '../Button'
+import AudioPlayingIcon from '../Icon/AudioPlayingIcon'
 
 interface Props {
   word: string
 }
 
-const Audio: FC<Props> = ({ word }) => {
+const AudioPlayer: FC<Props> = ({ word }) => {
   const handleAudio = async () => {
     Sound.setCategory('Playback')
     const whoosh = new Sound(
@@ -40,10 +41,10 @@ const Audio: FC<Props> = ({ word }) => {
   }
 
   return (
-    <Button color="white" wrapperClassNames="my-4" onPress={handleAudio}>
-      Audio Play
-    </Button>
+    <TouchableOpacity onPress={handleAudio}>
+      <AudioPlayingIcon width={64} height={64} />
+    </TouchableOpacity>
   )
 }
 
-export default Audio
+export default AudioPlayer

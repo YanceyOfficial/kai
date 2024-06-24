@@ -1,5 +1,5 @@
 import { FC, useEffect } from 'react'
-import { Pressable, Text } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import { useSharedValue } from 'react-native-reanimated'
 import { Word } from '../../shared/types'
 import Card from '../Card'
@@ -27,22 +27,27 @@ const FlipWordCard: FC<Props> = ({ wordInfo }) => {
         cardStyle="w-full"
         FlippedContent={
           <Card wrapperClassNames="w-full h-[500px]">
-            <Text className="text-lg font-bold">{wordInfo.explanation}</Text>
-            <Text className="text-xl">{wordInfo.phoneticNotation}</Text>
+            <View className="gap-4">
+              <Text className="text-lg font-bold">{wordInfo.word}</Text>
+              <Text className="text-lg font-bold">{wordInfo.explanation}</Text>
+              <Text className="text-xl">{wordInfo.phoneticNotation}</Text>
+              {wordInfo.examples.map((example) => (
+                <Text className="text-base text-[#4b4b4b]" key={example}>
+                  {example}
+                </Text>
+              ))}
+            </View>
           </Card>
         }
         RegularContent={
-          <>
-            <Card wrapperClassNames="w-full h-[500px] justify-center items-center">
-              <Text
-                className="text-4xl text-center"
-                style={{ fontFamily: 'DINNextRoundedLTW01-Bold' }}
-              >
-                {wordInfo.word}
-              </Text>
-             
-            </Card>
-          </>
+          <Card wrapperClassNames="w-full h-[500px] justify-center items-center">
+            <Text
+              className="text-4xl text-center"
+              style={{ fontFamily: 'DINNextRoundedLTW01-Bold' }}
+            >
+              {wordInfo.word}
+            </Text>
+          </Card>
         }
       />
     </Pressable>

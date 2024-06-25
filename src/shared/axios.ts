@@ -1,18 +1,46 @@
 import axios, { AxiosResponse } from 'axios'
+import { refresh } from 'react-native-app-auth'
 import Config from 'react-native-config'
 import { navigationRef } from '../App'
-import { TokenResponse } from './types'
-import { getData } from './utils'
+import { keycloak } from '../hooks/useAuth'
+import { TOKEN_EXPIRED_MIN_VALIDITY } from './constants'
+import { RootStackParamList, TokenResponse } from './types'
+import { getData, storeData } from './utils'
 
 axios.defaults.timeout = 5 * 10000
 axios.defaults.headers['Content-Type'] = 'application/json'
 axios.defaults.baseURL = Config.SERVICE_URL
 axios.interceptors.request.use(
   async (config) => {
-    const token = await getData<TokenResponse>('token')
-    if (token) {
+    let token = await getData<TokenResponse>('token')
+
+    if (!token) {
+      if (navigationRef.isReady()) {
+        // @ts-ignore
+        navigationRef.navigate<keyof RootStackParamList>('Login')
+      }
+    } else {
+      const accessTokenExpirationTimestamp = +new Date(
+        token.accessTokenExpirationDate
+      )
+      const nowTimeStamp = +new Date()
+
+      if (
+        token.refreshToken &&
+        nowTimeStamp - accessTokenExpirationTimestamp >
+          TOKEN_EXPIRED_MIN_VALIDITY
+      ) {
+        const refreshResult = await refresh(keycloak, {
+          refreshToken: token.refreshToken
+        })
+
+        token = { ...token, ...refreshResult }
+        await storeData('token', storeData)
+      }
+
       config.headers.Authorization = `Bearer ${token?.accessToken}`
     }
+
     return config
   },
   (error) => {
@@ -23,7 +51,8 @@ axios.interceptors.response.use(
   function (response) {
     if (response.status === 401) {
       if (navigationRef.isReady()) {
-        navigationRef.navigate('Login')
+        // @ts-ignore
+        navigationRef.navigate<keyof RootStackParamList>('Login')
       }
     }
     return response

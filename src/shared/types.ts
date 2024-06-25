@@ -1,25 +1,3 @@
-export interface TokenAdditionalParameters {
-  refresh_expires_in: number
-  session_state: string
-  'not-before-policy': number
-}
-
-export interface AuthorizeAdditionalParameters {
-  session_state: string
-  iss: string
-}
-
-export interface TokenResponse {
-  refreshToken: string
-  scopes: string[]
-  accessToken: string
-  idToken: string
-  tokenAdditionalParameters: TokenAdditionalParameters
-  tokenType: string
-  authorizeAdditionalParameters: AuthorizeAdditionalParameters
-  accessTokenExpirationDate: string
-}
-
 export interface Word {
   explanation: string
   phoneticNotation: string
@@ -39,4 +17,18 @@ export type RootStackParamList = {
   Login: undefined
   Home: undefined
   Detail: { id: string }
+}
+
+export interface TokenResponse {
+  accessToken: string
+  accessTokenExpirationDate: string
+  authorizeAdditionalParameters?: { [name: string]: string }
+  tokenAdditionalParameters?: { [name: string]: string }
+  idToken: string
+  refreshToken: string | null
+  tokenType: string
+  scopes: string[]
+  authorizationCode: string
+  codeVerifier?: string
+  additionalParameters?: { [name: string]: string }
 }

@@ -3,13 +3,14 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { AnimatableValue, useSharedValue } from 'react-native-reanimated'
+import { shuffle } from 'yancey-js-util'
 import Button from '../../components/Button'
 import FlipWordCard from '../../components/FlipWordCard'
 import CloseIcon from '../../components/Icon/CloseIcon'
 import Loading from '../../components/Loading'
 import ProgressBar from '../../components/ProgressBar'
 import { GET } from '../../shared/axios'
-import { RootStackParamList, WordList } from '../../shared/types'
+import { RootStackParamList, Word, WordList } from '../../shared/types'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>
 
@@ -18,7 +19,7 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false)
   const [idx, setIdx] = useState(0)
   const [dataSource, setDataSource] = useState<WordList | null>(null)
-  const isFlipped = useSharedValue(false)
+  const isFlipped = useSharedValue(true)
   const progress = useMemo(
     () =>
       `${((idx + 1) / (dataSource?.words.length || 1)) * 100}%` as AnimatableValue,
@@ -30,11 +31,32 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
     isFlipped.value = !isFlipped.value
   }
 
+  const toNextWord = () => {
+    if (!dataSource) return
+
+    if (idx < dataSource?.words?.length - 1) {
+      setIdx(idx + 1)
+    } else {
+      setIdx(0)
+    }
+  }
+
+  const switchWord = () => {
+    if (!isFlipped.value) {
+      isFlipped.value = true
+      setTimeout(() => {
+        toNextWord()
+      }, 250)
+    } else {
+      toNextWord()
+    }
+  }
+
   const fetchData = async () => {
     setLoading(true)
     try {
       const { data } = await GET<WordList>(`/word/${route.params.id}`)
-      setDataSource(data)
+      setDataSource({ ...data, words: shuffle<Word>(data.words) })
     } catch {
     } finally {
       setLoading(false)
@@ -69,20 +91,7 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
         />
       </View>
 
-      <Button
-        onPress={() => {
-          if (isFlipped) {
-            isFlipped.value = false
-            setTimeout(() => {
-              setIdx(idx + 1)
-            }, 250)
-          } else {
-            setIdx(idx + 1)
-          }
-        }}
-      >
-        Next
-      </Button>
+      <Button onPress={switchWord}>Next</Button>
     </View>
   )
 }

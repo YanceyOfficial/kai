@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios'
+import axios, { AxiosError, AxiosResponse } from 'axios'
 import { refresh } from 'react-native-app-auth'
 import Config from 'react-native-config'
 import { navigationRef } from '../App'
@@ -7,15 +7,16 @@ import { TOKEN_EXPIRED_MIN_VALIDITY } from './constants'
 import { RootStackParamList } from './types'
 import { getSecureValue, setSecureTokens } from './utils'
 
-console.log('yy')
-
-axios.defaults.timeout = 5 * 10000
-axios.defaults.headers['Content-Type'] = 'application/json'
-axios.defaults.baseURL = Config.SERVICE_URL
-axios.interceptors.request.use(
+const axiosInstance = axios.create({
+  baseURL: Config.SERVICE_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  timeout: 5000
+})
+axiosInstance.interceptors.request.use(
   async (config) => {
     let accessToken = await getSecureValue('accessToken')
-    console.log(accessToken)
 
     if (!accessToken) {
       if (navigationRef.isReady()) {
@@ -36,38 +37,45 @@ axios.interceptors.request.use(
 
         if (
           refreshToken &&
+          accessTokenExpirationTimestamp > nowTimeStamp &&
           accessTokenExpirationTimestamp - nowTimeStamp <=
             TOKEN_EXPIRED_MIN_VALIDITY
         ) {
-          const newTokens = await refresh(keycloak, {
-            refreshToken
-          })
-          await setSecureTokens(newTokens)
+          try {
+            const newTokens = await refresh(keycloak, {
+              refreshToken
+            })
+
+            accessToken = newTokens.accessToken
+            await setSecureTokens(newTokens)
+          } catch (e) {
+            if (navigationRef.isReady()) {
+              // @ts-ignore
+              navigationRef.navigate<keyof RootStackParamList>('My')
+            }
+          }
         }
       }
 
       config.headers.Authorization = `Bearer ${accessToken}`
     }
 
+    config.headers.Authorization = `Bearer ${accessToken}`
     return config
   },
   (error) => {
     return Promise.reject(error)
   }
 )
-axios.interceptors.response.use(
-  function (response) {
-    if (response.status === 401) {
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
       if (navigationRef.isReady()) {
         // @ts-ignore
-        navigationRef.navigate<keyof RootStackParamList>('Login')
+        navigationRef.navigate<keyof RootStackParamList>('My')
       }
     }
-    return response
-  },
-  function (error) {
-    // Any status codes that falls outside the range of 2xx cause this function to trigger
-    // Do something with response error
     return Promise.reject(error)
   }
 )
@@ -77,7 +85,7 @@ export const GET = <T, K = undefined>(
   params?: K
 ): Promise<AxiosResponse<T>> => {
   return new Promise((resolve, reject) => {
-    axios
+    axiosInstance
       .get(url, { params })
       .then((res) => {
         resolve(res)
@@ -93,7 +101,7 @@ export const POST = <T, K>(
   params?: K
 ): Promise<AxiosResponse<T>> => {
   return new Promise((resolve, reject) => {
-    axios
+    axiosInstance
       .post(url, params)
       .then(
         (res) => {
@@ -114,7 +122,7 @@ export const PUT = <T, K>(
   params?: K
 ): Promise<AxiosResponse<T>> => {
   return new Promise((resolve, reject) => {
-    axios
+    axiosInstance
       .put(url, params)
       .then((res) => {
         resolve(res)
@@ -130,7 +138,7 @@ export const PATCH = <T, K>(
   params?: K
 ): Promise<AxiosResponse<T>> => {
   return new Promise((resolve, reject) => {
-    axios
+    axiosInstance
       .patch(url, params)
       .then((res) => {
         resolve(res)
@@ -146,7 +154,7 @@ export const DELETE = <T, K>(
   params?: K
 ): Promise<AxiosResponse<T>> => {
   return new Promise((resolve, reject) => {
-    axios
+    axiosInstance
       .delete(url, { data: params })
       .then((res) => {
         resolve(res)

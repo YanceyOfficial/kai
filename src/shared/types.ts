@@ -14,8 +14,9 @@ export interface WordList {
 }
 
 export type RootStackParamList = {
-  Login: undefined
   Home: undefined
-  My: undefined
+  WordList: undefined
   Detail: { id: string }
+  My: undefined
+  Login: undefined
 }

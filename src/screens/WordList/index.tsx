@@ -7,7 +7,7 @@ import Loading from '../../components/Loading'
 import { GET } from '../../shared/axios'
 import { WordList as IWordList, RootStackParamList } from '../../shared/types'
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Home'>
+type Props = NativeStackScreenProps<RootStackParamList, 'WordList'>
 
 const WordList: FC<Props> = ({ navigation }) => {
   const isFocused = useIsFocused()

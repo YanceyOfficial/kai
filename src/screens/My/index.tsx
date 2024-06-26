@@ -1,24 +1,16 @@
-import { FC, useState } from 'react'
-import { WebView } from 'react-native-webview'
-import Loading from '../../components/Loading'
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { FC } from 'react'
+import { RootStackParamList } from '../../shared/types'
+import Login from '../Login'
 
-const MyScreen: FC = () => {
-  const [loading, setLoading] = useState(false)
+const Stack = createNativeStackNavigator<RootStackParamList>()
+
+const MyStack: FC = () => {
   return (
-    <>
-      {loading && <Loading />}
-      <WebView
-        source={{ uri: 'https://kai.yancey.app/' }}
-        style={{ flex: 1 }}
-        onLoadStart={() => {
-          setLoading(true)
-        }}
-        onLoadEnd={() => {
-          setLoading(false)
-        }}
-      />
-    </>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={Login} />
+    </Stack.Navigator>
   )
 }
 
-export default MyScreen
+export default MyStack

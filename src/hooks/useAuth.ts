@@ -8,7 +8,7 @@ export const keycloak = {
   issuer: Config.KEYCLOAK_ISSUER as string,
   clientId: Config.KEYCLOAK_CLIENT_ID as string,
   redirectUrl: OAUTH_REDIRECT_URL,
-  scopes: ['openid', 'profile']
+  scopes: ['openid', 'profile', 'offline_access']
 }
 
 const useAuth = (onSuccessCallback?: () => void) => {

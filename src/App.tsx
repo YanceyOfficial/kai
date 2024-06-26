@@ -6,11 +6,11 @@ import {
 import React, { JSX } from 'react'
 import { SafeAreaView, useColorScheme } from 'react-native'
 import { Colors } from 'react-native/Libraries/NewAppScreen'
-import LoginScreen from './screens/Login'
-import WordItemScreen from './screens/WordItem'
-import WordListScreen from './screens/WordList'
-import { RootStackParamList } from './shared/types'
+import HomeIcon from './components/Icon/HomeIcon'
+import MyIcon from './components/Icon/MyIcon'
 import MyScreen from './screens/My'
+import HomeStack from './screens/Home'
+import { RootStackParamList } from './shared/types'
 
 const Tab = createBottomTabNavigator<RootStackParamList>()
 export const navigationRef = createNavigationContainerRef()
@@ -24,11 +24,24 @@ const App = (): JSX.Element => {
       className="flex-1"
     >
       <NavigationContainer ref={navigationRef}>
-        <Tab.Navigator screenOptions={{ headerShown: false }}>
-          <Tab.Screen name="Home" component={WordListScreen} />
-          <Tab.Screen name="Detail" component={WordItemScreen} />
-          <Tab.Screen name="Login" component={LoginScreen} />
-          <Tab.Screen name="My" component={MyScreen} />
+        <Tab.Navigator
+          screenOptions={{
+            headerShown: false,
+            // tabBarActiveTintColor: '#e5e7eb'
+          }}
+          initialRouteName="Home"
+        >
+          <Tab.Screen
+            name="Home"
+            component={HomeStack}
+            options={{ tabBarIcon: () => <HomeIcon /> }}
+          />
+
+          <Tab.Screen
+            name="My"
+            component={MyScreen}
+            options={{ tabBarBadge: 3, tabBarIcon: () => <MyIcon /> }}
+          />
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaView>

@@ -27,7 +27,7 @@ axios.interceptors.request.use(
 
       if (
         token.refreshToken &&
-        nowTimeStamp - accessTokenExpirationTimestamp <=
+        accessTokenExpirationTimestamp - nowTimeStamp <=
           TOKEN_EXPIRED_MIN_VALIDITY
       ) {
         const refreshResult = await refresh(keycloak, {

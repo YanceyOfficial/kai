@@ -13,7 +13,6 @@ interface Props {
 }
 
 const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
-  console.log(isFlipped)
   return (
     <Pressable className="relative mt-4 w-full" onPress={onPress}>
       <FlipCard

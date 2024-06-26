@@ -16,10 +16,7 @@ const WordList: FC<Props> = ({ navigation }) => {
     try {
       const { data } = await GET<IWordList[]>('/word')
       setDataSource(data)
-    } catch (e) {
-      console.log(e)
-      navigation.navigate('Login')
-    }
+    } catch (e) {}
   }
 
   const goToItemPage = (id: string) => {

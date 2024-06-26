@@ -21,13 +21,11 @@ const useAuth = (onSuccessCallback?: () => void) => {
     try {
       const authState = await authorize(keycloak)
       storeData('token', authState)
-      console.log(authState.refreshToken)
 
       if (typeof onSuccessCallback === 'function') {
         onSuccessCallback()
       }
     } catch (error) {
-      // TODO:
     } finally {
       setLoading(false)
     }

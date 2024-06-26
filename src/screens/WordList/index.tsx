@@ -3,6 +3,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { FC, useEffect, useState } from 'react'
 import { View } from 'react-native'
 import Button from '../../components/Button'
+import Loading from '../../components/Loading'
 import { GET } from '../../shared/axios'
 import { WordList as IWordList, RootStackParamList } from '../../shared/types'
 
@@ -15,7 +16,7 @@ const WordList: FC<Props> = ({ navigation }) => {
     try {
       const { data } = await GET<IWordList[]>('/word')
       setDataSource(data)
-    } catch(e) {
+    } catch (e) {
       console.log(e)
       navigation.navigate('Login')
     }
@@ -28,6 +29,10 @@ const WordList: FC<Props> = ({ navigation }) => {
   useEffect(() => {
     fetchData()
   }, [isFocused])
+
+  if (!dataSource) {
+    return <Loading />
+  }
   return (
     <View className="p-4">
       {dataSource?.map((item) => (

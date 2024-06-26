@@ -1,27 +1,19 @@
-import { FC, useEffect } from 'react'
+import { FC } from 'react'
 import { Pressable, Text, View } from 'react-native'
-import { useSharedValue } from 'react-native-reanimated'
+import { SharedValue } from 'react-native-reanimated'
 import { Word } from '../../shared/types'
 import Card from '../Card'
 import FlipCard from '../FlipCard'
 
 interface Props {
   wordInfo: Word
+  isFlipped: SharedValue<boolean>
+  onPress: () => void
 }
 
-const FlipWordCard: FC<Props> = ({ wordInfo }) => {
-  const isFlipped = useSharedValue(false)
-
-  const handlePress = () => {
-    isFlipped.value = !isFlipped.value
-  }
-
-  useEffect(() => {
-    isFlipped.value = false
-  }, [wordInfo])
-
+const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
   return (
-    <Pressable className="relative mt-4 w-full" onPress={handlePress}>
+    <Pressable className="relative mt-4 w-full" onPress={onPress}>
       <FlipCard
         isFlipped={isFlipped}
         cardStyle="w-full"

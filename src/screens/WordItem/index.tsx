@@ -1,7 +1,7 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { FC, useEffect, useMemo, useState } from 'react'
-import { DimensionValue, Pressable, View } from 'react-native'
-import { useSharedValue } from 'react-native-reanimated'
+import { Pressable, View } from 'react-native'
+import { AnimatableValue, useSharedValue } from 'react-native-reanimated'
 import AudioPlayer from '../../components/Audio'
 import Button from '../../components/Button'
 import FlipWordCard from '../../components/FlipWordCard'
@@ -18,7 +18,11 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
   const [idx, setIdx] = useState(0)
   const [dataSource, setDataSource] = useState<WordList | null>(null)
   const isFlipped = useSharedValue(false)
-  const progress: DimensionValue = `${((idx + 1) / (dataSource?.words.length || 1)) * 100}%`
+  const progress = useMemo(
+    () =>
+      `${((idx + 1) / (dataSource?.words.length || 1)) * 100}%` as AnimatableValue,
+    [idx, dataSource]
+  )
   const currWord = useMemo(() => dataSource?.words?.[idx], [dataSource, idx])
 
   const handleFlip = () => {

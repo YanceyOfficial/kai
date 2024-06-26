@@ -18,7 +18,7 @@ const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
         isFlipped={isFlipped}
         cardStyle="w-full"
         FlippedContent={
-          <Card wrapperClassNames="w-full h-[500px]">
+          <Card wrapperClassNames="w-full h-96">
             <View className="gap-4">
               <Text className="text-lg font-bold">{wordInfo.word}</Text>
               <Text className="text-lg font-bold">{wordInfo.explanation}</Text>
@@ -32,7 +32,7 @@ const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
           </Card>
         }
         RegularContent={
-          <Card wrapperClassNames="w-full h-[500px] justify-center items-center">
+          <Card wrapperClassNames="w-full h-96 justify-center items-center">
             <Text
               className="text-4xl text-center"
               style={{ fontFamily: 'DINNextRoundedLTW01-Bold' }}

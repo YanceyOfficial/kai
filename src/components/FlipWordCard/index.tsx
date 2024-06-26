@@ -4,6 +4,7 @@ import { SharedValue } from 'react-native-reanimated'
 import { Word } from '../../shared/types'
 import Card from '../Card'
 import FlipCard from '../FlipCard'
+import AudioPlayer from '../AudioPlayer'
 
 interface Props {
   wordInfo: Word
@@ -17,6 +18,17 @@ const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
       <FlipCard
         isFlipped={isFlipped}
         cardStyle="w-full"
+        RegularContent={
+          <Card wrapperClassNames="w-full h-96 justify-center items-center">
+            <Text
+              className="text-4xl text-center"
+              style={{ fontFamily: 'DINNextRoundedLTW01-Bold' }}
+            >
+              {wordInfo.word}
+            </Text>
+            <AudioPlayer word={wordInfo.word} />
+          </Card>
+        }
         FlippedContent={
           <Card wrapperClassNames="w-full h-96">
             <View className="gap-4">
@@ -29,16 +41,6 @@ const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
                 </Text>
               ))}
             </View>
-          </Card>
-        }
-        RegularContent={
-          <Card wrapperClassNames="w-full h-96 justify-center items-center">
-            <Text
-              className="text-4xl text-center"
-              style={{ fontFamily: 'DINNextRoundedLTW01-Bold' }}
-            >
-              {wordInfo.word}
-            </Text>
           </Card>
         }
       />

@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import { Pressable, TouchableOpacity } from 'react-native'
+import { TouchableOpacity } from 'react-native'
 import Sound from 'react-native-sound'
 import { YOUDAO_VOICE_URL } from '../../shared/constants'
 import AudioPlayingIcon from '../Icon/AudioPlayingIcon'
@@ -41,7 +41,7 @@ const AudioPlayer: FC<Props> = ({ word }) => {
   }
 
   return (
-    <TouchableOpacity onPress={handleAudio}>
+    <TouchableOpacity onPress={handleAudio} className="z-10">
       <AudioPlayingIcon width={64} height={64} />
     </TouchableOpacity>
   )

@@ -1,8 +1,8 @@
+import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { AnimatableValue, useSharedValue } from 'react-native-reanimated'
-import AudioPlayer from '../../components/Audio'
 import Button from '../../components/Button'
 import FlipWordCard from '../../components/FlipWordCard'
 import CloseIcon from '../../components/Icon/CloseIcon'
@@ -14,6 +14,7 @@ import { RootStackParamList, WordList } from '../../shared/types'
 type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>
 
 const WordItemScreen: FC<Props> = ({ navigation, route }) => {
+  const isFocused = useIsFocused()
   const [loading, setLoading] = useState(false)
   const [idx, setIdx] = useState(0)
   const [dataSource, setDataSource] = useState<WordList | null>(null)
@@ -47,7 +48,7 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
   useEffect(() => {
     setIdx(0)
     fetchData()
-  }, [route.params.id])
+  }, [isFocused, route.params.id])
 
   if (loading || !currWord) return <Loading />
 
@@ -61,7 +62,6 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
       </View>
 
       <View className="flex items-center">
-        <AudioPlayer word={currWord.word} />
         <FlipWordCard
           wordInfo={currWord}
           isFlipped={isFlipped}

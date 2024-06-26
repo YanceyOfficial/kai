@@ -4,41 +4,49 @@ import Config from 'react-native-config'
 import { navigationRef } from '../App'
 import { keycloak } from '../hooks/useAuth'
 import { TOKEN_EXPIRED_MIN_VALIDITY } from './constants'
-import { RootStackParamList, TokenResponse } from './types'
-import { getData, storeData } from './utils'
+import { RootStackParamList } from './types'
+import { getSecureValue, setSecureTokens } from './utils'
+
+console.log('yy')
 
 axios.defaults.timeout = 5 * 10000
 axios.defaults.headers['Content-Type'] = 'application/json'
 axios.defaults.baseURL = Config.SERVICE_URL
 axios.interceptors.request.use(
   async (config) => {
-    let token = await getData<TokenResponse>('token')
+    let accessToken = await getSecureValue('accessToken')
+    console.log(accessToken)
 
-    if (!token) {
+    if (!accessToken) {
       if (navigationRef.isReady()) {
         // @ts-ignore
         navigationRef.navigate<keyof RootStackParamList>('Login')
       }
     } else {
-      const accessTokenExpirationTimestamp = +new Date(
-        token.accessTokenExpirationDate
+      const accessTokenExpirationDate = await getSecureValue(
+        'accessTokenExpirationDate'
       )
-      const nowTimeStamp = +new Date()
 
-      if (
-        token.refreshToken &&
-        accessTokenExpirationTimestamp - nowTimeStamp <=
-          TOKEN_EXPIRED_MIN_VALIDITY
-      ) {
-        const refreshResult = await refresh(keycloak, {
-          refreshToken: token.refreshToken
-        })
+      if (accessTokenExpirationDate) {
+        const accessTokenExpirationTimestamp = +new Date(
+          accessTokenExpirationDate
+        )
+        const nowTimeStamp = +new Date()
+        const refreshToken = await getSecureValue('refreshToken')
 
-        token = { ...token, ...refreshResult }
-        await storeData('token', storeData)
+        if (
+          refreshToken &&
+          accessTokenExpirationTimestamp - nowTimeStamp <=
+            TOKEN_EXPIRED_MIN_VALIDITY
+        ) {
+          const newTokens = await refresh(keycloak, {
+            refreshToken
+          })
+          await setSecureTokens(newTokens)
+        }
       }
 
-      config.headers.Authorization = `Bearer ${token?.accessToken}`
+      config.headers.Authorization = `Bearer ${accessToken}`
     }
 
     return config

@@ -19,17 +19,3 @@ export type RootStackParamList = {
   My: undefined
   Detail: { id: string }
 }
-
-export interface TokenResponse {
-  accessToken: string
-  accessTokenExpirationDate: string
-  authorizeAdditionalParameters?: { [name: string]: string }
-  tokenAdditionalParameters?: { [name: string]: string }
-  idToken: string
-  refreshToken: string | null
-  tokenType: string
-  scopes: string[]
-  authorizationCode: string
-  codeVerifier?: string
-  additionalParameters?: { [name: string]: string }
-}

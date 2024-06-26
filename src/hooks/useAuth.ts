@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { authorize, logout } from 'react-native-app-auth'
 import Config from 'react-native-config'
 import { OAUTH_REDIRECT_URL } from '../shared/constants'
-import { TokenResponse } from '../shared/types'
-import { getData, storeData } from '../shared/utils'
+import { getSecureValue, setSecureTokens } from '../shared/utils'
 
 export const keycloak = {
   issuer: Config.KEYCLOAK_ISSUER as string,
@@ -19,8 +18,8 @@ const useAuth = (onSuccessCallback?: () => void) => {
     setLoading(true)
 
     try {
-      const authState = await authorize(keycloak)
-      storeData('token', authState)
+      const tokens = await authorize(keycloak)
+      await setSecureTokens(tokens)
 
       if (typeof onSuccessCallback === 'function') {
         onSuccessCallback()
@@ -33,11 +32,14 @@ const useAuth = (onSuccessCallback?: () => void) => {
 
   const handleLogout = async () => {
     try {
-      const token = await getData<TokenResponse>('token')
-      const result = await logout(keycloak, {
-        idToken: token?.idToken || '',
-        postLogoutRedirectUrl: Config.KEYCLOAK_LOGOUT_URL || ''
-      })
+      const idToken = await getSecureValue('idToken')
+
+      if (idToken) {
+        await logout(keycloak, {
+          idToken,
+          postLogoutRedirectUrl: Config.KEYCLOAK_LOGOUT_URL || ''
+        })
+      }
     } catch (error) {
       // TODO:
     } finally {

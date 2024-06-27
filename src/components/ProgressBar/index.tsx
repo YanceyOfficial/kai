@@ -25,7 +25,7 @@ const ProgressBar: FC<Props> = ({ progress }) => {
   )
 
   return (
-    <View className="flex-1 bg-[#E5E5E5] rounded-3xl h-5 ml-4">
+    <View className="flex-1 bg-[#E5E5E5] rounded-3xl h-5 mx-4">
       <Animated.View
         className={`bg-[#93d333] h-5 rounded-3xl relative`}
         style={progressBarWidthAnimated}

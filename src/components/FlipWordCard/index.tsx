@@ -1,7 +1,6 @@
 import { FC } from 'react'
-import { Dimensions, Pressable, Text, View } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import { SharedValue } from 'react-native-reanimated'
-import RenderHtml from 'react-native-render-html'
 import { Word } from '../../shared/types'
 import AudioPlayer from '../AudioPlayer'
 import Card from '../Card'
@@ -26,13 +25,9 @@ const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
               <Text className="text-lg font-bold">{wordInfo.explanation}</Text>
               <Text className="text-xl">{wordInfo.phoneticNotation}</Text>
               {wordInfo.examples.map((example) => (
-                <View>
-                  <RenderHtml
-                    source={{ html: example }}
-                    contentWidth={Dimensions.get('window').width}
-                    key={example}
-                  />
-                </View>
+                <Text className="text-sm text-[#4b4b4b]" key={example}>
+                  {example}
+                </Text>
               ))}
             </View>
           </Card>

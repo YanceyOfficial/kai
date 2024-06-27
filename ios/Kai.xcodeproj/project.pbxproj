@@ -12,6 +12,7 @@
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
+		2BAEB3852C2D410A00EC0BE2 /* MaterialCommunityIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2BAEB3842C2D410A00EC0BE2 /* MaterialCommunityIcons.ttf */; };
 		7699B88040F8A987B510C191 /* libPods-Kai-KaiTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-Kai-KaiTests.a */; };
 		7A2BE4E4B2694B3B82398BA0 /* DINNextRoundedLTW01-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 3068AFD049594042BF601728 /* DINNextRoundedLTW01-Bold.otf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
@@ -44,15 +45,16 @@
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = Kai/main.m; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = Kai/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		19F6CBCC0A4E27FBF8BF4A61 /* libPods-Kai-KaiTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Kai-KaiTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		2B12B0AF5BB6437AB87AE437 /* DINNextRoundedLTW01-Medium.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "DINNextRoundedLTW01-Medium.otf"; path = "../assets/fonts/DINNextRoundedLTW01-Medium.otf"; sourceTree = "<group>"; };
-		3068AFD049594042BF601728 /* DINNextRoundedLTW01-Bold.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "DINNextRoundedLTW01-Bold.otf"; path = "../assets/fonts/DINNextRoundedLTW01-Bold.otf"; sourceTree = "<group>"; };
-		36F854F29AFF41D58B75E9E7 /* DINNextRoundedLTW01-Light.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "DINNextRoundedLTW01-Light.otf"; path = "../assets/fonts/DINNextRoundedLTW01-Light.otf"; sourceTree = "<group>"; };
+		2B12B0AF5BB6437AB87AE437 /* DINNextRoundedLTW01-Medium.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DINNextRoundedLTW01-Medium.otf"; path = "../assets/fonts/DINNextRoundedLTW01-Medium.otf"; sourceTree = "<group>"; };
+		2BAEB3842C2D410A00EC0BE2 /* MaterialCommunityIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = MaterialCommunityIcons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf"; sourceTree = "<group>"; };
+		3068AFD049594042BF601728 /* DINNextRoundedLTW01-Bold.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DINNextRoundedLTW01-Bold.otf"; path = "../assets/fonts/DINNextRoundedLTW01-Bold.otf"; sourceTree = "<group>"; };
+		36F854F29AFF41D58B75E9E7 /* DINNextRoundedLTW01-Light.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DINNextRoundedLTW01-Light.otf"; path = "../assets/fonts/DINNextRoundedLTW01-Light.otf"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-Kai.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Kai.debug.xcconfig"; path = "Target Support Files/Pods-Kai/Pods-Kai.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-Kai.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Kai.release.xcconfig"; path = "Target Support Files/Pods-Kai/Pods-Kai.release.xcconfig"; sourceTree = "<group>"; };
 		5B7EB9410499542E8C5724F5 /* Pods-Kai-KaiTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Kai-KaiTests.debug.xcconfig"; path = "Target Support Files/Pods-Kai-KaiTests/Pods-Kai-KaiTests.debug.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-Kai.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Kai.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Kai/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		82A7B6CC75B143F99DD0308A /* DINNextRoundedLTW01-Regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "DINNextRoundedLTW01-Regular.otf"; path = "../assets/fonts/DINNextRoundedLTW01-Regular.otf"; sourceTree = "<group>"; };
+		82A7B6CC75B143F99DD0308A /* DINNextRoundedLTW01-Regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "DINNextRoundedLTW01-Regular.otf"; path = "../assets/fonts/DINNextRoundedLTW01-Regular.otf"; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-Kai-KaiTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Kai-KaiTests.release.xcconfig"; path = "Target Support Files/Pods-Kai-KaiTests/Pods-Kai-KaiTests.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -112,13 +114,13 @@
 		2323CB9BD51F4619ABCB02F8 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				2BAEB3842C2D410A00EC0BE2 /* MaterialCommunityIcons.ttf */,
 				3068AFD049594042BF601728 /* DINNextRoundedLTW01-Bold.otf */,
 				36F854F29AFF41D58B75E9E7 /* DINNextRoundedLTW01-Light.otf */,
 				2B12B0AF5BB6437AB87AE437 /* DINNextRoundedLTW01-Medium.otf */,
 				82A7B6CC75B143F99DD0308A /* DINNextRoundedLTW01-Regular.otf */,
 			);
 			name = Resources;
-			path = "";
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
@@ -273,6 +275,7 @@
 				7A2BE4E4B2694B3B82398BA0 /* DINNextRoundedLTW01-Bold.otf in Resources */,
 				C3CB263E7B214F08ADEA5BB5 /* DINNextRoundedLTW01-Light.otf in Resources */,
 				C2565049DD954102A8D32B30 /* DINNextRoundedLTW01-Medium.otf in Resources */,
+				2BAEB3852C2D410A00EC0BE2 /* MaterialCommunityIcons.ttf in Resources */,
 				BCB0550E5D294E4CBB79603D /* DINNextRoundedLTW01-Regular.otf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

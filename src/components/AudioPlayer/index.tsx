@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import { TouchableOpacity } from 'react-native'
 import Sound from 'react-native-sound'
 import { YOUDAO_VOICE_URL } from '../../shared/constants'
@@ -39,6 +39,10 @@ const AudioPlayer: FC<Props> = ({ word }) => {
       }
     )
   }
+
+  useEffect(() => {
+    handleAudio()
+  }, [word])
 
   return (
     <TouchableOpacity onPress={handleAudio} className="z-10">

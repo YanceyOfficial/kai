@@ -7,11 +7,11 @@ import { shuffle } from 'yancey-js-util'
 import Button from '../../components/Button'
 import FlipWordCard from '../../components/FlipWordCard'
 import CloseIcon from '../../components/Icon/CloseIcon'
+import LikeButton from '../../components/LikeButton'
 import Loading from '../../components/Loading'
 import ProgressBar from '../../components/ProgressBar'
 import { GET } from '../../shared/axios'
 import { RootStackParamList, Word, WordList } from '../../shared/types'
-import LikeButton from '../../components/LikeButton'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>
 

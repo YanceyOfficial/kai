@@ -1,10 +1,26 @@
-export interface Word {
-  explanation: string
-  phoneticNotation: string
-  word: string
-  examples: string[]
+export enum QuizType {
+  SingleChoice = 'singleChoice',
+  FillInBlank = 'fillInBlank'
+}
+
+export interface Quiz {
   _id: string
-  score: number
+  answers: string[]
+  choices: string[]
+  question: string
+  translation: string
+  type: QuizType
+}
+
+export interface Word {
+  _id: string
+  name: string
+  phoneticNotation: string
+  explanation: string
+  examples: string[]
+  quizzes: Quiz[]
+  weightage: number
+  isMarked: boolean
 }
 
 export interface WordList {

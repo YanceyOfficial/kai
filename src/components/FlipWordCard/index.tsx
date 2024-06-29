@@ -21,7 +21,7 @@ const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
         RegularContent={
           <Card wrapperClassNames="w-full h-96">
             <View className="gap-4">
-              <Text className="text-lg font-bold">{wordInfo.word}</Text>
+              <Text className="text-lg font-bold">{wordInfo.name}</Text>
               <Text className="text-lg font-bold">{wordInfo.explanation}</Text>
               <Text className="text-xl">{wordInfo.phoneticNotation}</Text>
               {wordInfo.examples.map((example) => (
@@ -38,9 +38,9 @@ const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
               className="text-4xl text-center mb-8"
               style={{ fontFamily: 'DINNextRoundedLTW01-Bold' }}
             >
-              {wordInfo.word}
+              {wordInfo.name}
             </Text>
-            <AudioPlayer word={wordInfo.word} />
+            <AudioPlayer word={wordInfo.name} />
           </Card>
         }
       />

@@ -36,9 +36,13 @@ const Login: FC<Props> = ({ navigation }) => {
         </Text>
       </View>
       <View>
-        <Button onPress={handleLogin}>Get Started</Button>
+        <Button size="small" onPress={handleLogin}>
+          GET STARTED
+        </Button>
         <Button
           color="white"
+          variant="outlined"
+          size="small"
           wrapperClassNames="mt-[20px]"
           onPress={handleLogin}
         >

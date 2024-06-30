@@ -13,6 +13,7 @@ interface Props {
 
 const ProgressBar: FC<Props> = ({ progress }) => {
   const [width, setWidth] = useState(0)
+  console.log(width)
 
   const progressBarWidthAnimated = useAnimatedStyle(
     () => ({
@@ -25,9 +26,9 @@ const ProgressBar: FC<Props> = ({ progress }) => {
   )
 
   return (
-    <View className="flex-1 bg-[#E5E5E5] rounded-3xl h-5 mx-4">
+    <View className="flex-1 bg-[#e5e5e5] rounded-lg h-4 mx-4">
       <Animated.View
-        className={`bg-[#93d333] h-5 rounded-3xl relative`}
+        className={`bg-[#58cc02] h-4 rounded-3xl relative`}
         style={progressBarWidthAnimated}
         onLayout={(event) => {
           const { width } = event.nativeEvent.layout
@@ -36,7 +37,7 @@ const ProgressBar: FC<Props> = ({ progress }) => {
       >
         <View
           className="bg-[#fff] h-[6px] rounded top-1 left-[8px] opacity-20"
-          style={{ width: width - 16 }}
+          style={{ width: width - 16 <= 0 ? 0 : width - 16 }}
         />
       </Animated.View>
     </View>

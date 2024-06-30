@@ -2,34 +2,47 @@ import classNames from 'classnames'
 import React, { FC } from 'react'
 import { Pressable, Text } from 'react-native'
 import { trigger } from 'react-native-haptic-feedback'
+import useAudioPlayer from '../../hooks/useAudioPlayer'
+import {
+  fontFamilyStyles,
+  outlinedStyles,
+  sizeStyles,
+  textDisabledStyles,
+  textSelectedStyles,
+  textStyles,
+  wrapperDisabledStyles,
+  wrapperSelectedStyles,
+  wrapperStyles
+} from './styles'
 
 interface Props {
+  variant?: 'outlined' | 'contained'
+  size?: 'small' | 'large'
   children: string
-  color?: 'green' | 'white' | 'blue'
+  color?: 'green' | 'white' | 'blue' | 'red'
+  loading?: boolean
+  disabled?: boolean
+  selected?: boolean
+  soundSource?: string
   onPress?: () => void
   wrapperClassNames?: string
   textClassNames?: string
 }
 
-const wrapperStyles = {
-  green: 'bg-[#58cc02] shadow-duolingoGreen',
-  white: 'bg-white shadow-duolingoWhite border-2 border-b-0 border-[#E5E5E5]',
-  blue: 'bg-[#49c0f8] shadow-duolingoBlue'
-}
-
-const textStyles = {
-  green: 'text-white',
-  white: 'color-[#1cb0f6]',
-  blue: 'color-[#131f64]'
-}
-
 const Button: FC<Props> = ({
+  variant = 'contained',
   color = 'green',
+  size = 'small',
   children = '',
+  disabled = false,
+  selected = false,
+  soundSource,
   onPress,
   wrapperClassNames,
   textClassNames
 }) => {
+  const { handleAudioFromLocalFile } = useAudioPlayer()
+
   const handlePress = () => {
     trigger('impactLight', {
       enableVibrateFallback: true,
@@ -37,27 +50,36 @@ const Button: FC<Props> = ({
     })
 
     if (onPress) {
+      if (soundSource) {
+        handleAudioFromLocalFile(soundSource)
+      }
       onPress()
     }
   }
   return (
     <Pressable
       className={classNames(
-        'w-full rounded-xl py-[11px] flex justify-center items-center active:shadow-none active:translate-y-[4px]',
+        'w-full py-4 flex justify-center items-center active:shadow-none active:translate-y-[4px]',
         wrapperStyles[color],
+        sizeStyles[size].wrapper,
+        { [outlinedStyles[color]]: variant === 'outlined' },
+        { [wrapperDisabledStyles]: disabled },
+        { [wrapperSelectedStyles]: selected },
         wrapperClassNames
       )}
       onPress={handlePress}
     >
       <Text
         className={classNames(
-          'text-base leading-[22px]',
           textStyles[color],
+          sizeStyles[size].text,
+          { [textDisabledStyles]: disabled },
+          { [textSelectedStyles]: selected },
           textClassNames
         )}
-        style={{ fontFamily: 'DINNextRoundedLTW01-Bold' }}
+        style={fontFamilyStyles[size]}
       >
-        {children.toUpperCase()}
+        {children}
       </Text>
     </Pressable>
   )

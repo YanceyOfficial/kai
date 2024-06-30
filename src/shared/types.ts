@@ -33,6 +33,7 @@ export type RootStackParamList = {
   Home: undefined
   WordList: undefined
   Detail: { id: string }
+  Quiz: undefined
   My: undefined
   Login: undefined
 }

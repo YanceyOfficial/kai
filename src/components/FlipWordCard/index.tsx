@@ -23,7 +23,9 @@ const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
             <View className="gap-4">
               <Text className="text-lg font-bold">{wordInfo.name}</Text>
               <Text className="text-lg font-bold">{wordInfo.explanation}</Text>
-              <Text className="text-xl">{wordInfo.phoneticNotation}</Text>
+              {wordInfo.phoneticNotation.split(' ').length > 1 || (
+                <Text className="text-xl">{wordInfo.phoneticNotation}</Text>
+              )}
               {wordInfo.examples.map((example) => (
                 <Text className="text-sm text-[#4b4b4b]" key={example}>
                   {example}

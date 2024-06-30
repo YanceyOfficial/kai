@@ -8,8 +8,9 @@ import { SafeAreaView, useColorScheme } from 'react-native'
 import { Colors } from 'react-native/Libraries/NewAppScreen'
 import HomeIcon from './components/Icon/HomeIcon'
 import MyIcon from './components/Icon/MyIcon'
-import MyScreen from './screens/My'
 import HomeStack from './screens/Home'
+import MyScreen from './screens/My'
+import QuizScreen from './screens/Quiz'
 import { RootStackParamList } from './shared/types'
 
 const Tab = createBottomTabNavigator<RootStackParamList>()
@@ -26,7 +27,7 @@ const App = (): JSX.Element => {
       <NavigationContainer ref={navigationRef}>
         <Tab.Navigator
           screenOptions={{
-            headerShown: false,
+            headerShown: false
             // tabBarActiveTintColor: '#e5e7eb'
           }}
           initialRouteName="Home"
@@ -34,6 +35,12 @@ const App = (): JSX.Element => {
           <Tab.Screen
             name="Home"
             component={HomeStack}
+            options={{ tabBarIcon: () => <HomeIcon /> }}
+          />
+
+          <Tab.Screen
+            name="Quiz"
+            component={QuizScreen}
             options={{ tabBarIcon: () => <HomeIcon /> }}
           />
 

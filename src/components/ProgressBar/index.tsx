@@ -13,7 +13,6 @@ interface Props {
 
 const ProgressBar: FC<Props> = ({ progress }) => {
   const [width, setWidth] = useState(0)
-  console.log(width)
 
   const progressBarWidthAnimated = useAnimatedStyle(
     () => ({

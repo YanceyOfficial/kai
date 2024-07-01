@@ -14,6 +14,7 @@ const axiosInstance = axios.create({
   },
   timeout: 5000
 })
+
 axiosInstance.interceptors.request.use(
   async (config) => {
     let accessToken = await getSecureValue('accessToken')
@@ -21,7 +22,7 @@ axiosInstance.interceptors.request.use(
     if (!accessToken) {
       if (navigationRef.isReady()) {
         // @ts-ignore
-        navigationRef.navigate<keyof RootStackParamList>('Login')
+        navigationRef.navigate<keyof RootStackParamList>('My')
       }
     } else {
       const accessTokenExpirationDate = await getSecureValue(
@@ -35,23 +36,31 @@ axiosInstance.interceptors.request.use(
         const nowTimeStamp = +new Date()
         const refreshToken = await getSecureValue('refreshToken')
 
-        if (
-          refreshToken &&
-          accessTokenExpirationTimestamp > nowTimeStamp &&
-          accessTokenExpirationTimestamp - nowTimeStamp <=
-            TOKEN_EXPIRED_MIN_VALIDITY
-        ) {
-          try {
-            const newTokens = await refresh(keycloak, {
-              refreshToken
-            })
+        if (!refreshToken) {
+          if (navigationRef.isReady()) {
+            // @ts-ignore
+            navigationRef.navigate<keyof RootStackParamList>('My')
+          }
+        } else {
+          if (
+            // Access token has already expired.
+            accessTokenExpirationTimestamp >= nowTimeStamp ||
+            // Access token will expire within TOKEN_EXPIRED_MIN_VALIDITY.
+            accessTokenExpirationTimestamp - nowTimeStamp <=
+              TOKEN_EXPIRED_MIN_VALIDITY
+          ) {
+            try {
+              const newTokens = await refresh(keycloak, {
+                refreshToken
+              })
 
-            accessToken = newTokens.accessToken
-            await setSecureTokens(newTokens)
-          } catch (e) {
-            if (navigationRef.isReady()) {
-              // @ts-ignore
-              navigationRef.navigate<keyof RootStackParamList>('My')
+              accessToken = newTokens.accessToken
+              await setSecureTokens(newTokens)
+            } catch (e) {
+              if (navigationRef.isReady()) {
+                // @ts-ignore
+                navigationRef.navigate<keyof RootStackParamList>('My')
+              }
             }
           }
         }
@@ -60,17 +69,18 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${accessToken}`
     }
 
-    config.headers.Authorization = `Bearer ${accessToken}`
     return config
   },
   (error) => {
     return Promise.reject(error)
   }
 )
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
+      console.log('axiosInstance.interceptors.response error', error.response)
       if (navigationRef.isReady()) {
         // @ts-ignore
         navigationRef.navigate<keyof RootStackParamList>('My')

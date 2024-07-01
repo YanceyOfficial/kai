@@ -38,7 +38,7 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
     if (idx < dataSource?.words?.length - 1) {
       setIdx(idx + 1)
     } else {
-      setIdx(0)
+      navigation.navigate('Quiz', { id: route.params.id })
     }
   }
 

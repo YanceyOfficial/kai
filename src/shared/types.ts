@@ -16,6 +16,7 @@ export interface Word {
   _id: string
   name: string
   phoneticNotation: string
+  syllabification: string[]
   explanation: string
   examples: string[]
   quizzes: Quiz[]

@@ -8,7 +8,10 @@ const Stack = createNativeStackNavigator<RootStackParamList>()
 
 const HomeStack: FC = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName='WordList'>
+    <Stack.Navigator
+      screenOptions={{ headerShown: false }}
+      initialRouteName="WordList"
+    >
       <Stack.Screen name="WordList" component={WordList} />
       <Stack.Screen name="Detail" component={WordItemScreen} />
     </Stack.Navigator>

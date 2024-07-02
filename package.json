@@ -19,6 +19,7 @@
     "@react-navigation/native-stack": "^6.9.26",
     "axios": "^1.7.2",
     "classnames": "^2.5.1",
+    "jotai": "^2.8.4",
     "lottie-react-native": "^6.7.2",
     "nativewind": "^2.0.11",
     "react": "18.2.0",

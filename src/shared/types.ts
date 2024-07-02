@@ -37,4 +37,6 @@ export type RootStackParamList = {
   Quiz: { id: string }
   My: undefined
   Login: undefined
+  CMS: undefined
+  Error: undefined
 }

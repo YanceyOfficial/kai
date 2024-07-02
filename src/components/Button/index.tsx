@@ -1,8 +1,9 @@
 import classNames from 'classnames'
-import React, { FC } from 'react'
+import React, { FC, ReactNode } from 'react'
 import { Pressable, Text } from 'react-native'
 import { trigger } from 'react-native-haptic-feedback'
 import useAudioPlayer from '../../hooks/useAudioPlayer'
+import Loading from '../Loading'
 import {
   fontFamilyStyles,
   outlinedStyles,
@@ -18,7 +19,7 @@ import {
 interface Props {
   variant?: 'outlined' | 'contained'
   size?: 'small' | 'large'
-  children: string
+  children: ReactNode
   color?: 'green' | 'white' | 'blue' | 'red'
   loading?: boolean
   disabled?: boolean
@@ -35,12 +36,14 @@ const Button: FC<Props> = ({
   size = 'small',
   children = '',
   disabled = false,
+  loading = false,
   selected = false,
   soundSource,
   onPress,
   wrapperClassNames,
   textClassNames
 }) => {
+  const diasblePressingEffect = disabled || loading || selected
   const { handleAudioFromLocalFile } = useAudioPlayer()
 
   const handlePress = () => {
@@ -59,7 +62,10 @@ const Button: FC<Props> = ({
   return (
     <Pressable
       className={classNames(
-        'w-full py-4 flex justify-center items-center active:shadow-none active:translate-y-[4px]',
+        'py-4 flex justify-center items-center',
+        {
+          'active:shadow-none active:translate-y-[4px]': !diasblePressingEffect
+        },
         wrapperStyles[color],
         sizeStyles[size].wrapper,
         { [outlinedStyles[color]]: variant === 'outlined' },
@@ -69,18 +75,24 @@ const Button: FC<Props> = ({
       )}
       onPress={handlePress}
     >
-      <Text
-        className={classNames(
-          textStyles[color],
-          sizeStyles[size].text,
-          { [textDisabledStyles]: disabled },
-          { [textSelectedStyles]: selected },
-          textClassNames
-        )}
-        style={fontFamilyStyles[size]}
-      >
-        {children}
-      </Text>
+      {loading ? (
+        <Loading style={{ width: '100%', height: 17.3 }} />
+      ) : typeof children === 'object' ? (
+        <>{children}</>
+      ) : (
+        <Text
+          className={classNames(
+            textStyles[color],
+            sizeStyles[size].text,
+            { [textDisabledStyles]: disabled },
+            { [textSelectedStyles]: selected },
+            textClassNames
+          )}
+          style={fontFamilyStyles[size]}
+        >
+          {children}
+        </Text>
+      )}
     </Pressable>
   )
 }

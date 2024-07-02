@@ -27,9 +27,8 @@ const WordList: FC<Props> = ({ navigation }) => {
     fetchData()
   }, [isFocused])
 
-  if (!dataSource) {
-    return <Loading />
-  }
+  if (!dataSource) return <Loading fullScreen />
+
   return (
     <View className="p-4">
       {dataSource?.map((item) => (

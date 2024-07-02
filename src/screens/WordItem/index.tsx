@@ -1,5 +1,6 @@
 import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
+import { useAtomValue } from 'jotai'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { AnimatableValue, useSharedValue } from 'react-native-reanimated'
@@ -12,10 +13,12 @@ import Loading from '../../components/Loading'
 import ProgressBar from '../../components/ProgressBar'
 import { GET } from '../../shared/axios'
 import { RootStackParamList, Word, WordList } from '../../shared/types'
+import { isPlayingAtom } from '../../stores/global'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>
 
 const WordItemScreen: FC<Props> = ({ navigation, route }) => {
+  const isPlaying = useAtomValue(isPlayingAtom)
   const isFocused = useIsFocused()
   const [loading, setLoading] = useState(false)
   const [idx, setIdx] = useState(0)
@@ -73,7 +76,7 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
     fetchData()
   }, [isFocused, route.params.id])
 
-  if (loading || !currWord) return <Loading />
+  if (loading || !currWord) return <Loading fullScreen />
 
   return (
     <View className="px-4 py-8 flex-1 flex justify-between">
@@ -93,7 +96,9 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
         />
       </View>
 
-      <Button onPress={switchWord}>Next</Button>
+      <Button onPress={switchWord} disabled={isPlaying}>
+        NEXT
+      </Button>
     </View>
   )
 }

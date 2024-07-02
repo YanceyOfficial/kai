@@ -2,10 +2,10 @@ import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { FC, useEffect, useState } from 'react'
 import { View } from 'react-native'
-import Button from '../../components/Button'
-import Loading from '../../components/Loading'
-import { GET } from '../../shared/axios'
-import { WordList as IWordList, RootStackParamList } from '../../shared/types'
+import Button from 'components/Button'
+import Loading from 'components/Loading'
+import { GET } from 'shared/axios'
+import { WordList as IWordList, RootStackParamList } from 'shared/types'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WordList'>
 

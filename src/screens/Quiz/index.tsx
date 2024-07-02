@@ -1,5 +1,12 @@
 import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
+import Button from 'components/Button'
+import CloseIcon from 'components/Icon/CloseIcon'
+import Loading from 'components/Loading'
+import ProgressBar from 'components/ProgressBar'
+import useAudioPlayer from 'hooks/useAudioPlayer'
+import { GET } from 'shared/axios'
+import { Quiz, QuizType, RootStackParamList, WordList } from 'shared/types'
 import classNames from 'classnames'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
@@ -7,18 +14,6 @@ import { AnimatableValue } from 'react-native-reanimated'
 import { shuffle } from 'yancey-js-util'
 import rightAudio from '../../../assets/audios/right.mp3'
 import wrongAudio from '../../../assets/audios/wrong.mp3'
-import Button from '../../components/Button'
-import CloseIcon from '../../components/Icon/CloseIcon'
-import Loading from '../../components/Loading'
-import ProgressBar from '../../components/ProgressBar'
-import useAudioPlayer from '../../hooks/useAudioPlayer'
-import { GET } from '../../shared/axios'
-import {
-  Quiz,
-  QuizType,
-  RootStackParamList,
-  WordList
-} from '../../shared/types'
 
 export enum AnswerStatus {
   Initial,

@@ -1,6 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { FC } from 'react'
-import { RootStackParamList } from '../../shared/types'
+import { RootStackParamList } from 'shared/types'
 import CMS from '../CMS'
 import Error from '../Error'
 import Login from '../Login'

@@ -1,10 +1,10 @@
 import { FC } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { SharedValue } from 'react-native-reanimated'
-import { Word } from '../../shared/types'
-import WordAudioPlayer from '../WordAudioPlayer'
+import { Word } from 'shared/types'
 import Card from '../Card'
 import FlipCard from '../FlipCard'
+import WordAudioPlayer from '../WordAudioPlayer'
 
 interface Props {
   wordInfo: Word

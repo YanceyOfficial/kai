@@ -1,7 +1,21 @@
+import { useSetAtom } from 'jotai'
 import Sound from 'react-native-sound'
+import { isPlayingAtom } from '../stores/global'
 
-const useAudioPlayer = () => {
+interface Options {
+  onStartPlayhandler: () => void
+  onStopPlayhandler: () => void
+}
+
+const useAudioPlayer = (options?: Options) => {
+  const setIsPlaying = useSetAtom(isPlayingAtom)
+
   const handleAudioFromLocalFile = async (audioSource: string) => {
+    setIsPlaying(true)
+    if (typeof options?.onStartPlayhandler === 'function') {
+      options.onStartPlayhandler()
+    }
+
     Sound.setCategory('Playback')
 
     const whoosh = new Sound(audioSource, () => {
@@ -12,11 +26,23 @@ const useAudioPlayer = () => {
         } else {
           console.log('playback failed due to audio decoding errors')
         }
+
+        setIsPlaying(false)
+        if (typeof options?.onStopPlayhandler === 'function') {
+          options.onStopPlayhandler()
+        }
       })
     })
   }
 
   const handleAudioFromNetworkFile = async (audioSource: string) => {
+    console.log(audioSource)
+
+    setIsPlaying(true)
+    if (typeof options?.onStartPlayhandler === 'function') {
+      options.onStartPlayhandler()
+    }
+
     Sound.setCategory('Playback')
 
     const whoosh = new Sound(audioSource, undefined, () => {
@@ -26,6 +52,11 @@ const useAudioPlayer = () => {
           console.log('successfully finished playing')
         } else {
           console.log('playback failed due to audio decoding errors')
+        }
+
+        setIsPlaying(false)
+        if (typeof options?.onStopPlayhandler === 'function') {
+          options.onStopPlayhandler()
         }
       })
     })

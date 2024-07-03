@@ -10,7 +10,6 @@ import HomeIcon from './components/Icon/HomeIcon'
 import MyIcon from './components/Icon/MyIcon'
 import HomeStack from './screens/Home'
 import MyScreen from './screens/My'
-import QuizScreen from './screens/Quiz'
 import { RootStackParamList } from './shared/types'
 
 const Tab = createBottomTabNavigator<RootStackParamList>()
@@ -35,12 +34,6 @@ const App = (): JSX.Element => {
           <Tab.Screen
             name="Home"
             component={HomeStack}
-            options={{ tabBarIcon: () => <HomeIcon /> }}
-          />
-
-          <Tab.Screen
-            name="Quiz"
-            component={QuizScreen}
             options={{ tabBarIcon: () => <HomeIcon /> }}
           />
 

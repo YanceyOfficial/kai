@@ -1,9 +1,9 @@
 import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
-import { FC, useEffect, useState } from 'react'
-import { View } from 'react-native'
 import Button from 'components/Button'
 import Loading from 'components/Loading'
+import { FC, useEffect, useState } from 'react'
+import { View } from 'react-native'
 import { GET } from 'shared/axios'
 import { WordList as IWordList, RootStackParamList } from 'shared/types'
 
@@ -35,9 +35,10 @@ const WordList: FC<Props> = ({ navigation }) => {
         <Button
           onPress={() => goToItemPage(item._id)}
           key={item._id}
+          color="blue"
           wrapperClassNames="mt-4"
         >
-          {item.title}
+          {item.title.toUpperCase()}
         </Button>
       ))}
     </View>

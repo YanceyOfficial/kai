@@ -1,15 +1,15 @@
+import Loading from 'components/Loading'
 import { FC, useState } from 'react'
 import { WebView } from 'react-native-webview'
-import Loading from 'components/Loading'
 
-const MyScreen: FC = () => {
+const CmsWebview: FC = () => {
   const [loading, setLoading] = useState(false)
   return (
     <>
-      {loading && <Loading />}
+      {loading && <Loading fullScreen />}
       <WebView
         source={{ uri: 'https://kai.yancey.app/' }}
-        style={{ flex: 1 }}
+        className={loading ? 'hidden' : ''}
         onLoadStart={() => {
           setLoading(true)
         }}
@@ -21,4 +21,4 @@ const MyScreen: FC = () => {
   )
 }
 
-export default MyScreen
+export default CmsWebview

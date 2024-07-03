@@ -9,10 +9,13 @@ const Stack = createNativeStackNavigator<RootStackParamList>()
 
 const MyStack: FC = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{ headerShown: false }}
+      initialRouteName="CMS"
+    >
+      <Stack.Screen name="CMS" component={CMS} />
       <Stack.Screen name="Error" component={Error} />
       <Stack.Screen name="Login" component={Login} />
-      <Stack.Screen name="CMS" component={CMS} />
     </Stack.Navigator>
   )
 }

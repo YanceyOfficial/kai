@@ -35,7 +35,7 @@ const ProgressBar: FC<Props> = ({ progress }) => {
         }}
       >
         <View
-          className="bg-[#fff] h-[6px] rounded top-1 left-[8px] opacity-20"
+          className="bg-[#fff] h-[6px] rounded-lg top-1 left-[8px] opacity-20"
           style={{ width: width - 16 <= 0 ? 0 : width - 16 }}
         />
       </Animated.View>

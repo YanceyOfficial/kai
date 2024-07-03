@@ -1,7 +1,7 @@
 export enum QuizType {
   SingleChoice = 'singleChoice',
   FillInBlank = 'fillInBlank',
-  SplitCombine = 'splitCombine',
+  SplitCombine = 'splitCombine'
 }
 
 export interface Quiz {
@@ -29,6 +29,17 @@ export interface WordList {
   _id: string
   title: string
   words: Word[]
+}
+
+export enum AnswerStatus {
+  Unanswered,
+  Correct,
+  Wrong
+}
+
+export interface AnswerInfo {
+  answers: string[]
+  status: AnswerStatus
 }
 
 export type RootStackParamList = {

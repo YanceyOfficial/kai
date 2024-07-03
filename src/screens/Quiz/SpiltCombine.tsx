@@ -1,20 +1,22 @@
+import classNames from 'classnames'
+import WordAudioPlayer from 'components/WordAudioPlayer'
+import Button from 'components/Button'
 import { produce } from 'immer'
-import { FC, useState } from 'react'
+import { useAtom } from 'jotai'
+import { FC, useEffect, useState } from 'react'
 import { View } from 'react-native'
-import { shuffle } from 'yancey-js-util'
-import AudioPlayer from '../../components/AudioPlayer'
-import Button from '../../components/Button'
-import { Quiz } from '../../shared/types'
+import { Quiz } from 'shared/types'
+import { answerInfoAtom } from 'stores/quiz'
 
 interface Props {
   quiz: Quiz
 }
 
 const SplitCombine: FC<Props> = ({ quiz }) => {
+  const [answerInfo, setAnswerInfo] = useAtom(answerInfoAtom)
   const [combines, setCombines] = useState<string[]>(
     new Array(quiz.choices.length).fill('')
   )
-  const choices = shuffle(quiz.choices)
 
   const addCombine = (syllabification: string) => {
     const emptyIndex = combines.findIndex((combine) => combine === '')
@@ -34,21 +36,39 @@ const SplitCombine: FC<Props> = ({ quiz }) => {
     setCombines(newCombine)
   }
 
-  return (
-    <View className="flex-1 justify-center items-center gap-12">
-      <AudioPlayer word={quiz.question} />
+  useEffect(() => {
+    const isDone = combines.every(Boolean)
+    if (isDone) {
+      setAnswerInfo({ ...answerInfo, answers: combines })
+    }
+  }, [combines])
 
-      <View className="flex-row">
+  useEffect(() => {
+    setCombines(new Array(quiz.choices.length).fill(''))
+  }, [quiz])
+
+  return (
+    <View className="flex-1 justify-center items-center">
+      <WordAudioPlayer word={quiz.question} />
+
+      <View className="flex-row items-end h-14 mt-8">
         {combines.map((combine, i) => (
           <>
             {combine === '' ? (
-              <View key={i} className="w-8 h-1 bg-[#e5e5e5] mr-2" />
+              <View
+                key={i}
+                className={classNames('w-8 h-1 bg-[#e5e5e5] mr-2', {
+                  'mr-0': i === combines.length - 1
+                })}
+              />
             ) : (
               <Button
                 key={i}
                 color="white"
                 variant="outlined"
-                wrapperClassNames="mr-2 last:mr-0"
+                wrapperClassNames={classNames('mr-2', {
+                  'mr-0': i === combines.length - 1
+                })}
                 onPress={() => subtractCombine(i)}
               >
                 {combine}
@@ -58,20 +78,22 @@ const SplitCombine: FC<Props> = ({ quiz }) => {
         ))}
       </View>
 
-      <View className="flex-row visible">
-        {choices.map((item, i) => {
-          const isCombined = combines.includes(item)
+      <View className="flex-row item-center justify-center visible mt-8">
+        {quiz.choices.map((choice, i) => {
+          const isCombined = combines.includes(choice)
           return (
             <Button
               key={i}
               color="white"
               variant="outlined"
-              wrapperClassNames="mr-2 last:mr-0"
+              wrapperClassNames={classNames('mr-2 last:mr-0', {
+                'mr-0': i === combines.length - 1
+              })}
               disabled={isCombined}
-              onPress={() => addCombine(item)}
+              onPress={() => addCombine(choice)}
               textClassNames={isCombined ? 'opacity-0' : ''}
             >
-              {item}
+              {choice}
             </Button>
           )
         })}

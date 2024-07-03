@@ -1,15 +1,15 @@
 import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
-import { useAtomValue } from 'jotai'
-import { FC, useEffect, useMemo, useState } from 'react'
-import { Pressable, View } from 'react-native'
-import { AnimatableValue, useSharedValue } from 'react-native-reanimated'
 import Button from 'components/Button'
 import FlipWordCard from 'components/FlipWordCard'
 import CloseIcon from 'components/Icon/CloseIcon'
 import LikeButton from 'components/LikeButton'
 import Loading from 'components/Loading'
 import ProgressBar from 'components/ProgressBar'
+import { useAtomValue } from 'jotai'
+import { FC, useEffect, useMemo, useState } from 'react'
+import { Pressable, View } from 'react-native'
+import { AnimatableValue, useSharedValue } from 'react-native-reanimated'
 import { GET } from 'shared/axios'
 import { RootStackParamList, Word, WordList } from 'shared/types'
 import { isPlayingAtom } from 'stores/global'
@@ -29,7 +29,7 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
       `${((idx + 1) / (dataSource?.words.length || 1)) * 100}%` as AnimatableValue,
     [idx, dataSource]
   )
-  const currWord = useMemo(() => dataSource?.words?.[idx], [dataSource, idx])
+  const wordInfo = useMemo(() => dataSource?.words?.[idx], [dataSource, idx])
 
   const handleFlip = () => {
     isFlipped.value = !isFlipped.value
@@ -41,7 +41,7 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
     if (idx < dataSource?.words?.length - 1) {
       setIdx(idx + 1)
     } else {
-      navigation.navigate('Quiz', { id: route.params.id })
+      navigation.replace('Quiz', { id: route.params.id })
     }
   }
 
@@ -72,11 +72,10 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
   }
 
   useEffect(() => {
-    setIdx(0)
     fetchData()
   }, [isFocused, route.params.id])
 
-  if (loading || !currWord) return <Loading fullScreen />
+  if (loading || !wordInfo) return <Loading fullScreen />
 
   return (
     <View className="px-4 py-8 flex-1 flex justify-between">
@@ -90,7 +89,7 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
 
       <View className="flex items-center">
         <FlipWordCard
-          wordInfo={currWord}
+          wordInfo={wordInfo}
           isFlipped={isFlipped}
           onPress={handleFlip}
         />

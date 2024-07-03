@@ -14,6 +14,7 @@ import { AnimatableValue } from 'react-native-reanimated'
 import { shuffle } from 'yancey-js-util'
 import rightAudio from '../../../assets/audios/right.mp3'
 import wrongAudio from '../../../assets/audios/wrong.mp3'
+import SplitCombine from './SpiltCombine'
 
 export enum AnswerStatus {
   Initial,
@@ -70,7 +71,20 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
     setLoading(true)
     try {
       const { data } = await GET<WordList>(`/word/${route.params.id}`)
-      setQuizzes(shuffle(data.words.map((word) => word.quizzes).flat()))
+      const splitCombineQuizzes: Quiz[] = data.words.map((word) => ({
+        _id: word._id,
+        question: word.name,
+        answers: [word.name],
+        choices: word.syllabification,
+        translation: word.explanation,
+        type: QuizType.SplitCombine
+      }))
+      setQuizzes(
+        shuffle([
+          ...data.words.map((word) => word.quizzes).flat(),
+          ...splitCombineQuizzes
+        ])
+      )
     } catch {
     } finally {
       setLoading(false)
@@ -93,40 +107,46 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
         <ProgressBar progress={progress} />
       </View>
 
-      <View className="flex-1">
-        {currQuiz?.type === QuizType.SingleChoice && (
-          <View>
-            <Text
-              className="text-lg font-bold mb-4"
-              style={{ fontFamily: 'DINNextRoundedLTW01-Medium' }}
-            >
-              {currQuiz.question}
-            </Text>
+      {
+        <View className="flex-1">
+          {currQuiz?.type === QuizType.SingleChoice && (
+            <View>
+              <Text
+                className="text-lg font-bold mb-4"
+                style={{ fontFamily: 'DINNextRoundedLTW01-Medium' }}
+              >
+                {currQuiz.question}
+              </Text>
 
-            <View className="flex">
-              {currQuiz.choices.map((choice) => (
-                <Button
-                  color="white"
-                  variant="outlined"
-                  size="large"
-                  key={choice}
-                  wrapperClassNames="mb-3"
-                  selected={choice === answerInfo.answer}
-                  onPress={() => {
-                    if (answerInfo.status !== AnswerStatus.Initial) {
-                      return
-                    }
+              <View className="flex">
+                {currQuiz.choices.map((choice) => (
+                  <Button
+                    color="white"
+                    variant="outlined"
+                    size="large"
+                    key={choice}
+                    wrapperClassNames="mb-3"
+                    selected={choice === answerInfo.answer}
+                    onPress={() => {
+                      if (answerInfo.status !== AnswerStatus.Initial) {
+                        return
+                      }
 
-                    setAnswerInfo({ ...answerInfo, answer: choice })
-                  }}
-                >
-                  {choice}
-                </Button>
-              ))}
+                      setAnswerInfo({ ...answerInfo, answer: choice })
+                    }}
+                  >
+                    {choice}
+                  </Button>
+                ))}
+              </View>
             </View>
-          </View>
-        )}
-      </View>
+          )}
+
+          {currQuiz.type === QuizType.SplitCombine && (
+            <SplitCombine quiz={currQuiz} />
+          )}
+        </View>
+      }
 
       <View
         className={classNames(

@@ -1,6 +1,7 @@
 export enum QuizType {
   SingleChoice = 'singleChoice',
-  FillInBlank = 'fillInBlank'
+  FillInBlank = 'fillInBlank',
+  SplitCombine = 'splitCombine',
 }
 
 export interface Quiz {

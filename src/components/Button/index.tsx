@@ -47,6 +47,8 @@ const Button: FC<Props> = ({
   const { handleAudioFromLocalFile } = useAudioPlayer()
 
   const handlePress = () => {
+    if (disabled) return
+
     trigger('impactLight', {
       enableVibrateFallback: true,
       ignoreAndroidSystemSettings: false
@@ -62,7 +64,7 @@ const Button: FC<Props> = ({
   return (
     <Pressable
       className={classNames(
-        'py-4 flex justify-center items-center',
+        'p-4 justify-center items-center',
         {
           'active:shadow-none active:translate-y-[4px]': !diasblePressingEffect
         },

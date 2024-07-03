@@ -9,7 +9,7 @@ import { Colors } from 'react-native/Libraries/NewAppScreen'
 import HomeIcon from './components/Icon/HomeIcon'
 import MyIcon from './components/Icon/MyIcon'
 import HomeStack from './screens/Home'
-import MyScreen from './screens/My'
+import MyStack from './screens/MyStack'
 import { RootStackParamList } from './shared/types'
 
 const Tab = createBottomTabNavigator<RootStackParamList>()
@@ -39,7 +39,7 @@ const App = (): JSX.Element => {
 
           <Tab.Screen
             name="My"
-            component={MyScreen}
+            component={MyStack}
             options={{ tabBarBadge: 3, tabBarIcon: () => <MyIcon /> }}
           />
         </Tab.Navigator>

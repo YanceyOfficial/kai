@@ -37,7 +37,7 @@ const useAuth = (onSuccessCallback?: () => void) => {
       if (idToken) {
         await logout(keycloak, {
           idToken,
-          postLogoutRedirectUrl: Config.KEYCLOAK_LOGOUT_URL || ''
+          postLogoutRedirectUrl: OAUTH_REDIRECT_URL
         })
       }
     } catch (error) {

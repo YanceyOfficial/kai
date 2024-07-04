@@ -1,12 +1,12 @@
 import classNames from 'classnames'
-import WordAudioPlayer from 'components/WordAudioPlayer'
 import Button from 'components/Button'
+import WordAudioPlayer from 'components/WordAudioPlayer'
 import { produce } from 'immer'
 import { useAtom } from 'jotai'
 import { FC, useEffect, useState } from 'react'
 import { View } from 'react-native'
-import { Quiz } from 'shared/types'
 import { answerInfoAtom } from 'stores/quiz'
+import { Quiz } from 'types'
 
 interface Props {
   quiz: Quiz

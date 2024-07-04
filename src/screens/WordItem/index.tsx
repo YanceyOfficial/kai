@@ -1,18 +1,24 @@
 import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
+import classNames from 'classnames'
 import Button from 'components/Button'
 import FlipWordCard from 'components/FlipWordCard'
 import CloseIcon from 'components/Icon/CloseIcon'
-import LikeButton from 'components/LikeButton'
 import Loading from 'components/Loading'
 import ProgressBar from 'components/ProgressBar'
 import { useAtomValue } from 'jotai'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { AnimatableValue, useSharedValue } from 'react-native-reanimated'
-import { GET } from 'shared/axios'
-import { RootStackParamList, Word, WordList } from 'shared/types'
+import { GET, POST } from 'shared/axios'
 import { isPlayingAtom } from 'stores/global'
+import {
+  RootStackParamList,
+  WeightageAction,
+  WeightageDto,
+  Word,
+  WordList
+} from 'types'
 import { shuffle } from 'yancey-js-util'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>
@@ -24,12 +30,30 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
   const [idx, setIdx] = useState(0)
   const [dataSource, setDataSource] = useState<WordList | null>(null)
   const isFlipped = useSharedValue(true)
+  const [isForgot, setIsForgot] = useState(false)
   const progress = useMemo(
     () =>
       `${((idx + 1) / (dataSource?.words.length || 1)) * 100}%` as AnimatableValue,
     [idx, dataSource]
   )
   const wordInfo = useMemo(() => dataSource?.words?.[idx], [dataSource, idx])
+
+  // const handleMark = async () => {
+  //   if (!dataSource) return
+
+  //   setDataSource(
+  //     produce(dataSource, (draft) => {
+  //       draft.words[idx].isMarked = !draft.words[idx].isMarked
+  //     })
+  //   )
+
+  //   await POST<unknown, MarkDto>(
+  //     `/word/mark/${route.params.id}/${wordInfo?._id}`,
+  //     {
+  //       isMarked: !wordInfo?.isMarked
+  //     }
+  //   )
+  // }
 
   const handleFlip = () => {
     isFlipped.value = !isFlipped.value
@@ -45,7 +69,29 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
     }
   }
 
-  const switchWord = () => {
+  const forgotWord = async () => {
+    isFlipped.value = false
+    setIsForgot(true)
+    await POST<unknown, WeightageDto>(
+      `/word/weightage/${route.params.id}/${wordInfo?._id}`,
+      {
+        action: WeightageAction.Addiation
+      }
+    )
+  }
+
+  const switchToNextWord = async () => {
+    if (isForgot) {
+      setIsForgot(false)
+    } else {
+      POST<unknown, WeightageDto>(
+        `/word/weightage/${route.params.id}/${wordInfo?._id}`,
+        {
+          action: WeightageAction.Substract
+        }
+      )
+    }
+
     if (!isFlipped.value) {
       isFlipped.value = true
       setTimeout(() => {
@@ -75,6 +121,18 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
     fetchData()
   }, [isFocused, route.params.id])
 
+  useEffect(() => {
+    navigation.getParent()?.setOptions({
+      tabBarStyle: {
+        display: 'none'
+      }
+    })
+    return () =>
+      navigation.getParent()?.setOptions({
+        tabBarStyle: undefined
+      })
+  }, [navigation])
+
   if (loading || !wordInfo) return <Loading fullScreen />
 
   return (
@@ -83,8 +141,8 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
         <Pressable onPress={backToWordListPage}>
           <CloseIcon />
         </Pressable>
-        <ProgressBar progress={progress} />
-        <LikeButton />
+        <ProgressBar progress={progress} wrapperClassNames="ml-4" />
+        {/* <LikeButton onPress={handleMark} /> */}
       </View>
 
       <View className="flex items-center">
@@ -95,9 +153,31 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
         />
       </View>
 
-      <Button onPress={switchWord} disabled={isPlaying}>
-        NEXT
-      </Button>
+      <View className="flex-row">
+        {isForgot || (
+          <Button
+            onPress={forgotWord}
+            disabled={isPlaying}
+            color="red"
+            wrapperClassNames="flex-1 mr-2"
+          >
+            FORGOT
+          </Button>
+        )}
+
+        {
+          <Button
+            onPress={switchToNextWord}
+            disabled={isPlaying}
+            color="blue"
+            wrapperClassNames={classNames('flex-1 ml-2', {
+              'ml-0': isForgot
+            })}
+          >
+            {isForgot ? 'NEXT' : 'REMEMBER'}
+          </Button>
+        }
+      </View>
     </View>
   )
 }

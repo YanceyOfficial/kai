@@ -10,14 +10,14 @@ import { FC, useEffect, useMemo, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { AnimatableValue } from 'react-native-reanimated'
 import { GET } from 'shared/axios'
+import { answerInfoAtom, quizIdxAtom, quizzesAtom } from 'stores/quiz'
 import {
   AnswerStatus,
   Quiz,
   QuizType,
   RootStackParamList,
   WordList
-} from 'shared/types'
-import { answerInfoAtom, quizIdxAtom, quizzesAtom } from 'stores/quiz'
+} from 'types'
 import { shuffle } from 'yancey-js-util'
 import rightAudio from '../../../assets/audios/right.mp3'
 import wrongAudio from '../../../assets/audios/wrong.mp3'
@@ -129,6 +129,18 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
     fetchData()
   }, [isFocused])
 
+  useEffect(() => {
+    navigation.getParent()?.setOptions({
+      tabBarStyle: {
+        display: 'none'
+      }
+    })
+    return () =>
+      navigation.getParent()?.setOptions({
+        tabBarStyle: undefined
+      })
+  }, [navigation])
+
   if (loading || !quiz) return <Loading fullScreen />
 
   return (
@@ -137,7 +149,7 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
         <Pressable onPress={backToWordListPage}>
           <CloseIcon />
         </Pressable>
-        <ProgressBar progress={progress} />
+        <ProgressBar progress={progress} wrapperClassNames="ml-4" />
       </View>
 
       <View className="flex-1">{renderQuizByType()}</View>

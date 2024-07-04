@@ -6,7 +6,7 @@ import LoginIcon from 'components/Icon/LoginIcon'
 import useAuth from 'hooks/useAuth'
 import { FC } from 'react'
 import { Text, View, useColorScheme } from 'react-native'
-import { RootStackParamList } from 'shared/types'
+import { RootStackParamList } from 'types'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>
 

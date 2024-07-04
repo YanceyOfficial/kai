@@ -3,7 +3,7 @@ import { FC } from 'react'
 import QuizScreen from 'screens/Quiz'
 import WordItemScreen from 'screens/WordItem'
 import WordList from 'screens/WordList'
-import { RootStackParamList } from 'shared/types'
+import { RootStackParamList } from 'types'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 

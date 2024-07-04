@@ -42,6 +42,19 @@ export interface AnswerInfo {
   status: AnswerStatus
 }
 
+export enum WeightageAction {
+  Addiation,
+  Substract
+}
+
+export interface WeightageDto {
+  action: WeightageAction
+}
+
+export interface MarkDto {
+  isMarked: boolean
+}
+
 export type RootStackParamList = {
   Home: undefined
   WordList: undefined

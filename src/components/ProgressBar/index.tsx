@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import { FC, useState } from 'react'
 import { DimensionValue, View } from 'react-native'
 import Animated, {
@@ -9,9 +10,10 @@ import Animated, {
 
 interface Props {
   progress: AnimatableValue
+  wrapperClassNames?: string
 }
 
-const ProgressBar: FC<Props> = ({ progress }) => {
+const ProgressBar: FC<Props> = ({ progress, wrapperClassNames }) => {
   const [width, setWidth] = useState(0)
 
   const progressBarWidthAnimated = useAnimatedStyle(
@@ -25,7 +27,12 @@ const ProgressBar: FC<Props> = ({ progress }) => {
   )
 
   return (
-    <View className="flex-1 bg-[#e5e5e5] rounded-lg h-4 mx-4">
+    <View
+      className={classNames(
+        'flex-1 bg-[#e5e5e5] rounded-lg h-4',
+        wrapperClassNames
+      )}
+    >
       <Animated.View
         className={`bg-[#58cc02] h-4 rounded-3xl relative`}
         style={progressBarWidthAnimated}

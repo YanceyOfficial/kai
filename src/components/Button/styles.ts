@@ -23,7 +23,7 @@ export const textStyles = {
   blue: 'text-[#131f64]'
 }
 
-export const textDisabledStyles = 'border-[#84d8ff]'
+export const textDisabledStyles = 'text-[#afafaf]'
 export const textSelectedStyles = 'text-[#1899d6]'
 
 export const sizeStyles = {

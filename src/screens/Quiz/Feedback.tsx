@@ -2,8 +2,8 @@ import classNames from 'classnames'
 import { useAtomValue } from 'jotai'
 import { FC } from 'react'
 import { Text, View } from 'react-native'
-import { AnswerStatus, Quiz } from 'shared/types'
 import { answerInfoAtom } from 'stores/quiz'
+import { AnswerStatus, Quiz } from 'types'
 
 interface Props {
   quiz: Quiz

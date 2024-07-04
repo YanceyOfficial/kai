@@ -5,7 +5,7 @@ import Loading from 'components/Loading'
 import { FC, useEffect, useState } from 'react'
 import { View } from 'react-native'
 import { GET } from 'shared/axios'
-import { WordList as IWordList, RootStackParamList } from 'shared/types'
+import { WordList as IWordList, RootStackParamList } from 'types'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WordList'>
 

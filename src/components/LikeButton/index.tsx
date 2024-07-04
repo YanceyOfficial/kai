@@ -9,7 +9,11 @@ import Animated, {
 } from 'react-native-reanimated'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-const LikeButton: FC = () => {
+interface Props {
+  onPress: () => void
+}
+
+const LikeButton: FC<Props> = ({ onPress }) => {
   const liked = useSharedValue(0)
 
   const outlineStyle = useAnimatedStyle(() => {
@@ -29,8 +33,13 @@ const LikeButton: FC = () => {
     }
   })
 
+  const handlePress = () => {
+    liked.value = withSpring(liked.value ? 0 : 1)
+    onPress()
+  }
+
   return (
-    <Pressable onPress={() => (liked.value = withSpring(liked.value ? 0 : 1))}>
+    <Pressable onPress={handlePress}>
       <Animated.View style={[StyleSheet.absoluteFillObject, outlineStyle]}>
         <Icon name={'star-plus-outline'} size={28} color={'#ADADAD'} />
       </Animated.View>

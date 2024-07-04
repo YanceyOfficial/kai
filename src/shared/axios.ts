@@ -3,8 +3,8 @@ import { refresh } from 'react-native-app-auth'
 import Config from 'react-native-config'
 import { navigationRef } from '../App'
 import { keycloak } from '../hooks/useAuth'
+import { RootStackParamList } from '../types'
 import { TOKEN_EXPIRED_MIN_VALIDITY } from './constants'
-import { RootStackParamList } from './types'
 import { getSecureValue, setSecureTokens } from './utils'
 
 const axiosInstance = axios.create({
@@ -22,7 +22,7 @@ axiosInstance.interceptors.request.use(
     if (!accessToken) {
       if (navigationRef.isReady()) {
         // @ts-ignore
-        navigationRef.navigate<keyof RootStackParamList>('My')
+        navigationRef.navigate<keyof RootStackParamList>('Login')
       }
     } else {
       const accessTokenExpirationDate = await getSecureValue(
@@ -39,7 +39,7 @@ axiosInstance.interceptors.request.use(
         if (!refreshToken) {
           if (navigationRef.isReady()) {
             // @ts-ignore
-            navigationRef.navigate<keyof RootStackParamList>('My')
+            navigationRef.navigate<keyof RootStackParamList>('Login')
           }
         } else {
           if (
@@ -59,7 +59,7 @@ axiosInstance.interceptors.request.use(
             } catch (e) {
               if (navigationRef.isReady()) {
                 // @ts-ignore
-                navigationRef.navigate<keyof RootStackParamList>('My')
+                navigationRef.navigate<keyof RootStackParamList>('Login')
               }
             }
           }
@@ -80,10 +80,9 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      console.log('axiosInstance.interceptors.response error', error.response)
       if (navigationRef.isReady()) {
         // @ts-ignore
-        navigationRef.navigate<keyof RootStackParamList>('My')
+        navigationRef.navigate<keyof RootStackParamList>('Login')
       }
     }
     return Promise.reject(error)

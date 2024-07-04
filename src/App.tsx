@@ -10,7 +10,7 @@ import HomeIcon from './components/Icon/HomeIcon'
 import MyIcon from './components/Icon/MyIcon'
 import HomeStack from './screens/Home'
 import MyStack from './screens/MyStack'
-import { RootStackParamList } from './shared/types'
+import { RootStackParamList } from './types'
 
 const Tab = createBottomTabNavigator<RootStackParamList>()
 export const navigationRef = createNavigationContainerRef()

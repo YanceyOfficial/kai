@@ -9,6 +9,7 @@ import { useAtom } from 'jotai'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { AnimatableValue } from 'react-native-reanimated'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { GET } from 'shared/axios'
 import { answerInfoAtom, quizIdxAtom, quizzesAtom } from 'stores/quiz'
 import {
@@ -144,7 +145,7 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
   if (loading || !quiz) return <Loading fullScreen />
 
   return (
-    <View className="px-4 flex-1 flex justify-between bg-white relative">
+    <SafeAreaView className="px-4 flex-1 flex justify-between bg-white relative">
       <View className="flex flex-row items-center py-6">
         <Pressable onPress={backToWordListPage}>
           <CloseIcon />
@@ -163,7 +164,7 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
       >
         {answerInfo.status !== AnswerStatus.Unanswered ? 'CONTINUE' : 'CHECK'}
       </Button>
-    </View>
+    </SafeAreaView>
   )
 }
 

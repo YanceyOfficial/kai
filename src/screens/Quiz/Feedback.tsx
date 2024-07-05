@@ -2,6 +2,7 @@ import classNames from 'classnames'
 import { useAtomValue } from 'jotai'
 import { FC } from 'react'
 import { Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { answerInfoAtom } from 'stores/quiz'
 import { AnswerStatus, Quiz } from 'types'
 
@@ -11,6 +12,7 @@ interface Props {
 
 const Feedback: FC<Props> = ({ quiz }) => {
   const answerInfo = useAtomValue(answerInfoAtom)
+  const { bottom } = useSafeAreaInsets()
 
   const CorrectFeedback = () => (
     <>
@@ -61,6 +63,7 @@ const Feedback: FC<Props> = ({ quiz }) => {
     <View
       className={classNames(
         'px-4 absolute bottom-0 w-screen pb-16 pt-4',
+        bottom > 0 ? ' pb-24' : 'pb-16',
         { 'bg-[#d7ffb8]': answerInfo.status === AnswerStatus.Correct },
         { 'bg-[#ffdfe0]': answerInfo.status === AnswerStatus.Wrong }
       )}

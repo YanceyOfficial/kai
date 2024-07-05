@@ -4,7 +4,8 @@ import {
   createNavigationContainerRef
 } from '@react-navigation/native'
 import React, { JSX } from 'react'
-import { SafeAreaView, useColorScheme } from 'react-native'
+import { useColorScheme } from 'react-native'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { Colors } from 'react-native/Libraries/NewAppScreen'
 import HomeIcon from './components/Icon/HomeIcon'
 import MyIcon from './components/Icon/MyIcon'
@@ -19,15 +20,19 @@ const App = (): JSX.Element => {
   const isDarkMode = useColorScheme() === 'dark'
 
   return (
-    <SafeAreaView
+    <SafeAreaProvider
       style={isDarkMode ? Colors.darker : Colors.lighter}
       className="flex-1"
     >
       <NavigationContainer ref={navigationRef}>
         <Tab.Navigator
+          sceneContainerStyle={{
+            backgroundColor: '#131f24'
+          }}
           screenOptions={{
-            headerShown: false
-            // tabBarActiveTintColor: '#e5e7eb'
+            headerShown: false,
+            tabBarStyle: { backgroundColor: '#131f24' },
+            tabBarActiveTintColor: '#e5e7eb'
           }}
           initialRouteName="Home"
         >
@@ -44,7 +49,7 @@ const App = (): JSX.Element => {
           />
         </Tab.Navigator>
       </NavigationContainer>
-    </SafeAreaView>
+    </SafeAreaProvider>
   )
 }
 

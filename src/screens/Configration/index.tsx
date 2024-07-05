@@ -3,6 +3,7 @@ import Button from 'components/Button'
 import useAuth from 'hooks/useAuth'
 import { FC } from 'react'
 import { View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { RootStackParamList } from 'types'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Configuration'>
@@ -10,7 +11,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Configuration'>
 const Configuration: FC<Props> = ({ navigation }) => {
   const { handleLogout } = useAuth()
   return (
-    <View className="flex-1 p-4">
+    <SafeAreaView className="flex-1 p-4">
       <Button color="blue" onPress={() => navigation.replace('CMS')}>
         CMS
       </Button>
@@ -32,7 +33,7 @@ const Configuration: FC<Props> = ({ navigation }) => {
       >
         LOGOUT
       </Button>
-    </View>
+    </SafeAreaView>
   )
 }
 

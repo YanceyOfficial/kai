@@ -10,6 +10,7 @@ import { useAtomValue } from 'jotai'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { AnimatableValue, useSharedValue } from 'react-native-reanimated'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { GET, POST } from 'shared/axios'
 import { isPlayingAtom } from 'stores/global'
 import {
@@ -136,7 +137,7 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
   if (loading || !wordInfo) return <Loading fullScreen />
 
   return (
-    <View className="px-4 py-8 flex-1 flex justify-between">
+    <SafeAreaView className="p-4 flex-1 flex justify-between">
       <View className="flex flex-row items-center">
         <Pressable onPress={backToWordListPage}>
           <CloseIcon />
@@ -178,7 +179,7 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
           </Button>
         }
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 

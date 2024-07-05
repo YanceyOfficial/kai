@@ -3,13 +3,16 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import Button from 'components/Button'
 import Loading from 'components/Loading'
 import { FC, useEffect, useState } from 'react'
-import { View } from 'react-native'
+import { useColorScheme } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Colors } from 'react-native/Libraries/NewAppScreen'
 import { GET } from 'shared/axios'
 import { WordList as IWordList, RootStackParamList } from 'types'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WordList'>
 
 const WordList: FC<Props> = ({ navigation }) => {
+  const isDarkMode = useColorScheme() === 'dark'
   const isFocused = useIsFocused()
   const [dataSource, setDataSource] = useState<IWordList[] | null>(null)
   const fetchData = async () => {
@@ -30,7 +33,9 @@ const WordList: FC<Props> = ({ navigation }) => {
   if (!dataSource) return <Loading fullScreen />
 
   return (
-    <View className="p-4">
+    <SafeAreaView
+      className="p-4 bg-[#131f24] flex-1"
+    >
       {dataSource?.map((item) => (
         <Button
           onPress={() => goToItemPage(item._id)}
@@ -41,7 +46,7 @@ const WordList: FC<Props> = ({ navigation }) => {
           {item.title.toUpperCase()}
         </Button>
       ))}
-    </View>
+    </SafeAreaView>
   )
 }
 

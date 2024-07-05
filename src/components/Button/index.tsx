@@ -1,7 +1,7 @@
 import classNames from 'classnames'
 import useAudioPlayer from 'hooks/useAudioPlayer'
 import React, { FC, ReactNode } from 'react'
-import { Pressable, Text } from 'react-native'
+import { Pressable, Text, useColorScheme } from 'react-native'
 import { trigger } from 'react-native-haptic-feedback'
 import Loading from '../Loading'
 import {
@@ -45,6 +45,7 @@ const Button: FC<Props> = ({
 }) => {
   const diasblePressingEffect = disabled || loading || selected
   const { handleAudioFromLocalFile } = useAudioPlayer()
+  const isDarkMode = useColorScheme() === 'dark'
 
   const handlePress = () => {
     if (disabled) return
@@ -68,11 +69,11 @@ const Button: FC<Props> = ({
         {
           'active:shadow-none active:translate-y-[4px]': !diasblePressingEffect
         },
-        wrapperStyles[color],
+        wrapperStyles(isDarkMode)[color],
         sizeStyles[size].wrapper,
-        { [outlinedStyles[color]]: variant === 'outlined' },
-        { [wrapperDisabledStyles]: disabled },
-        { [wrapperSelectedStyles]: selected },
+        { [outlinedStyles(isDarkMode)[color]]: variant === 'outlined' },
+        { [wrapperDisabledStyles(isDarkMode)]: disabled },
+        { [wrapperSelectedStyles(isDarkMode)]: selected },
         wrapperClassNames
       )}
       onPress={handlePress}
@@ -84,9 +85,9 @@ const Button: FC<Props> = ({
       ) : (
         <Text
           className={classNames(
-            textStyles[color],
+            textStyles(isDarkMode)[color],
             sizeStyles[size].text,
-            { [textDisabledStyles]: disabled },
+            { [textDisabledStyles(isDarkMode)]: disabled },
             { [textSelectedStyles]: selected },
             textClassNames
           )}

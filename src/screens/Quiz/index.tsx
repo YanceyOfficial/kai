@@ -1,15 +1,14 @@
 import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import Button from 'components/Button'
-import CloseIcon from 'components/Icon/CloseIcon'
 import Loading from 'components/Loading'
 import ProgressBar from 'components/ProgressBar'
+import SafeAreaViewWrapper from 'components/SafeAreaViewWrapper'
 import useAudioPlayer from 'hooks/useAudioPlayer'
 import { useAtom } from 'jotai'
 import { FC, useEffect, useMemo, useState } from 'react'
-import { Pressable, View } from 'react-native'
+import { View } from 'react-native'
 import { AnimatableValue } from 'react-native-reanimated'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { GET } from 'shared/axios'
 import { answerInfoAtom, quizIdxAtom, quizzesAtom } from 'stores/quiz'
 import {
@@ -145,26 +144,22 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
   if (loading || !quiz) return <Loading fullScreen />
 
   return (
-    <SafeAreaView className="px-4 flex-1 flex justify-between bg-white relative">
-      <View className="flex flex-row items-center py-6">
-        <Pressable onPress={backToWordListPage}>
-          <CloseIcon />
-        </Pressable>
+    <SafeAreaViewWrapper
+      headerRightComp={
         <ProgressBar progress={progress} wrapperClassNames="ml-4" />
-      </View>
-
-      <View className="flex-1">{renderQuizByType()}</View>
+      }
+    >
+      <View className="flex-1 pt-8">{renderQuizByType()}</View>
       <Feedback quiz={quiz} />
 
       <Button
         color={answerInfo.status === AnswerStatus.Wrong ? 'red' : 'green'}
         onPress={handleConfirm}
         disabled={answerInfo.answers.length === 0}
-        wrapperClassNames="mb-5"
       >
         {answerInfo.status !== AnswerStatus.Unanswered ? 'CONTINUE' : 'CHECK'}
       </Button>
-    </SafeAreaView>
+    </SafeAreaViewWrapper>
   )
 }
 

@@ -4,7 +4,7 @@ import WordAudioPlayer from 'components/WordAudioPlayer'
 import { produce } from 'immer'
 import { useAtom } from 'jotai'
 import { FC, useEffect, useState } from 'react'
-import { View } from 'react-native'
+import { View, useColorScheme } from 'react-native'
 import { answerInfoAtom } from 'stores/quiz'
 import { Quiz } from 'types'
 
@@ -13,6 +13,7 @@ interface Props {
 }
 
 const SplitCombine: FC<Props> = ({ quiz }) => {
+  const isDarkMode = useColorScheme() === 'dark'
   const [answerInfo, setAnswerInfo] = useAtom(answerInfoAtom)
   const [combines, setCombines] = useState<string[]>(
     new Array(quiz.choices.length).fill('')
@@ -57,9 +58,13 @@ const SplitCombine: FC<Props> = ({ quiz }) => {
             {combine === '' ? (
               <View
                 key={i}
-                className={classNames('w-8 h-1 bg-[#e5e5e5] mr-2', {
-                  'mr-0': i === combines.length - 1
-                })}
+                className={classNames(
+                  'w-8 h-1 mr-2',
+                  isDarkMode ? 'bg-[#37464f]' : 'bg-[#e5e5e5]',
+                  {
+                    'mr-0': i === combines.length - 1
+                  }
+                )}
               />
             ) : (
               <Button

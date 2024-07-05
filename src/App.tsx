@@ -6,7 +6,6 @@ import {
 import React, { JSX } from 'react'
 import { useColorScheme } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { Colors } from 'react-native/Libraries/NewAppScreen'
 import HomeIcon from './components/Icon/HomeIcon'
 import MyIcon from './components/Icon/MyIcon'
 import HomeStack from './screens/Home'
@@ -20,32 +19,31 @@ const App = (): JSX.Element => {
   const isDarkMode = useColorScheme() === 'dark'
 
   return (
-    <SafeAreaProvider
-      style={isDarkMode ? Colors.darker : Colors.lighter}
-      className="flex-1"
-    >
+    <SafeAreaProvider>
       <NavigationContainer ref={navigationRef}>
         <Tab.Navigator
-          sceneContainerStyle={{
-            backgroundColor: '#131f24'
-          }}
           screenOptions={{
             headerShown: false,
-            tabBarStyle: { backgroundColor: '#131f24' },
-            tabBarActiveTintColor: '#e5e7eb'
+            tabBarStyle: {
+              backgroundColor: isDarkMode ? '#131f24' : '#ffffff'
+            },
+            tabBarShowLabel: false
           }}
           initialRouteName="Home"
         >
           <Tab.Screen
             name="Home"
             component={HomeStack}
-            options={{ tabBarIcon: () => <HomeIcon /> }}
+            options={{ tabBarIcon: () => <HomeIcon width={40} /> }}
           />
 
           <Tab.Screen
             name="My"
             component={MyStack}
-            options={{ tabBarBadge: 3, tabBarIcon: () => <MyIcon /> }}
+            options={{
+              tabBarBadge: 3,
+              tabBarIcon: () => <MyIcon width={40} />
+            }}
           />
         </Tab.Navigator>
       </NavigationContainer>

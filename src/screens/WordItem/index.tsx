@@ -3,14 +3,13 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import classNames from 'classnames'
 import Button from 'components/Button'
 import FlipWordCard from 'components/FlipWordCard'
-import CloseIcon from 'components/Icon/CloseIcon'
 import Loading from 'components/Loading'
 import ProgressBar from 'components/ProgressBar'
+import SafeAreaViewWrapper from 'components/SafeAreaViewWrapper'
 import { useAtomValue } from 'jotai'
 import { FC, useEffect, useMemo, useState } from 'react'
-import { Pressable, View } from 'react-native'
+import { View } from 'react-native'
 import { AnimatableValue, useSharedValue } from 'react-native-reanimated'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { GET, POST } from 'shared/axios'
 import { isPlayingAtom } from 'stores/global'
 import {
@@ -114,10 +113,6 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
     }
   }
 
-  const backToWordListPage = () => {
-    navigation.goBack()
-  }
-
   useEffect(() => {
     fetchData()
   }, [isFocused, route.params.id])
@@ -137,22 +132,16 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
   if (loading || !wordInfo) return <Loading fullScreen />
 
   return (
-    <SafeAreaView className="p-4 flex-1 flex justify-between">
-      <View className="flex flex-row items-center">
-        <Pressable onPress={backToWordListPage}>
-          <CloseIcon />
-        </Pressable>
+    <SafeAreaViewWrapper
+      headerRightComp={
         <ProgressBar progress={progress} wrapperClassNames="ml-4" />
-        {/* <LikeButton onPress={handleMark} /> */}
-      </View>
-
-      <View className="flex items-center">
-        <FlipWordCard
-          wordInfo={wordInfo}
-          isFlipped={isFlipped}
-          onPress={handleFlip}
-        />
-      </View>
+      }
+    >
+      <FlipWordCard
+        wordInfo={wordInfo}
+        isFlipped={isFlipped}
+        onPress={handleFlip}
+      />
 
       <View className="flex-row">
         {isForgot || (
@@ -179,7 +168,7 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
           </Button>
         }
       </View>
-    </SafeAreaView>
+    </SafeAreaViewWrapper>
   )
 }
 

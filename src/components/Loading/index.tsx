@@ -1,6 +1,7 @@
+import classNames from 'classnames'
 import LottieView from 'lottie-react-native'
 import React, { FC } from 'react'
-import { StyleProp, View, ViewStyle } from 'react-native'
+import { StyleProp, View, ViewStyle, useColorScheme } from 'react-native'
 
 interface Props {
   style?: StyleProp<ViewStyle>
@@ -8,6 +9,8 @@ interface Props {
 }
 
 const Loading: FC<Props> = ({ style, fullScreen }) => {
+  const isDarkMode = useColorScheme() === 'dark'
+
   const LoadingLottie = () => (
     <LottieView
       source={require('../../../assets/lotties/lottie-loading.json')}
@@ -20,7 +23,12 @@ const Loading: FC<Props> = ({ style, fullScreen }) => {
   return (
     <>
       {fullScreen ? (
-        <View className="flex-1 items-center justify-center">
+        <View
+          className={classNames(
+            'flex-1 items-center justify-center',
+            isDarkMode ? 'bg-[#131f24]' : 'bg-#[ffffff]'
+          )}
+        >
           <LoadingLottie />
         </View>
       ) : (

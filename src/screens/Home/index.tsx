@@ -1,6 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { FC } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import QuizScreen from 'screens/Quiz'
 import WordItemScreen from 'screens/WordItem'
 import WordList from 'screens/WordList'

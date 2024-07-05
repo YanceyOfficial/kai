@@ -1,6 +1,6 @@
 import classNames from 'classnames'
 import { FC, useState } from 'react'
-import { DimensionValue, View } from 'react-native'
+import { DimensionValue, View, useColorScheme } from 'react-native'
 import Animated, {
   AnimatableValue,
   Easing,
@@ -14,6 +14,7 @@ interface Props {
 }
 
 const ProgressBar: FC<Props> = ({ progress, wrapperClassNames }) => {
+  const isDarkMode = useColorScheme() === 'dark'
   const [width, setWidth] = useState(0)
 
   const progressBarWidthAnimated = useAnimatedStyle(
@@ -29,12 +30,16 @@ const ProgressBar: FC<Props> = ({ progress, wrapperClassNames }) => {
   return (
     <View
       className={classNames(
-        'flex-1 bg-[#e5e5e5] rounded-lg h-4',
+        'flex-1 rounded-lg h-4',
+        isDarkMode ? 'bg-[#37464f]' : 'bg-[#e5e5e5]',
         wrapperClassNames
       )}
     >
       <Animated.View
-        className={`bg-[#58cc02] h-4 rounded-3xl relative`}
+        className={classNames(
+          'h-4 rounded-3xl relative',
+          isDarkMode ? 'bg-[#93d333]' : 'bg-[#58cc02]'
+        )}
         style={progressBarWidthAnimated}
         onLayout={(event) => {
           const { width } = event.nativeEvent.layout
@@ -42,7 +47,7 @@ const ProgressBar: FC<Props> = ({ progress, wrapperClassNames }) => {
         }}
       >
         <View
-          className="bg-[#fff] h-[6px] rounded-lg top-1 left-[8px] opacity-20"
+          className="bg-white h-[6px] rounded-lg top-1 left-[8px] opacity-20"
           style={{ width: width - 16 <= 0 ? 0 : width - 16 }}
         />
       </Animated.View>

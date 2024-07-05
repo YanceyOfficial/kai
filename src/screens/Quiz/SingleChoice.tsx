@@ -1,7 +1,8 @@
+import classNames from 'classnames'
 import Button from 'components/Button'
 import { useAtom } from 'jotai'
 import { FC } from 'react'
-import { Text, View } from 'react-native'
+import { Text, View, useColorScheme } from 'react-native'
 import { answerInfoAtom } from 'stores/quiz'
 import { AnswerStatus, Quiz } from 'types'
 
@@ -10,12 +11,16 @@ interface Props {
 }
 
 const SingleChoice: FC<Props> = ({ quiz }) => {
+  const isDarkMode = useColorScheme() === 'dark'
   const [answerInfo, setAnswerInfo] = useAtom(answerInfoAtom)
 
   return (
     <View>
       <Text
-        className="text-lg font-bold mb-4"
+        className={classNames(
+          'text-lg font-bold mb-4',
+          isDarkMode ? 'text-[#f1f7fb]' : 'text-[#3c3c3c]'
+        )}
         style={{ fontFamily: 'DINNextRoundedLTW01-Medium' }}
       >
         {quiz.question}

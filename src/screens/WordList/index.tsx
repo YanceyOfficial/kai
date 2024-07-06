@@ -1,11 +1,11 @@
 import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
-import Button from 'components/Button'
-import Loading from 'components/Loading'
-import SafeAreaViewWrapper from 'components/SafeAreaViewWrapper'
 import { FC, useEffect, useState } from 'react'
-import { GET } from 'shared/axios'
-import { WordList as IWordList, RootStackParamList } from 'types'
+import Button from 'src/components/Button'
+import Loading from 'src/components/Loading'
+import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
+import { GET } from 'src/shared/axios'
+import { WordList as IWordList, RootStackParamList } from 'src/types'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WordList'>
 

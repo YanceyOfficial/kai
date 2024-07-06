@@ -1,8 +1,8 @@
 import classNames from 'classnames'
-import useAudioPlayer from 'hooks/useAudioPlayer'
 import React, { FC, ReactNode } from 'react'
 import { Pressable, Text, useColorScheme } from 'react-native'
 import { trigger } from 'react-native-haptic-feedback'
+import useAudioPlayer from 'src/hooks/useAudioPlayer'
 import Loading from '../Loading'
 import {
   fontFamilyStyles,

@@ -1,7 +1,7 @@
-import SafeAreaViewWrapper from 'components/SafeAreaViewWrapper'
 import { FC, useEffect, useState } from 'react'
 import { ScrollView, Text, View } from 'react-native'
 import * as DeviceInfo from 'react-native-device-info'
+import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
 
 const Item: FC<{
   name: string

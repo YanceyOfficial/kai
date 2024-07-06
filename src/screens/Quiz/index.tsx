@@ -1,26 +1,26 @@
 import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
-import Button from 'components/Button'
-import Loading from 'components/Loading'
-import ProgressBar from 'components/ProgressBar'
-import SafeAreaViewWrapper from 'components/SafeAreaViewWrapper'
-import useAudioPlayer from 'hooks/useAudioPlayer'
+import rightAudio from 'assets/audios/right.mp3'
+import wrongAudio from 'assets/audios/wrong.mp3'
 import { useAtom } from 'jotai'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { View } from 'react-native'
 import { AnimatableValue } from 'react-native-reanimated'
-import { GET } from 'shared/axios'
-import { answerInfoAtom, quizIdxAtom, quizzesAtom } from 'stores/quiz'
+import Button from 'src/components/Button'
+import Loading from 'src/components/Loading'
+import ProgressBar from 'src/components/ProgressBar'
+import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
+import useAudioPlayer from 'src/hooks/useAudioPlayer'
+import { GET } from 'src/shared/axios'
+import { answerInfoAtom, quizIdxAtom, quizzesAtom } from 'src/stores/quiz'
 import {
   AnswerStatus,
   Quiz,
   QuizType,
   RootStackParamList,
   WordList
-} from 'types'
+} from 'src/types'
 import { shuffle } from 'yancey-js-util'
-import rightAudio from '../../../assets/audios/right.mp3'
-import wrongAudio from '../../../assets/audios/wrong.mp3'
 import Feedback from './Feedback'
 import SingleChoice from './SingleChoice'
 import SplitCombine from './SpiltCombine'

@@ -1,4 +1,4 @@
-import { AnswerInfo, Quiz, QuizType } from 'types'
+import { AnswerInfo, Quiz, QuizType } from 'src/types'
 
 export const checkAnswer = (answerInfo: AnswerInfo, quiz: Quiz) => {
   switch (quiz.type) {

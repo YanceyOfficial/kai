@@ -1,9 +1,9 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { FC } from 'react'
-import QuizScreen from 'screens/Quiz'
-import WordItemScreen from 'screens/WordItem'
-import WordList from 'screens/WordList'
-import { RootStackParamList } from 'types'
+import QuizScreen from 'src/screens/Quiz'
+import WordItemScreen from 'src/screens/WordItem'
+import WordList from 'src/screens/WordList'
+import { RootStackParamList } from 'src/types'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 

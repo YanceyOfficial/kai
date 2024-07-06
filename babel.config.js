@@ -17,8 +17,10 @@ module.exports = {
           '.js',
           '.json'
         ],
-        root: ['./src'],
-        alias: {}
+        alias: {
+          src: "./src",
+          assets: "./assets",
+        }
       }
     ]
   ]

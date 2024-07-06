@@ -1231,7 +1231,7 @@ PODS:
     - React-Core
   - RNReactNativeHapticFeedback (2.2.0):
     - React-Core
-  - RNReanimated (3.12.0):
+  - RNReanimated (3.13.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1563,7 +1563,7 @@ SPEC CHECKSUMS:
   RNDeviceInfo: b899ce37a403a4dea52b7cb85e16e49c04a5b88e
   RNKeychain: bfe3d12bf4620fe488771c414530bf16e88f3678
   RNReactNativeHapticFeedback: ec56a5f81c3941206fd85625fa669ffc7b4545f9
-  RNReanimated: 8978449b2a511388ea71faf1e66f669134e87658
+  RNReanimated: 9c213184c27dc4a2ed7e9ff41a4b0b9258bb54f0
   RNScreens: 5aeecbb09aa7285379b6e9f3c8a3c859bb16401c
   RNSound: 6c156f925295bdc83e8e422e7d8b38d33bc71852
   RNSVG: a48668fd382115bc89761ce291a81c4ca5f2fd2e

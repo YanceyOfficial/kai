@@ -1,10 +1,10 @@
 import classNames from 'classnames'
-import Button from 'components/Button'
 import { useAtom } from 'jotai'
 import { FC } from 'react'
 import { Text, View, useColorScheme } from 'react-native'
-import { answerInfoAtom } from 'stores/quiz'
-import { AnswerStatus, Quiz } from 'types'
+import Button from 'src/components/Button'
+import { answerInfoAtom } from 'src/stores/quiz'
+import { AnswerStatus, Quiz } from 'src/types'
 
 interface Props {
   quiz: Quiz

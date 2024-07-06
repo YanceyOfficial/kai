@@ -1,9 +1,8 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import { refresh } from 'react-native-app-auth'
 import Config from 'react-native-config'
-import { navigationRef } from '../App'
-import { keycloak } from '../hooks/useAuth'
-import { RootStackParamList } from '../types'
+import { keycloak } from 'src/hooks/useAuth'
+import { navigate } from 'src/route'
 import { TOKEN_EXPIRED_MIN_VALIDITY } from './constants'
 import { getSecureValue, setSecureTokens } from './utils'
 
@@ -20,10 +19,10 @@ axiosInstance.interceptors.request.use(
     let accessToken = await getSecureValue('accessToken')
 
     if (!accessToken) {
-      if (navigationRef.isReady()) {
-        // @ts-ignore
-        navigationRef.navigate<keyof RootStackParamList>('Login')
-      }
+      navigate('My', {
+        screen: 'Login',
+        initial: false
+      })
     } else {
       const accessTokenExpirationDate = await getSecureValue(
         'accessTokenExpirationDate'
@@ -37,10 +36,10 @@ axiosInstance.interceptors.request.use(
         const refreshToken = await getSecureValue('refreshToken')
 
         if (!refreshToken) {
-          if (navigationRef.isReady()) {
-            // @ts-ignore
-            navigationRef.navigate<keyof RootStackParamList>('Login')
-          }
+          navigate('My', {
+            screen: 'Login',
+            initial: false
+          })
         } else {
           if (
             // Access token has already expired.
@@ -57,10 +56,10 @@ axiosInstance.interceptors.request.use(
               accessToken = newTokens.accessToken
               await setSecureTokens(newTokens)
             } catch (e) {
-              if (navigationRef.isReady()) {
-                // @ts-ignore
-                navigationRef.navigate<keyof RootStackParamList>('Login')
-              }
+              navigate('My', {
+                screen: 'Login',
+                initial: false
+              })
             }
           }
         }
@@ -80,10 +79,10 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      if (navigationRef.isReady()) {
-        // @ts-ignore
-        navigationRef.navigate<keyof RootStackParamList>('Login')
-      }
+      navigate('My', {
+        screen: 'Login',
+        initial: false
+      })
     }
     return Promise.reject(error)
   }

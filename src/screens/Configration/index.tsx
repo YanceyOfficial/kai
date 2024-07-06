@@ -1,10 +1,10 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
-import Button from 'components/Button'
-import SafeAreaViewWrapper from 'components/SafeAreaViewWrapper'
-import useAuth from 'hooks/useAuth'
 import { FC } from 'react'
 import { View } from 'react-native'
-import { RootStackParamList } from 'types'
+import Button from 'src/components/Button'
+import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
+import useAuth from 'src/hooks/useAuth'
+import { RootStackParamList } from 'src/types'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Configuration'>
 
@@ -12,18 +12,18 @@ const Configuration: FC<Props> = ({ navigation }) => {
   const { handleLogout } = useAuth()
   return (
     <SafeAreaViewWrapper wrapperClassNames="justify-start">
-      <View className='mt-8'>
-        <Button color="blue" onPress={() => navigation.replace('CMS')}>
+      <View className="mt-8">
+        <Button color="blue" onPress={() => navigation.navigate('CMS')}>
           CMS
         </Button>
         <Button
           color="blue"
           wrapperClassNames="my-4"
-          onPress={() => navigation.replace('Login')}
+          onPress={() => navigation.navigate('Login')}
         >
           LOGIN
         </Button>
-        <Button color="blue" onPress={() => navigation.replace('System')}>
+        <Button color="blue" onPress={() => navigation.navigate('System')}>
           SYSTEM
         </Button>
         <Button

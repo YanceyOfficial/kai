@@ -1,12 +1,12 @@
 import classNames from 'classnames'
-import Button from 'components/Button'
-import WordAudioPlayer from 'components/WordAudioPlayer'
 import { produce } from 'immer'
 import { useAtom } from 'jotai'
-import { FC, useEffect, useState } from 'react'
+import { FC, Fragment, useEffect, useState } from 'react'
 import { View, useColorScheme } from 'react-native'
-import { answerInfoAtom } from 'stores/quiz'
-import { Quiz } from 'types'
+import Button from 'src/components/Button'
+import WordAudioPlayer from 'src/components/WordAudioPlayer'
+import { answerInfoAtom } from 'src/stores/quiz'
+import { Quiz } from 'src/types'
 
 interface Props {
   quiz: Quiz
@@ -54,10 +54,9 @@ const SplitCombine: FC<Props> = ({ quiz }) => {
 
       <View className="flex-row items-end h-14 mt-8">
         {combines.map((combine, i) => (
-          <>
+          <Fragment key={i}>
             {combine === '' ? (
               <View
-                key={i}
                 className={classNames(
                   'w-8 h-1 mr-2',
                   isDarkMode ? 'bg-[#37464f]' : 'bg-[#e5e5e5]',
@@ -68,7 +67,6 @@ const SplitCombine: FC<Props> = ({ quiz }) => {
               />
             ) : (
               <Button
-                key={i}
                 color="white"
                 variant="outlined"
                 wrapperClassNames={classNames('mr-2', {
@@ -79,7 +77,7 @@ const SplitCombine: FC<Props> = ({ quiz }) => {
                 {combine}
               </Button>
             )}
-          </>
+          </Fragment>
         ))}
       </View>
 

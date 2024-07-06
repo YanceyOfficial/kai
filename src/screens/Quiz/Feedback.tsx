@@ -3,8 +3,8 @@ import { useAtomValue } from 'jotai'
 import { FC } from 'react'
 import { Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { answerInfoAtom } from 'stores/quiz'
-import { AnswerStatus, Quiz } from 'types'
+import { answerInfoAtom } from 'src/stores/quiz'
+import { AnswerStatus, Quiz } from 'src/types'
 
 interface Props {
   quiz: Quiz

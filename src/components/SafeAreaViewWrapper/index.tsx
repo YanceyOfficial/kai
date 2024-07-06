@@ -1,9 +1,9 @@
 import { useNavigation } from '@react-navigation/native'
 import classNames from 'classnames'
-import CloseIcon from 'components/Icon/CloseIcon'
 import { FC, ReactNode } from 'react'
 import { Pressable, View, useColorScheme } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import CloseIcon from 'src/components/Icon/CloseIcon'
 
 interface Props {
   children: ReactNode

@@ -1,24 +1,24 @@
 import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import classNames from 'classnames'
-import Button from 'components/Button'
-import FlipWordCard from 'components/FlipWordCard'
-import Loading from 'components/Loading'
-import ProgressBar from 'components/ProgressBar'
-import SafeAreaViewWrapper from 'components/SafeAreaViewWrapper'
 import { useAtomValue } from 'jotai'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { View } from 'react-native'
 import { AnimatableValue, useSharedValue } from 'react-native-reanimated'
-import { GET, POST } from 'shared/axios'
-import { isPlayingAtom } from 'stores/global'
+import Button from 'src/components/Button'
+import FlipWordCard from 'src/components/FlipWordCard'
+import Loading from 'src/components/Loading'
+import ProgressBar from 'src/components/ProgressBar'
+import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
+import { GET, POST } from 'src/shared/axios'
+import { isPlayingAtom } from 'src/stores/global'
 import {
   RootStackParamList,
   WeightageAction,
   WeightageDto,
   Word,
   WordList
-} from 'types'
+} from 'src/types'
 import { shuffle } from 'yancey-js-util'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>

@@ -27,7 +27,7 @@ const WordAudioPlayer: FC<Props> = ({ word }) => {
     >
       <LottieView
         ref={animationRef}
-        source={require('../../../assets/lotties/lottie-sound.json')}
+        source={require('assets/lotties/lottie-sound.json')}
         style={[{ width: 48, height: 48 }]}
         loop
         progress={1}

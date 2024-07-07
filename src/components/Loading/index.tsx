@@ -13,7 +13,7 @@ const Loading: FC<Props> = ({ style, fullScreen }) => {
 
   const LoadingLottie = () => (
     <LottieView
-      source={require('../../../assets/lotties/lottie-loading.json')}
+      source={require('assets/lotties/lottie-loading.json')}
       style={[{ width: '25%', height: '25%' }, style]}
       autoPlay
       loop

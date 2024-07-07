@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { authorize, logout } from 'react-native-app-auth'
 import Config from 'react-native-config'
-import { OAUTH_REDIRECT_URL } from '../shared/constants'
-import { getSecureValue, setSecureTokens } from '../shared/utils'
+import { OAUTH_REDIRECT_URL } from 'src/shared/constants'
+import { getSecureValue, setSecureTokens } from 'src/shared/utils'
 
 export const keycloak = {
   issuer: Config.KEYCLOAK_ISSUER as string,

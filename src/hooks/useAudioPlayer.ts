@@ -1,6 +1,6 @@
 import { useSetAtom } from 'jotai'
 import Sound from 'react-native-sound'
-import { isPlayingAtom } from '../stores/global'
+import { isPlayingAtom } from 'src/stores/global'
 
 interface Options {
   onStartPlayhandler: () => void

@@ -1,8 +1,8 @@
 import LottieView from 'lottie-react-native'
 import { FC, useEffect, useRef } from 'react'
+import Button from 'src/components/Button'
 import useAudioPlayer from 'src/hooks/useAudioPlayer'
 import { YOUDAO_VOICE_URL } from 'src/shared/constants'
-import Button from '../Button'
 
 interface Props {
   word: string

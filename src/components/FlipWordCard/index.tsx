@@ -2,10 +2,10 @@ import classNames from 'classnames'
 import { FC } from 'react'
 import { Pressable, Text, View, useColorScheme } from 'react-native'
 import { SharedValue } from 'react-native-reanimated'
+import Card from 'src/components/Card'
+import FlipCard from 'src/components/FlipCard'
+import WordAudioPlayer from 'src/components/WordAudioPlayer'
 import { Word } from 'src/types'
-import Card from '../Card'
-import FlipCard from '../FlipCard'
-import WordAudioPlayer from '../WordAudioPlayer'
 
 interface Props {
   wordInfo: Word

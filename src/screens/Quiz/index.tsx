@@ -44,10 +44,6 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
     [quizIdx, quizzes]
   )
 
-  const backToWordListPage = () => {
-    navigation.replace('Home')
-  }
-
   const toCheckAnswer = () => {
     if (!quiz) return
 

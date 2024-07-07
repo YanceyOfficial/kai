@@ -10,6 +10,7 @@ import FlipWordCard from 'src/components/FlipWordCard'
 import Loading from 'src/components/Loading'
 import ProgressBar from 'src/components/ProgressBar'
 import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
+import useHideBottomTab from 'src/hooks/useHideBottomTab'
 import { GET, POST } from 'src/shared/axios'
 import { isPlayingAtom } from 'src/stores/global'
 import {
@@ -24,6 +25,7 @@ import { shuffle } from 'yancey-js-util'
 type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>
 
 const WordItemScreen: FC<Props> = ({ navigation, route }) => {
+  useHideBottomTab(navigation)
   const isPlaying = useAtomValue(isPlayingAtom)
   const isFocused = useIsFocused()
   const [loading, setLoading] = useState(false)
@@ -37,23 +39,6 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
     [idx, dataSource]
   )
   const wordInfo = useMemo(() => dataSource?.words?.[idx], [dataSource, idx])
-
-  // const handleMark = async () => {
-  //   if (!dataSource) return
-
-  //   setDataSource(
-  //     produce(dataSource, (draft) => {
-  //       draft.words[idx].isMarked = !draft.words[idx].isMarked
-  //     })
-  //   )
-
-  //   await POST<unknown, MarkDto>(
-  //     `/word/mark/${route.params.id}/${wordInfo?._id}`,
-  //     {
-  //       isMarked: !wordInfo?.isMarked
-  //     }
-  //   )
-  // }
 
   const handleFlip = () => {
     isFlipped.value = !isFlipped.value
@@ -116,18 +101,6 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
   useEffect(() => {
     fetchData()
   }, [isFocused, route.params.id])
-
-  useEffect(() => {
-    navigation.getParent()?.setOptions({
-      tabBarStyle: {
-        display: 'none'
-      }
-    })
-    return () =>
-      navigation.getParent()?.setOptions({
-        tabBarStyle: undefined
-      })
-  }, [navigation])
 
   if (loading || !wordInfo) return <Loading fullScreen />
 

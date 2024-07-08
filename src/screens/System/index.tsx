@@ -1,19 +1,35 @@
+import classNames from 'classnames'
 import { FC, useEffect, useState } from 'react'
-import { ScrollView, Text, View } from 'react-native'
+import { ScrollView, Text, View, useColorScheme } from 'react-native'
 import * as DeviceInfo from 'react-native-device-info'
 import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
 
 const Item: FC<{
   name: string
   value: string | number
-}> = ({ name, value }) => (
-  <Text className="mb-4">
-    <Text className="font-bold">{name}: </Text>
-    {value}
-  </Text>
-)
+}> = ({ name, value }) => {
+  const isDarkMode = useColorScheme() === 'dark'
+
+  return (
+    <Text
+      className={classNames('mb-4', {
+        'text-[#f1f7fb]': isDarkMode
+      })}
+    >
+      <Text
+        className={classNames(' font-bold', {
+          'text-[#f1f7fb]': isDarkMode
+        })}
+      >
+        {name}:{' '}
+      </Text>
+      {value}
+    </Text>
+  )
+}
 
 const System: FC = () => {
+  const isDarkMode = useColorScheme() === 'dark'
   const [deviceToken, setDeviceToken] = useState('')
 
   const availableLocationProviders =
@@ -38,7 +54,13 @@ const System: FC = () => {
         <Item name="Application Name" value={DeviceInfo.getApplicationName()} />
 
         <View>
-          <Text className="font-bold">Available Location Providers:</Text>
+          <Text
+            className={classNames('font-bold', {
+              'text-[#f1f7fb]': isDarkMode
+            })}
+          >
+            Available Location Providers:
+          </Text>
           <View className="ml-4 mt-4">
             {Object.keys(availableLocationProviders).map((provider) => (
               <Item
@@ -85,7 +107,13 @@ const System: FC = () => {
         <Item name="Model" value={DeviceInfo.getModel()} />
 
         <View>
-          <Text className="font-bold">Power State:</Text>
+          <Text
+            className={classNames('font-bold', {
+              'text-[#f1f7fb]': isDarkMode
+            })}
+          >
+            Available Location Providers:
+          </Text>
           <View className="ml-4 mt-4">
             {Object.keys(powerStateSync).map((item) => (
               <Item

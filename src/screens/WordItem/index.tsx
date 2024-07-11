@@ -32,59 +32,46 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
   const [idx, setIdx] = useState(0)
   const [dataSource, setDataSource] = useState<WordList | null>(null)
   const isFlipped = useSharedValue(true)
-  const [isForgot, setIsForgot] = useState(false)
+  const [showContinueBtn, setShowContinueBtn] = useState(false)
+  const wordInfo = useMemo(() => dataSource?.words?.[idx], [dataSource, idx])
   const progress = useMemo(
     () =>
       `${((idx + 1) / (dataSource?.words.length || 1)) * 100}%` as AnimatableValue,
     [idx, dataSource]
   )
-  const wordInfo = useMemo(() => dataSource?.words?.[idx], [dataSource, idx])
 
-  const handleFlip = () => {
-    isFlipped.value = !isFlipped.value
-  }
-
-  const toNextWord = () => {
-    if (!dataSource) return
-
-    if (idx < dataSource?.words?.length - 1) {
-      setIdx(idx + 1)
-    } else {
-      navigation.replace('Quiz', { id: route.params.id })
+  const showExplanation = async (isRemebered: boolean) => {
+    if (!isFlipped.value) {
+      return
     }
-  }
 
-  const forgotWord = async () => {
     isFlipped.value = false
-    setIsForgot(true)
-    await POST<unknown, WeightageDto>(
-      `/word/weightage/${route.params.id}/${wordInfo?._id}`,
-      {
-        action: WeightageAction.Addiation
-      }
-    )
-  }
+    setShowContinueBtn(true)
 
-  const switchToNextWord = async () => {
-    if (isForgot) {
-      setIsForgot(false)
-    } else {
+    if (!isRemebered) {
       POST<unknown, WeightageDto>(
         `/word/weightage/${route.params.id}/${wordInfo?._id}`,
         {
-          action: WeightageAction.Substract
+          action: isRemebered
+            ? WeightageAction.Substract
+            : WeightageAction.Addiation
         }
       )
     }
+  }
 
-    if (!isFlipped.value) {
-      isFlipped.value = true
-      setTimeout(() => {
-        toNextWord()
-      }, 250)
-    } else {
-      toNextWord()
-    }
+  const switchToNextWord = async () => {
+    isFlipped.value = true
+    setShowContinueBtn(false)
+    setTimeout(() => {
+      if (!dataSource) return
+
+      if (idx < dataSource.words.length - 1) {
+        setIdx(idx + 1)
+      } else {
+        navigation.replace('Quiz', { id: route.params.id })
+      }
+    }, 250)
   }
 
   const fetchData = async () => {
@@ -113,33 +100,41 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
       <FlipWordCard
         wordInfo={wordInfo}
         isFlipped={isFlipped}
-        onPress={handleFlip}
+        onPress={() => showExplanation(false)}
       />
 
       <View className="flex-row">
-        {isForgot || (
-          <Button
-            onPress={forgotWord}
-            disabled={isPlaying}
-            color="red"
-            wrapperClassNames="flex-1 mr-2"
-          >
-            FORGOT
-          </Button>
-        )}
-
-        {
+        {showContinueBtn ? (
           <Button
             onPress={switchToNextWord}
             disabled={isPlaying}
-            color="blue"
-            wrapperClassNames={classNames('flex-1 ml-2', {
-              'ml-0': isForgot
-            })}
+            color="green"
+            wrapperClassNames={classNames('flex-1 ml-0')}
           >
-            {isForgot ? 'NEXT' : 'REMEMBER'}
+            CONTINUE
           </Button>
-        }
+        ) : (
+          <>
+            <Button
+              onPress={() => showExplanation(false)}
+              disabled={isPlaying}
+              color="white"
+              variant="outlined"
+              wrapperClassNames="flex-1 mr-2"
+            >
+              FORGOT
+            </Button>
+            <Button
+              onPress={() => showExplanation(true)}
+              disabled={isPlaying}
+              color="white"
+              variant="outlined"
+              wrapperClassNames={classNames('flex-1 ml-2')}
+            >
+              REMEMBER
+            </Button>
+          </>
+        )}
       </View>
     </SafeAreaViewWrapper>
   )

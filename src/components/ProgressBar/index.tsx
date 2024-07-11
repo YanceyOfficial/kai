@@ -22,7 +22,9 @@ const ProgressBar: FC<Props> = ({ progress, wrapperClassNames }) => {
       width: withTiming(progress, {
         duration: 250,
         easing: Easing.bounce
-      }) as DimensionValue
+      }) as DimensionValue,
+      display:
+        Number((progress as string).replace('%', '')) < 4 ? 'none' : 'flex'
     }),
     [progress]
   )

@@ -1,6 +1,6 @@
 import classNames from 'classnames'
 import { FC } from 'react'
-import { Pressable, Text, View, useColorScheme } from 'react-native'
+import { Dimensions, Pressable, Text, View, useColorScheme } from 'react-native'
 import { SharedValue } from 'react-native-reanimated'
 import Card from 'src/components/Card'
 import FlipCard from 'src/components/FlipCard'
@@ -19,9 +19,12 @@ const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
     <Pressable className="relative mt-4 w-full" onPress={onPress}>
       <FlipCard
         isFlipped={isFlipped}
-        cardStyle="w-full"
+        cardStyle="w-full items-center"
         RegularContent={
-          <Card wrapperClassNames="w-full h-96">
+          <Card
+            wrapperClassNames="w-11/12"
+            wrapperStyles={{ height: Dimensions.get('window').height * 0.6 }}
+          >
             <View className="gap-4">
               <Text
                 className={classNames('text-lg font-bold', {
@@ -60,7 +63,10 @@ const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
           </Card>
         }
         FlippedContent={
-          <Card wrapperClassNames="w-full h-96 justify-center items-center">
+          <Card
+            wrapperClassNames="w-11/12 justify-center items-center"
+            wrapperStyles={{ height: Dimensions.get('window').height * 0.6 }}
+          >
             <Text
               className={classNames('text-4xl text-center mb-8', {
                 'text-[#f1f7fb]': isDarkMode

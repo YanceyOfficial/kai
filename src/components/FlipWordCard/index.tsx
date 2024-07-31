@@ -55,6 +55,7 @@ const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
                     'text-[#f1f7fb]': isDarkMode
                   })}
                   key={example}
+                  selectable
                 >
                   {example}
                 </Text>

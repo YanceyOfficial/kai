@@ -47,7 +47,7 @@ const WordList: FC<Props> = ({ navigation }) => {
             onPress={() => goToItemPage(item._id)}
             key={item._id}
             color="blue"
-            wrapperClassNames="mt-4"
+            wrapperClassNames="my-2"
           >
             {item.title.toUpperCase()}
           </Button>

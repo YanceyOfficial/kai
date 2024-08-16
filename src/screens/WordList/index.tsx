@@ -6,34 +6,40 @@ import Button from 'src/components/Button'
 import Loading from 'src/components/Loading'
 import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
 import { GET } from 'src/shared/axios'
-import { WordList as IWordList, RootStackParamList } from 'src/types'
+import {
+  WordList as IWordList,
+  Pagination,
+  RootStackParamList
+} from 'src/types'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WordList'>
 
 const WordList: FC<Props> = ({ navigation }) => {
-  const isFocused = useIsFocused()
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
-  const [dataSource, setDataSource] = useState<IWordList[] | null>(null)
   const fetchData = async () => {
     setLoading(true)
     try {
-      const { data } = await GET<IWordList[]>('/word')
-      setDataSource(data)
+      const { data } = await GET<IWordList, Pagination>('/word', {
+        page: 0,
+        pageSize: 1
+      })
+      setTotal(data.total)
     } catch (e) {
     } finally {
       setLoading(false)
     }
   }
 
-  const goToItemPage = (id: string) => {
-    navigation.navigate('Detail', { id })
+  const goToItemPage = (page: number) => {
+    navigation.navigate('Detail', { page })
   }
 
   useEffect(() => {
     fetchData()
-  }, [isFocused])
+  }, [useIsFocused])
 
-  if (!dataSource) return <Loading fullScreen />
+  if (!total) return <Loading fullScreen />
 
   return (
     <SafeAreaViewWrapper hideHeader>
@@ -42,14 +48,14 @@ const WordList: FC<Props> = ({ navigation }) => {
           <RefreshControl refreshing={loading} onRefresh={fetchData} />
         }
       >
-        {dataSource?.map((item) => (
+        {[...Array(Math.ceil(total / 50)).keys()]?.map((item) => (
           <Button
-            onPress={() => goToItemPage(item._id)}
-            key={item._id}
+            onPress={() => goToItemPage(item)}
+            key={item}
             color="blue"
             wrapperClassNames="my-2"
           >
-            {item.title.toUpperCase()}
+            Word List {item + 1}
           </Button>
         ))}
       </ScrollView>

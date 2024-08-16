@@ -81,8 +81,8 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const { data } = await GET<WordList>(`/word/${route.params.id}`)
-      const splitCombineQuizzes: Quiz[] = data.words
+      const { data } = await GET<WordList>(`/word/${route.params.page}`)
+      const splitCombineQuizzes: Quiz[] = data.items
         .filter((word) => word.name.split(' ').length === 1)
         .map((word) => ({
           _id: word._id,
@@ -94,7 +94,7 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
         }))
       setQuizzes(
         shuffle([
-          ...data.words
+          ...data.items
             .map((word) => word.quizzes)
             .flat()
             .map((quiz) => ({ ...quiz, choices: shuffle(quiz.choices) })),

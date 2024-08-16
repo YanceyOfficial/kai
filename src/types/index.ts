@@ -21,14 +21,15 @@ export interface Word {
   explanation: string
   examples: string[]
   quizzes: Quiz[]
-  weightage: number
+  factor: number
   isMarked: boolean
 }
 
 export interface WordList {
-  _id: string
-  title: string
-  words: Word[]
+  total: number
+  page: number
+  pageSize: number
+  items: Word[]
 }
 
 export enum AnswerStatus {
@@ -42,13 +43,14 @@ export interface AnswerInfo {
   status: AnswerStatus
 }
 
-export enum WeightageAction {
-  Addiation,
-  Substract
+export enum FactorAction {
+  Addition,
+  Subtraction
 }
 
-export interface WeightageDto {
-  action: WeightageAction
+export interface StatusDto {
+  action: FactorAction
+  isMarked?: boolean
 }
 
 export interface MarkDto {
@@ -58,12 +60,19 @@ export interface MarkDto {
 export type RootStackParamList = {
   Home: undefined
   WordList: undefined
-  Detail: { id: string }
-  Quiz: { id: string }
+  Detail: { page: number }
+  Quiz: { page: number }
   My: undefined
   Configuration: undefined
   System: undefined
   Login: undefined
   CMS: undefined
   Error: undefined
+}
+
+export interface Pagination {
+  page: number
+  pageSize: number
+  fromMarked?: boolean
+  fromChallenging?: boolean
 }

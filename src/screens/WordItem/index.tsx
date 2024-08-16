@@ -14,13 +14,13 @@ import useHideBottomTab from 'src/hooks/useHideBottomTab'
 import { GET, POST } from 'src/shared/axios'
 import { isPlayingAtom } from 'src/stores/global'
 import {
+  FactorAction,
+  StatusDto,
+  Pagination,
   RootStackParamList,
-  WeightageAction,
-  WeightageDto,
   Word,
   WordList
 } from 'src/types'
-import { shuffle } from 'yancey-js-util'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>
 
@@ -30,17 +30,16 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
   const isFocused = useIsFocused()
   const [loading, setLoading] = useState(false)
   const [idx, setIdx] = useState(0)
-  const [dataSource, setDataSource] = useState<WordList | null>(null)
+  const [words, setWords] = useState<Word[] | null>(null)
   const isFlipped = useSharedValue(true)
   const [showContinueBtn, setShowContinueBtn] = useState(false)
-  const wordInfo = useMemo(() => dataSource?.words?.[idx], [dataSource, idx])
+  const wordInfo = useMemo(() => words?.[idx], [words, idx])
   const progress = useMemo(
-    () =>
-      `${((idx + 1) / (dataSource?.words.length || 1)) * 100}%` as AnimatableValue,
-    [idx, dataSource]
+    () => `${((idx + 1) / (words?.length || 1)) * 100}%` as AnimatableValue,
+    [idx, words]
   )
 
-  const showExplanation = async (isRemebered: boolean) => {
+  const showExplanation = async (isRemembered: boolean) => {
     if (!isFlipped.value) {
       return
     }
@@ -48,15 +47,10 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
     isFlipped.value = false
     setShowContinueBtn(true)
 
-    if (!isRemebered) {
-      POST<unknown, WeightageDto>(
-        `/word/weightage/${route.params.id}/${wordInfo?._id}`,
-        {
-          action: isRemebered
-            ? WeightageAction.Substract
-            : WeightageAction.Addiation
-        }
-      )
+    if (!isRemembered) {
+      POST<unknown, StatusDto>(`/word/setStatus/${wordInfo?._id}`, {
+        action: isRemembered ? FactorAction.Subtraction : FactorAction.Addition
+      })
     }
   }
 
@@ -64,12 +58,12 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
     isFlipped.value = true
     setShowContinueBtn(false)
     setTimeout(() => {
-      if (!dataSource) return
+      if (!words) return
 
-      if (idx < dataSource.words.length - 1) {
+      if (idx < words.length - 1) {
         setIdx(idx + 1)
       } else {
-        navigation.replace('Quiz', { id: route.params.id })
+        navigation.replace('Quiz', { page: route.params.page })
       }
     }, 250)
   }
@@ -77,9 +71,12 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const { data } = await GET<WordList>(`/word/${route.params.id}`)
-      setDataSource({ ...data, words: shuffle<Word>(data.words) })
-    } catch {
+      const { data } = await GET<WordList, Pagination>('/word', {
+        page: route.params.page,
+        pageSize: 50
+      })
+      setWords(data.items)
+    } catch (e) {
     } finally {
       setLoading(false)
     }
@@ -87,7 +84,7 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
 
   useEffect(() => {
     fetchData()
-  }, [isFocused, route.params.id])
+  }, [isFocused, route.params.page])
 
   if (loading || !wordInfo) return <Loading fullScreen />
 

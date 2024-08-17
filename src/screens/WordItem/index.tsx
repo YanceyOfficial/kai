@@ -12,15 +12,17 @@ import ProgressBar from 'src/components/ProgressBar'
 import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
 import useHideBottomTab from 'src/hooks/useHideBottomTab'
 import { GET, POST } from 'src/shared/axios'
+import { DEFAULT_PAGE_SIZE } from 'src/shared/constants'
 import { isPlayingAtom } from 'src/stores/global'
 import {
   FactorAction,
-  StatusDto,
   Pagination,
   RootStackParamList,
+  StatusDto,
   Word,
   WordList
 } from 'src/types'
+import { shuffle } from 'yancey-js-util'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>
 
@@ -47,11 +49,9 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
     isFlipped.value = false
     setShowContinueBtn(true)
 
-    if (!isRemembered) {
-      POST<unknown, StatusDto>(`/word/setStatus/${wordInfo?._id}`, {
-        action: isRemembered ? FactorAction.Subtraction : FactorAction.Addition
-      })
-    }
+    POST<unknown, StatusDto>(`/word/status/${wordInfo?._id}`, {
+      action: isRemembered ? FactorAction.Subtraction : FactorAction.Addition
+    })
   }
 
   const switchToNextWord = async () => {
@@ -63,7 +63,13 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
       if (idx < words.length - 1) {
         setIdx(idx + 1)
       } else {
-        navigation.replace('Quiz', { page: route.params.page })
+        if (route.params.fromChallenging) {
+          navigation.replace('WordList')
+        } else {
+          navigation.replace('Quiz', {
+            page: route.params.page
+          })
+        }
       }
     }, 250)
   }
@@ -71,11 +77,16 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const { data } = await GET<WordList, Pagination>('/word', {
-        page: route.params.page,
-        pageSize: 50
-      })
-      setWords(data.items)
+      if (route.params.fromChallenging) {
+        const { data } = await GET<WordList>('/word/challenging')
+        setWords(shuffle(data.items))
+      } else {
+        const { data } = await GET<WordList, Pagination>('/word', {
+          page: route.params.page,
+          pageSize: DEFAULT_PAGE_SIZE
+        })
+        setWords(shuffle(data.items))
+      }
     } catch (e) {
     } finally {
       setLoading(false)

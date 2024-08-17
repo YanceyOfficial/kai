@@ -60,7 +60,7 @@ export interface MarkDto {
 export type RootStackParamList = {
   Home: undefined
   WordList: undefined
-  Detail: { page: number }
+  Detail: { page: number; fromChallenging: boolean }
   Quiz: { page: number }
   My: undefined
   Configuration: undefined
@@ -73,6 +73,15 @@ export type RootStackParamList = {
 export interface Pagination {
   page: number
   pageSize: number
-  fromMarked?: boolean
-  fromChallenging?: boolean
+}
+
+export interface Statistics {
+  items: Chunk[]
+  challengingCount: number
+}
+
+export interface Chunk {
+  total: number
+  page: number
+  learnedCount: number
 }

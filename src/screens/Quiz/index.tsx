@@ -15,6 +15,7 @@ import { GET } from 'src/shared/axios'
 import { answerInfoAtom, quizIdxAtom, quizzesAtom } from 'src/stores/quiz'
 import {
   AnswerStatus,
+  Pagination,
   Quiz,
   QuizType,
   RootStackParamList,
@@ -25,6 +26,7 @@ import Feedback from './Feedback'
 import SingleChoice from './SingleChoice'
 import SplitCombine from './SpiltCombine'
 import { checkAnswer } from './checkAnswer'
+import { DEFAULT_PAGE_SIZE } from 'src/shared/constants'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>
 
@@ -64,7 +66,7 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
     if (quizIdx < quizzes?.length - 1) {
       setQuizIdx(quizIdx + 1)
     } else {
-      navigation.replace('Home')
+      navigation.replace('WordList')
     }
   }
 
@@ -81,7 +83,10 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const { data } = await GET<WordList>(`/word/${route.params.page}`)
+      const { data } = await GET<WordList, Pagination>('/word', {
+        page: route.params.page,
+        pageSize: DEFAULT_PAGE_SIZE
+      })
       const splitCombineQuizzes: Quiz[] = data.items
         .filter((word) => word.name.split(' ').length === 1)
         .map((word) => ({

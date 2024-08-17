@@ -4,3 +4,5 @@ export const YOUDAO_VOICE_URL =
 export const OAUTH_REDIRECT_URL = 'app.yancey.kai://oauth'
 
 export const TOKEN_EXPIRED_MIN_VALIDITY = 1 * 60 * 1000
+
+export const DEFAULT_PAGE_SIZE = 50

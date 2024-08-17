@@ -43,7 +43,7 @@ const Button: FC<Props> = ({
   wrapperClassNames,
   textClassNames
 }) => {
-  const diasblePressingEffect = disabled || loading || selected
+  const disablePressingEffect = disabled || loading || selected
   const { handleAudioFromLocalFile } = useAudioPlayer()
   const isDarkMode = useColorScheme() === 'dark'
 
@@ -67,7 +67,7 @@ const Button: FC<Props> = ({
       className={classNames(
         'p-4 justify-center items-center',
         {
-          'active:shadow-none active:translate-y-[4px]': !diasblePressingEffect
+          'active:shadow-none active:translate-y-[4px]': !disablePressingEffect
         },
         wrapperStyles(isDarkMode)[color],
         sizeStyles[size].wrapper,

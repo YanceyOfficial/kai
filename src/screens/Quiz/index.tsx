@@ -12,6 +12,7 @@ import ProgressBar from 'src/components/ProgressBar'
 import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
 import useAudioPlayer from 'src/hooks/useAudioPlayer'
 import { GET } from 'src/shared/axios'
+import { DEFAULT_PAGE_SIZE } from 'src/shared/constants'
 import { answerInfoAtom, quizIdxAtom, quizzesAtom } from 'src/stores/quiz'
 import {
   AnswerStatus,
@@ -26,7 +27,6 @@ import Feedback from './Feedback'
 import SingleChoice from './SingleChoice'
 import SplitCombine from './SpiltCombine'
 import { checkAnswer } from './checkAnswer'
-import { DEFAULT_PAGE_SIZE } from 'src/shared/constants'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>
 
@@ -88,7 +88,14 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
         pageSize: DEFAULT_PAGE_SIZE
       })
       const splitCombineQuizzes: Quiz[] = data.items
-        .filter((word) => word.name.split(' ').length === 1)
+        .filter(
+          (word) =>
+            // TODO:
+            word.name.split(' ').length === 1 &&
+            !word.name.includes('-') &&
+            [...new Set(word.syllabification)].length ===
+              word.syllabification.length
+        )
         .map((word) => ({
           _id: word._id,
           question: word.name,

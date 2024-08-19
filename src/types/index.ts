@@ -23,6 +23,9 @@ export interface Word {
   quizzes: Quiz[]
   factor: number
   isMarked: boolean
+  isLearned: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 export interface WordList {

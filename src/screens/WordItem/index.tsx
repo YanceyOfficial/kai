@@ -2,6 +2,7 @@ import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import classNames from 'classnames'
 import { useAtomValue } from 'jotai'
+import { DateTime } from 'luxon'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { View } from 'react-native'
 import { AnimatableValue, useSharedValue } from 'react-native-reanimated'
@@ -12,7 +13,10 @@ import ProgressBar from 'src/components/ProgressBar'
 import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
 import useHideBottomTab from 'src/hooks/useHideBottomTab'
 import { GET, POST } from 'src/shared/axios'
-import { DEFAULT_PAGE_SIZE } from 'src/shared/constants'
+import {
+  DEFAULT_FORGETTABLE_DAYS,
+  DEFAULT_PAGE_SIZE
+} from 'src/shared/constants'
 import { isPlayingAtom } from 'src/stores/global'
 import {
   FactorAction,
@@ -78,14 +82,24 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
     setLoading(true)
     try {
       if (route.params.fromChallenging) {
-        const { data } = await GET<WordList>('/word/challenging')
-        setWords(shuffle(data.items))
+        const { data } = await GET<Word[]>('/word/challenging')
+        setWords(shuffle(data))
       } else {
         const { data } = await GET<WordList, Pagination>('/word', {
           page: route.params.page,
           pageSize: DEFAULT_PAGE_SIZE
         })
-        setWords(shuffle(data.items))
+
+        const filtered = data.items.filter(
+          (item) =>
+            item.factor > 0 ||
+            (item.factor <= 0 &&
+              (DateTime.now()
+                .diff(DateTime.fromISO(item.updatedAt), 'days')
+                .toObject().days as number) >= DEFAULT_FORGETTABLE_DAYS)
+        )
+
+        setWords(shuffle(filtered))
       }
     } catch (e) {
     } finally {

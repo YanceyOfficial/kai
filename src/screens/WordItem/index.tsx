@@ -2,7 +2,6 @@ import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import classNames from 'classnames'
 import { useAtomValue } from 'jotai'
-import { DateTime } from 'luxon'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { View } from 'react-native'
 import { AnimatableValue, useSharedValue } from 'react-native-reanimated'
@@ -13,10 +12,7 @@ import ProgressBar from 'src/components/ProgressBar'
 import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
 import useHideBottomTab from 'src/hooks/useHideBottomTab'
 import { GET, POST } from 'src/shared/axios'
-import {
-  DEFAULT_FORGETTABLE_DAYS,
-  DEFAULT_PAGE_SIZE
-} from 'src/shared/constants'
+import { DEFAULT_PAGE_SIZE } from 'src/shared/constants'
 import { isPlayingAtom } from 'src/stores/global'
 import {
   FactorAction,
@@ -90,16 +86,24 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
           pageSize: DEFAULT_PAGE_SIZE
         })
 
-        const filtered = data.items.filter(
-          (item) =>
-            item.factor > 0 ||
-            (item.factor <= 0 &&
-              (DateTime.now()
-                .diff(DateTime.fromISO(item.updatedAt), 'days')
-                .toObject().days as number) >= DEFAULT_FORGETTABLE_DAYS)
-        )
+        const sorted = shuffle(data.items).sort((a, b) => {
+          if (a.isLearned === b.isLearned) {
+            return b.factor - a.factor
+          } else {
+            return Number(b.isLearned) - Number(a.isLearned)
+          }
+        })
 
-        setWords(shuffle(filtered))
+        // const filtered = data.items.filter(
+        //   (item) =>
+        //     item.factor > 0 ||
+        //     (item.factor <= 0 &&
+        //       (DateTime.now()
+        //         .diff(DateTime.fromISO(item.updatedAt), 'days')
+        //         .toObject().days as number) >= DEFAULT_FORGETTABLE_DAYS)
+        // )
+
+        setWords(sorted)
       }
     } catch (e) {
     } finally {

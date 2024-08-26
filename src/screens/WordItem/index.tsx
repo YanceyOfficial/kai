@@ -90,7 +90,7 @@ const WordItemScreen: FC<Props> = ({ navigation, route }) => {
           if (a.isLearned === b.isLearned) {
             return b.factor - a.factor
           } else {
-            return Number(b.isLearned) - Number(a.isLearned)
+            return Number(a.isLearned) - Number(b.isLearned)
           }
         })
 

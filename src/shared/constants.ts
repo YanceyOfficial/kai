@@ -8,3 +8,5 @@ export const TOKEN_EXPIRED_MIN_VALIDITY = 1 * 60 * 1000
 export const DEFAULT_PAGE_SIZE = 50
 
 export const DEFAULT_FORGETTABLE_DAYS = 3
+
+export const DEFAULT_CHALLENGING_FACTOR = 3

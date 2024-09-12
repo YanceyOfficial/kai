@@ -44,6 +44,7 @@ const WordList: FC<Props> = ({ navigation }) => {
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={fetchStatistics} />
         }
+        className='mb-10'
       >
         <Button
           onPress={() => goToItemPage(-1, true)}
@@ -59,7 +60,7 @@ const WordList: FC<Props> = ({ navigation }) => {
             key={item.page}
             onPress={() => goToItemPage(item.page, false)}
             color="blue"
-            wrapperClassNames="my-2 "
+            wrapperClassNames="my-2"
           >
             {`Word List ${item.page + 1} - ${item.learnedCount}/${item.total}`}
           </Button>

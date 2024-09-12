@@ -6,11 +6,14 @@ import Button from 'src/components/Button'
 import DuolingoLogoIcon from 'src/components/Icon/DuolingoLogoIcon'
 import LoginIcon from 'src/components/Icon/LoginIcon'
 import useAuth from 'src/hooks/useAuth'
+import useHideBottomTab from 'src/hooks/useHideBottomTab'
 import { RootStackParamList } from 'src/types'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>
 
 const Login: FC<Props> = ({ navigation }) => {
+  useHideBottomTab(navigation)
+
   const toHomeScreen = () => {
     navigation.navigate('Home')
   }

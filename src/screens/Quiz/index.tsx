@@ -11,6 +11,7 @@ import Loading from 'src/components/Loading'
 import ProgressBar from 'src/components/ProgressBar'
 import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
 import useAudioPlayer from 'src/hooks/useAudioPlayer'
+import useHideBottomTab from 'src/hooks/useHideBottomTab'
 import { GET } from 'src/shared/axios'
 import { DEFAULT_PAGE_SIZE } from 'src/shared/constants'
 import { answerInfoAtom, quizIdxAtom, quizzesAtom } from 'src/stores/quiz'
@@ -31,6 +32,7 @@ import { checkAnswer } from './checkAnswer'
 type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>
 
 const QuizScreen: FC<Props> = ({ navigation, route }) => {
+  useHideBottomTab(navigation)
   const { handleAudioFromLocalFile } = useAudioPlayer()
   const isFocused = useIsFocused()
 
@@ -138,18 +140,6 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
   useEffect(() => {
     fetchData()
   }, [isFocused])
-
-  useEffect(() => {
-    navigation.getParent()?.setOptions({
-      tabBarStyle: {
-        display: 'none'
-      }
-    })
-    return () =>
-      navigation.getParent()?.setOptions({
-        tabBarStyle: undefined
-      })
-  }, [navigation])
 
   if (loading || !quiz) return <Loading fullScreen />
 

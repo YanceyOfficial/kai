@@ -7,7 +7,6 @@ import FlipCard from 'src/components/FlipCard'
 import WordAudioPlayer from 'src/components/WordAudioPlayer'
 import { DEFAULT_CHALLENGING_FACTOR } from 'src/shared/constants'
 import { Word } from 'src/types'
-import SupperIcon from '../Icon/SuperIcon'
 
 interface Props {
   wordInfo: Word
@@ -70,9 +69,18 @@ const FlipWordCard: FC<Props> = ({ wordInfo, isFlipped, onPress }) => {
             wrapperClassNames="w-11/12 justify-center items-center relative"
             wrapperStyles={{ height: Dimensions.get('window').height * 0.6 }}
           >
-            {wordInfo.factor >= DEFAULT_CHALLENGING_FACTOR && (
-              <SupperIcon classNames="absolute top-2 left-2" />
-            )}
+            <View className="flex flex-row items-center absolute top-4 left-2">
+              <Text
+                style={{ fontFamily: 'DINNextRoundedLTW01-Bold' }}
+                className="text-[#C386F8] ml-2"
+              >
+                {!wordInfo.isLearned
+                  ? 'NEW WORD'
+                  : wordInfo.factor > DEFAULT_CHALLENGING_FACTOR
+                    ? 'CHALLENGING WORD'
+                    : ''}
+              </Text>
+            </View>
             <Text
               className={classNames('text-4xl text-center mb-8', {
                 'text-[#f1f7fb]': isDarkMode

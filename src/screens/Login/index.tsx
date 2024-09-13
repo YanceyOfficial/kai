@@ -1,10 +1,10 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
-import classNames from 'classnames'
 import { FC } from 'react'
 import { Text, View, useColorScheme } from 'react-native'
 import Button from 'src/components/Button'
 import DuolingoLogoIcon from 'src/components/Icon/DuolingoLogoIcon'
 import LoginIcon from 'src/components/Icon/LoginIcon'
+import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
 import useAuth from 'src/hooks/useAuth'
 import useHideBottomTab from 'src/hooks/useHideBottomTab'
 import { RootStackParamList } from 'src/types'
@@ -22,15 +22,10 @@ const Login: FC<Props> = ({ navigation }) => {
   const isDarkMode = useColorScheme() === 'dark'
 
   return (
-    <View
-      className={classNames(
-        'px-[20px] flex-1 justify-between py-4 pt-[90px]',
-        isDarkMode ? 'bg-black' : 'bg-white'
-      )}
-    >
+    <SafeAreaViewWrapper hideHeader>
       <View className="flex justify-center items-center">
-        <LoginIcon />
-        <DuolingoLogoIcon classNames="mt-[40px] mb-5" />
+        <LoginIcon classNames='mt-20'/>
+        <DuolingoLogoIcon classNames="mt-10 mb-5" />
         <Text
           className="text-[#777] text-lg text-center"
           style={{ fontFamily: 'DINNextRoundedLTW01-Medium' }}
@@ -52,7 +47,7 @@ const Login: FC<Props> = ({ navigation }) => {
           I ALREADY HAVE AN ACCOUNT
         </Button>
       </View>
-    </View>
+    </SafeAreaViewWrapper>
   )
 }
 

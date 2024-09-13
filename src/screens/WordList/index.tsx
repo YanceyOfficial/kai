@@ -44,7 +44,6 @@ const WordList: FC<Props> = ({ navigation }) => {
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={fetchStatistics} />
         }
-        className='mb-10'
       >
         <Button
           onPress={() => goToItemPage(-1, true)}

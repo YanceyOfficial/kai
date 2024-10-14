@@ -1,79 +1,54 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Kai(甲斐)
 
-# Getting Started
+[![Code Style](https://img.shields.io/badge/code%20style-prettier-green)](https://prettier.io/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-green.svg)](https://github.com/YanceyOfficial/kai-monorepo/pulls)
+[![Node](https://img.shields.io/badge/Node.js-%3E%3D18.19.0-green.svg)](https://nodejs.org/en/)
+[![Twitter](https://img.shields.io/badge/Twitter-Connect-brightgreen?logo=twitter)](https://twitter/YanceyOfficial)
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+Flashcards APP using AI for learning words.
 
-## Step 1: Start the Metro Server
+| Word                            | Word Explanation                                        | Spilt Combine                                               | Single Choice                                               |
+| ------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
+| ![word](./screenshots/word.PNG) | ![word_explanation](./screenshots/word_explanation.PNG) | ![quiz_spilt_combine](./screenshots/quiz_spilt_combine.PNG) | ![quiz_single_choice](./screenshots/quiz_single_choice.PNG) |
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+## Features
 
-To start Metro, run the following command from the _root_ of your React Native project:
+Gathering those words that you can't recognize and using AI to generate their Chinese explanation, phonetic notation, examples, and quizzes. Kai can mark words as `challenging` automatically and copy them to the `challenging words` folder if you can't recognize them by learning more times. Then just learn them repeatedly until you totally recognize them.
 
-```bash
-# using npm
-npm start
+## To start developing Hyper Chat
 
-# OR using Yarn
-yarn start
+We have chosen [React Native](https://reactnative.dev/) as our cross-platform base. Please follow their instruction to make sure that it is globally installed on your system.
+
+1. Install Nodejs dependencies: `npm i`
+2. Install iOS pod: `npx pod-install`
+3. To start the development server, you can execute `npx react-native run-ios`
+
+## Environment Variables
+
+```dash
+KEYCLOAK_ISSUER=<YOUR_KEYCLOAK_ISSUER>
+KEYCLOAK_CLIENT_ID=<YOURKEYCLOAK_CLIENT_ID>
+KEYCLOAK_LOGOUT_URL=<YOUR_KEYCLOAK_LOGOUT_URL>
+SENTRY_DSN=<YOUR_SENTRY_DSN>
+SERVICE_URL=<YOUR_SERVICE_URL>
 ```
 
-## Step 2: Start your Application
+## Contributing
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+The main purpose of this repository is to continue to evolve Kai, making it faster and easier to use. Development of Kai happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving Kai.
 
-### For Android
+### [Code of Conduct](./CODE_OF_CONDUCT.md)
 
-```bash
-# using npm
-npm run android
+Kai has adopted a Code of Conduct that we expect project participants to adhere to. Please read [the full text](./CODE_OF_CONDUCT.md) so that you can understand what actions will and will not be tolerated.
 
-# OR using Yarn
-yarn android
-```
+### [Contributing Guide](./CONTRIBUTING.md)
 
-### For iOS
+Read our [contributing guide](./CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Kai.
 
-```bash
-# using npm
-npm run ios
+### Good Issues
 
-# OR using Yarn
-yarn ios
-```
+Please make sure to read the [Issue Reporting Checklist](./.github/ISSUE_TEMPLATE/bug_report.md) before opening an issue. Issues not conforming to the guidelines may be closed immediately.
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+## License
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
-
-## Step 3: Modifying your App
-
-Now that you have successfully run the app, let's modify it.
-
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
-
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+Kai is licensed under the terms of the [MIT licensed](https://opensource.org/licenses/MIT).

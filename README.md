@@ -15,11 +15,11 @@ Flashcards APP using AI for learning words.
 
 Gathering those words that you can't recognize and using AI to generate their Chinese explanation, phonetic notation, examples, and quizzes. Kai can mark words as `challenging` automatically and copy them to the `challenging words` folder if you can't recognize them by learning more times. Then just learn them repeatedly until you totally recognize them.
 
-## To start developing Hyper Chat
+## To start developing Kai
 
 We have chosen [React Native](https://reactnative.dev/) as our cross-platform base. Please follow their instruction to make sure that it is globally installed on your system.
 
-1. Install Nodejs dependencies: `npm i`
+1. Install Node.js dependencies: `npm i`
 2. Install iOS pod: `npx pod-install`
 3. To start the development server, you can execute `npx react-native run-ios`
 

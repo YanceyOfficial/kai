@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native'
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import { refresh } from 'react-native-app-auth'
 import Config from 'react-native-config'
@@ -19,6 +20,8 @@ axiosInstance.interceptors.request.use(
     let accessToken = await getSecureValue('accessToken')
 
     if (!accessToken) {
+      Sentry.captureMessage('redirect to Login page due to no accessToken')
+
       navigate('My', {
         screen: 'Login',
         initial: false
@@ -40,6 +43,8 @@ axiosInstance.interceptors.request.use(
             screen: 'Login',
             initial: false
           })
+
+          Sentry.captureMessage('redirect to Login page due to no refreshToken')
         } else {
           if (
             // Access token has already expired.
@@ -56,6 +61,9 @@ axiosInstance.interceptors.request.use(
               accessToken = newTokens.accessToken
               await setSecureTokens(newTokens)
             } catch (e) {
+              Sentry.captureMessage(
+                'redirect to Login page due to execute refresh function error'
+              )
               navigate('My', {
                 screen: 'Login',
                 initial: false
@@ -79,6 +87,9 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
+      Sentry.captureMessage(
+        'redirect to Login page due to 401 status code from the response interceptor of axios'
+      )
       navigate('My', {
         screen: 'Login',
         initial: false

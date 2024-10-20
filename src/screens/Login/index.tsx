@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { FC } from 'react'
-import { Text, View, useColorScheme } from 'react-native'
+import { Text, View } from 'react-native'
 import Button from 'src/components/Button'
 import DuolingoLogoIcon from 'src/components/Icon/DuolingoLogoIcon'
 import LoginIcon from 'src/components/Icon/LoginIcon'
@@ -15,16 +15,15 @@ const Login: FC<Props> = ({ navigation }) => {
   useHideBottomTab(navigation)
 
   const toHomeScreen = () => {
-    navigation.navigate('Home')
+    navigation.replace('WordList')
   }
 
   const { handleLogin } = useAuth(toHomeScreen)
-  const isDarkMode = useColorScheme() === 'dark'
 
   return (
     <SafeAreaViewWrapper hideHeader>
       <View className="flex justify-center items-center">
-        <LoginIcon classNames='mt-20'/>
+        <LoginIcon classNames="mt-20" />
         <DuolingoLogoIcon classNames="mt-10 mb-5" />
         <Text
           className="text-[#777] text-lg text-center"

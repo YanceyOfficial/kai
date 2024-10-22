@@ -7,6 +7,7 @@ import LoginIcon from 'src/components/Icon/LoginIcon'
 import SafeAreaViewWrapper from 'src/components/SafeAreaViewWrapper'
 import useAuth from 'src/hooks/useAuth'
 import useHideBottomTab from 'src/hooks/useHideBottomTab'
+import { navigate } from 'src/route'
 import { RootStackParamList } from 'src/types'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>
@@ -15,7 +16,10 @@ const Login: FC<Props> = ({ navigation }) => {
   useHideBottomTab(navigation)
 
   const toHomeScreen = () => {
-    navigation.replace('WordList')
+    navigate('Home', {
+      screen: 'WordList',
+      initial: false
+    })
   }
 
   const { handleLogin } = useAuth(toHomeScreen)

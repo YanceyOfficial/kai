@@ -12,7 +12,7 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 5000
+  timeout: 10000
 })
 
 axiosInstance.interceptors.request.use(
@@ -21,7 +21,6 @@ axiosInstance.interceptors.request.use(
 
     if (!accessToken) {
       Sentry.captureMessage('redirect to Login page due to no accessToken')
-
       navigate('My', {
         screen: 'Login',
         initial: false
@@ -57,13 +56,13 @@ axiosInstance.interceptors.request.use(
               const newTokens = await refresh(keycloak, {
                 refreshToken
               })
-
               accessToken = newTokens.accessToken
               await setSecureTokens(newTokens)
             } catch (e) {
               Sentry.captureMessage(
                 'redirect to Login page due to execute refresh function error'
               )
+              Sentry.captureException(e)
               navigate('My', {
                 screen: 'Login',
                 initial: false

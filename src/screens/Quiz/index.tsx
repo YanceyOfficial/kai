@@ -28,6 +28,7 @@ import Feedback from './Feedback'
 import SingleChoice from './SingleChoice'
 import SplitCombine from './SpiltCombine'
 import { checkAnswer } from './checkAnswer'
+import { navigate } from 'src/route'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>
 
@@ -68,7 +69,10 @@ const QuizScreen: FC<Props> = ({ navigation, route }) => {
     if (quizIdx < quizzes?.length - 1) {
       setQuizIdx(quizIdx + 1)
     } else {
-      navigation.replace('WordList')
+      navigate('Home', {
+        screen: 'WordList',
+        initial: false
+      })
     }
   }
 

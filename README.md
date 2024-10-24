@@ -11,9 +11,9 @@ Flashcards APP using AI for learning words.
 | ------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
 | ![word](./screenshots/word.PNG) | ![word_explanation](./screenshots/word_explanation.PNG) | ![quiz_spilt_combine](./screenshots/quiz_spilt_combine.PNG) | ![quiz_single_choice](./screenshots/quiz_single_choice.PNG) |
 
-## Features
+## Introduction
 
-Gathering those words that you can't recognize and using AI to generate their Chinese explanation, phonetic notation, examples, and quizzes. Kai can mark words as `challenging` automatically and copy them to the `challenging words` folder if you can't recognize them by learning more times. Then just learn them repeatedly until you totally recognize them.
+Gathering words that you can't recognize and using AI to generate their Chinese explanation, phonetic notation, examples, and quizzes. Kai can mark words as `challenging` automatically and alias them to the `challenging words` folder if you can't recognize them by learning more times. Then just learn them repeatedly until you totally recognize them.
 
 ## To start developing Kai
 

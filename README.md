@@ -7,9 +7,14 @@
 
 Flashcards APP using AI for learning words.
 
-| Word                            | Word Explanation                                        | Spilt Combine                                               | Single Choice                                               |
-| ------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
-| ![word](./screenshots/word.PNG) | ![word_explanation](./screenshots/word_explanation.PNG) | ![quiz_spilt_combine](./screenshots/quiz_spilt_combine.PNG) | ![quiz_single_choice](./screenshots/quiz_single_choice.PNG) |
+| Word    | Word Explanation    | Spilt Combine         | Single Choice         |
+| ------- | ------------------- | --------------------- | --------------------- |
+| ![word] | ![word_explanation] | ![quiz_spilt_combine] | ![quiz_single_choice] |
+
+[word]: ./screenshots/word.jpg
+[word_explanation]: ./screenshots/word_explanation.jpg
+[quiz_spilt_combine]: ./screenshots/quiz_spilt_combine.jpg
+[quiz_single_choice]: ./screenshots/quiz_single_choice.jpg
 
 ## Introduction
 

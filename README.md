@@ -13,11 +13,13 @@ Flashcards APP using AI for learning words.
 
 ## Introduction
 
-Gathering words that you can't recognize and using AI to generate their Chinese explanation, phonetic notation, examples, and quizzes. If you can't recognize them by learning more times, Kai can sync them to the `challenging words` folder, and just learn them repeatedly until you totally recognize them.
+Gathering words that you can't recognize and using AI to generate their Chinese explanation, phonetic notation, examples, and quizzes. If you still can't recognize them by learning more times, Kai can sync them to the `challenging words` folder, and just learn them repeatedly until you totally recognize them. 😊
 
-[Kai-monorepo](https://github.com/YanceyOfficial/kai-monorepo) is the repository for the CMS and backend.
+[Kai-monorepo](https://github.com/YanceyOfficial/kai-monorepo) is the repository for the CMS and Backend.
 
 ## To start developing Kai
+
+> 🚧 Kai is only supporting iOS right now.
 
 We have chosen [React Native](https://reactnative.dev/) as our cross-platform base. Please follow their instruction to make sure that it is globally installed on your system.
 
@@ -29,7 +31,7 @@ We have chosen [React Native](https://reactnative.dev/) as our cross-platform ba
 
 ```dash
 KEYCLOAK_ISSUER=<YOUR_KEYCLOAK_ISSUER>
-KEYCLOAK_CLIENT_ID=<YOURKEYCLOAK_CLIENT_ID>
+KEYCLOAK_CLIENT_ID=<YOUR_KEYCLOAK_CLIENT_ID>
 KEYCLOAK_LOGOUT_URL=<YOUR_KEYCLOAK_LOGOUT_URL>
 SENTRY_DSN=<YOUR_SENTRY_DSN>
 SERVICE_URL=<YOUR_SERVICE_URL>

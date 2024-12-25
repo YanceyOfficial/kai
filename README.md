@@ -15,7 +15,7 @@ Flashcards APP using AI for learning words.
 
 Gathering words that you can't recognize and using AI to generate their Chinese explanation, phonetic notation, examples, and quizzes. If you still can't recognize them by learning more times, Kai can sync them to the `challenging words` folder, and just learn them repeatedly until you totally recognize them. 😊
 
-[Kai-monorepo](https://github.com/YanceyOfficial/kai-monorepo) is the repository for the CMS and Backend.
+[Kai-monorepo](https://github.com/YanceyOfficial/kai-monorepo) is the repository for the CMS and Backend. (Because I have't found a way to integrate React Native project into monorepo. 😭)
 
 ## To start developing Kai
 

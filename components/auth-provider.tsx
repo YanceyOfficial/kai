@@ -26,7 +26,6 @@ const AuthContext = createContext<{
   ) => Promise<AuthSession.AuthSessionResult>
   signOut: () => Promise<void>
   reloadUserInfo: () => Promise<void>
-  updateRefreshToken: () => Promise<void>
 } | null>(null)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -46,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     discovery
   )
 
-  const updateRefreshToken = async () => {
+  const updateRefreshToken = useCallback(async () => {
     const refreshToken = await SecureStore.getItemAsync('refresh_token')
     if (!refreshToken || !discovery) return
 
@@ -60,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     await SecureStore.setItemAsync('access_token', result.accessToken)
     await SecureStore.setItemAsync('refresh_token', result.refreshToken ?? '')
-  }
+  }, [discovery])
 
   const loadUserInfo = useCallback(async () => {
     const accessToken = await SecureStore.getItemAsync('access_token')
@@ -72,8 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         discovery
       )) as UserInfo
       setUserInfo(response)
-    } catch (e) {
-      console.log(e)
+    } catch {
       setUserInfo(null)
     } finally {
       setLoading(false)
@@ -121,19 +119,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [loadUserInfo])
 
+  // Refresh Token
+  useEffect(() => {
+    const interval = setInterval(() => {
+      updateRefreshToken()
+    }, 10_000)
+
+    return () => clearInterval(interval)
+  }, [updateRefreshToken])
+
   return (
-    <AuthContext
+    <AuthContext.Provider
       value={{
         userInfo,
         loading,
-        updateRefreshToken,
         signIn: promptAsync,
         signOut,
         reloadUserInfo: loadUserInfo
       }}
     >
       {children}
-    </AuthContext>
+    </AuthContext.Provider>
   )
 }
 

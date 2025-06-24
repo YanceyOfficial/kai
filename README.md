@@ -19,15 +19,9 @@ Gathering words that you can't recognize and using AI to generate their Chinese 
 
 ## To start developing Kai
 
-> 🚧 Kai is only supporting iOS right now.
+We have chosen [Expo](https://expo.dev/) and [React Native](https://reactnative.dev/) as our cross-platform base. Please follow their instructions to make sure that they are installed on your system.
 
-We have chosen [React Native](https://reactnative.dev/) as our cross-platform base. Please follow their instruction to make sure that it is globally installed on your system.
-
-1. Install Node.js dependencies: `npm i`
-2. Install iOS pod: `npx pod-install`
-3. To start the development server, you can execute `npx react-native run-ios`
-
-## Environment Variables
+### Environment Variables
 
 ```dash
 KEYCLOAK_ISSUER=<YOUR_KEYCLOAK_ISSUER>

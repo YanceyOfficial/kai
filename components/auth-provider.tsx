@@ -5,18 +5,16 @@ import * as SecureStore from 'expo-secure-store'
 import {
   createContext,
   ReactNode,
-  use,
   useCallback,
+  useContext,
   useEffect,
   useRef,
   useState
 } from 'react'
 
 const authConfig = {
-  clientId: process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID,
-  redirectUri: AuthSession.makeRedirectUri({
-    scheme: OAUTH_REDIRECT_URL
-  })
+  clientId: process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID!,
+  redirectUri: AuthSession.makeRedirectUri({ scheme: OAUTH_REDIRECT_URL })
 }
 
 const AuthContext = createContext<{
@@ -30,12 +28,14 @@ const AuthContext = createContext<{
 } | null>(null)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const timer = useRef<number | null>(null)
+  const refreshTimer = useRef<number | NodeJS.Timeout | null>(null)
   const [loading, setLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+
   const discovery = AuthSession.useAutoDiscovery(
-    process.env.EXPO_PUBLIC_KEYCLOAK_ISSUER
+    process.env.EXPO_PUBLIC_KEYCLOAK_ISSUER!
   )
+
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
       ...authConfig,
@@ -46,85 +46,111 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     discovery
   )
 
+  const signOut = useCallback(async () => {
+    await SecureStore.deleteItemAsync('access_token')
+    await SecureStore.deleteItemAsync('refresh_token')
+    setUserInfo(null)
+    if (refreshTimer.current) {
+      clearInterval(refreshTimer.current)
+      refreshTimer.current = null
+    }
+  }, [])
+
   const updateRefreshToken = useCallback(async () => {
     const refreshToken = await SecureStore.getItemAsync('refresh_token')
     if (!refreshToken || !discovery) return
 
-    const result = await AuthSession.refreshAsync(
-      {
-        clientId: process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID,
-        refreshToken
-      },
-      discovery
-    )
+    try {
+      const result = await AuthSession.refreshAsync(
+        {
+          clientId: authConfig.clientId,
+          refreshToken
+        },
+        discovery
+      )
 
-    await SecureStore.setItemAsync('access_token', result.accessToken)
-    await SecureStore.setItemAsync('refresh_token', result.refreshToken ?? '')
-  }, [discovery])
+      await SecureStore.setItemAsync('access_token', result.accessToken)
+      if (result.refreshToken) {
+        await SecureStore.setItemAsync('refresh_token', result.refreshToken)
+      }
+    } catch (err) {
+      console.warn('Refresh token failed:', err)
+      await signOut()
+    }
+  }, [discovery, signOut])
 
   const loadUserInfo = useCallback(async () => {
     const accessToken = await SecureStore.getItemAsync('access_token')
-    if (!accessToken || !discovery) return
+    if (!accessToken || !discovery) {
+      setLoading(false)
+      return
+    }
 
     try {
-      const response = (await AuthSession.fetchUserInfoAsync(
+      const info = (await AuthSession.fetchUserInfoAsync(
         { accessToken },
         discovery
       )) as UserInfo
-      setUserInfo(response)
 
-      timer.current = setInterval(() => {
-        updateRefreshToken()
-      }, 10_000)
-    } catch {
+      setUserInfo(info)
+
+      if (refreshTimer.current) clearInterval(refreshTimer.current)
+      refreshTimer.current = setInterval(updateRefreshToken, 10_000)
+    } catch (err) {
+      console.warn('Fetching user info failed:', err)
       setUserInfo(null)
     } finally {
       setLoading(false)
     }
   }, [discovery, updateRefreshToken])
 
-  const signOut = async () => {
-    await SecureStore.deleteItemAsync('access_token')
-    await SecureStore.deleteItemAsync('refresh_token')
-    setUserInfo(null)
-  }
-
-  // After Sign-in
   useEffect(() => {
-    if (discovery && response?.type === 'success') {
-      AuthSession.exchangeCodeAsync(
-        {
-          ...authConfig,
-          code: response.params.code,
-          extraParams: {
-            code_verifier: request?.codeVerifier ?? ''
-          }
-        },
-        discovery
-      ).then((tokenResult) => {
-        SecureStore.setItem('access_token', tokenResult.accessToken)
-        SecureStore.setItem('refresh_token', tokenResult.refreshToken ?? '')
-        loadUserInfo()
-      })
-    }
+    const handleAuthResult = async () => {
+      if (!discovery || response?.type !== 'success') return
 
-    return () => {
-      if (timer.current) {
-        clearInterval(timer.current)
+      try {
+        const tokenResult = await AuthSession.exchangeCodeAsync(
+          {
+            ...authConfig,
+            code: response.params.code,
+            extraParams: {
+              code_verifier: request?.codeVerifier ?? ''
+            }
+          },
+          discovery
+        )
+
+        await SecureStore.setItemAsync('access_token', tokenResult.accessToken)
+        if (tokenResult.refreshToken) {
+          await SecureStore.setItemAsync(
+            'refresh_token',
+            tokenResult.refreshToken
+          )
+        }
+
+        await loadUserInfo()
+      } catch (err) {
+        console.error('Exchange code failed:', err)
       }
     }
-  }, [discovery, loadUserInfo, request?.codeVerifier, response])
 
-  // After launching APP if exist access token
+    handleAuthResult()
+  }, [response, request?.codeVerifier, discovery, loadUserInfo])
+
   useEffect(() => {
-    const accessToken = SecureStore.getItem('access_token')
-    if (accessToken) {
-      loadUserInfo()
+    const bootstrap = async () => {
+      const accessToken = await SecureStore.getItemAsync('access_token')
+      if (accessToken) {
+        await loadUserInfo()
+      } else {
+        setLoading(false)
+      }
     }
 
+    bootstrap()
     return () => {
-      if (timer.current) {
-        clearInterval(timer.current)
+      if (refreshTimer.current) {
+        clearInterval(refreshTimer.current)
       }
     }
   }, [loadUserInfo])
@@ -145,10 +171,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 }
 
 export function useAuth() {
-  const value = use(AuthContext)
-  if (!value) {
-    throw new Error('useSession must be wrapped in a <SessionProvider />')
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-
-  return value
+  return context
 }

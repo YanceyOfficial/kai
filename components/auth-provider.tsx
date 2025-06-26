@@ -8,6 +8,7 @@ import {
   use,
   useCallback,
   useEffect,
+  useRef,
   useState
 } from 'react'
 
@@ -29,12 +30,12 @@ const AuthContext = createContext<{
 } | null>(null)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const timer = useRef<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const discovery = AuthSession.useAutoDiscovery(
     process.env.EXPO_PUBLIC_KEYCLOAK_ISSUER
   )
-
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
       ...authConfig,
@@ -71,34 +72,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         discovery
       )) as UserInfo
       setUserInfo(response)
+
+      timer.current = setInterval(() => {
+        updateRefreshToken()
+      }, 10_000)
     } catch {
       setUserInfo(null)
     } finally {
       setLoading(false)
     }
-  }, [discovery])
-
-  const exchangeCodeToToken = useCallback(async () => {
-    if (discovery && response?.type === 'success') {
-      const tokenResult = await AuthSession.exchangeCodeAsync(
-        {
-          ...authConfig,
-          code: response.params.code,
-          extraParams: {
-            code_verifier: request?.codeVerifier ?? ''
-          }
-        },
-        discovery
-      )
-
-      await SecureStore.setItemAsync('access_token', tokenResult.accessToken)
-      await SecureStore.setItemAsync(
-        'refresh_token',
-        tokenResult.refreshToken ?? ''
-      )
-      loadUserInfo()
-    }
-  }, [discovery, loadUserInfo, request?.codeVerifier, response])
+  }, [discovery, updateRefreshToken])
 
   const signOut = async () => {
     await SecureStore.deleteItemAsync('access_token')
@@ -108,25 +91,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // After Sign-in
   useEffect(() => {
-    exchangeCodeToToken()
-  }, [exchangeCodeToToken, response])
+    if (discovery && response?.type === 'success') {
+      AuthSession.exchangeCodeAsync(
+        {
+          ...authConfig,
+          code: response.params.code,
+          extraParams: {
+            code_verifier: request?.codeVerifier ?? ''
+          }
+        },
+        discovery
+      ).then((tokenResult) => {
+        SecureStore.setItem('access_token', tokenResult.accessToken)
+        SecureStore.setItem('refresh_token', tokenResult.refreshToken ?? '')
+        loadUserInfo()
+      })
+    }
 
-  // After launching APP
+    return () => {
+      if (timer.current) {
+        clearInterval(timer.current)
+      }
+    }
+  }, [discovery, loadUserInfo, request?.codeVerifier, response])
+
+  // After launching APP if exist access token
   useEffect(() => {
     const accessToken = SecureStore.getItem('access_token')
     if (accessToken) {
       loadUserInfo()
     }
+
+    return () => {
+      if (timer.current) {
+        clearInterval(timer.current)
+      }
+    }
   }, [loadUserInfo])
-
-  // Refresh Token
-  useEffect(() => {
-    const interval = setInterval(() => {
-      updateRefreshToken()
-    }, 10_000)
-
-    return () => clearInterval(interval)
-  }, [updateRefreshToken])
 
   return (
     <AuthContext.Provider

@@ -4,6 +4,7 @@ import Animated, {
   SharedValue,
   interpolate,
   useAnimatedStyle,
+  useDerivedValue,
   withTiming
 } from 'react-native-reanimated'
 
@@ -26,51 +27,59 @@ const FlipCard: FC<Props> = ({
 }) => {
   const isDirectionX = direction === 'x'
 
-  const regularCardAnimatedStyle = useAnimatedStyle(() => {
-    const spinValue = interpolate(Number(isFlipped.value), [0, 1], [0, 180])
-    const rotateValue = withTiming(`${spinValue}deg`, { duration })
+  const rotation = useDerivedValue(() =>
+    withTiming(isFlipped.value ? 180 : 0, { duration })
+  )
+
+  const frontStyle = useAnimatedStyle(() => {
+    const rotate = isDirectionX
+      ? `${rotation.value}deg`
+      : `${rotation.value}deg`
 
     return {
       transform: [
-        isDirectionX ? { rotateX: rotateValue } : { rotateY: rotateValue }
-      ]
+        { perspective: 1000 },
+        isDirectionX ? { rotateX: rotate } : { rotateY: rotate }
+      ],
+      opacity: interpolate(rotation.value, [0, 90], [1, 0])
     }
   })
 
-  const flippedCardAnimatedStyle = useAnimatedStyle(() => {
-    const spinValue = interpolate(Number(isFlipped.value), [0, 1], [180, 360])
-    const rotateValue = withTiming(`${spinValue}deg`, { duration })
+  const backStyle = useAnimatedStyle(() => {
+    const rotate = isDirectionX
+      ? `${rotation.value + 180}deg`
+      : `${rotation.value + 180}deg`
 
     return {
       transform: [
-        isDirectionX ? { rotateX: rotateValue } : { rotateY: rotateValue }
-      ]
+        { perspective: 1000 },
+        isDirectionX ? { rotateX: rotate } : { rotateY: rotate }
+      ],
+      opacity: interpolate(rotation.value, [90, 180], [0, 1])
     }
   })
 
-  const flipCardStyles = StyleSheet.create({
-    regularCard: {
-      position: 'absolute',
-      zIndex: 1
+  const styles = StyleSheet.create({
+    cardContainer: {
+      position: 'relative'
     },
-    flippedCard: {
+    cardFace: {
       backfaceVisibility: 'hidden',
-      zIndex: 2
+      position: 'absolute',
+      width: '100%',
+      height: '100%'
     }
   })
 
   return (
-    <View>
+    <View style={styles.cardContainer}>
       <Animated.View
         className={cardStyle}
-        style={[flipCardStyles.regularCard, regularCardAnimatedStyle]}
+        style={[styles.cardFace, frontStyle]}
       >
         {RegularContent}
       </Animated.View>
-      <Animated.View
-        className={cardStyle}
-        style={[flipCardStyles.flippedCard, flippedCardAnimatedStyle]}
-      >
+      <Animated.View className={cardStyle} style={[styles.cardFace, backStyle]}>
         {FlippedContent}
       </Animated.View>
     </View>

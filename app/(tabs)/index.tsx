@@ -29,7 +29,7 @@ export default function WordList() {
         }
       >
         <Button
-          onPress={() => goToItemPage(-1, WordType.Challenging)}
+          onPress={() => goToItemPage(0, WordType.Challenging)}
           color="green"
           wrapperClassNames="mb-2"
           disabled={statistics?.challengingCount === 0}

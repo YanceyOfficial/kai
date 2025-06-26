@@ -14,7 +14,6 @@ export function youdaoWordAudioUrl(word: string) {
 export const checkAnswer = (answerInfo: AnswerInfo, quiz: Quiz) => {
   switch (quiz.type) {
     case QuizType.SingleChoice:
-      console.log(answerInfo.answers.join(''))
       return answerInfo.answers.every((answer) =>
         quiz?.answers.includes(answer)
       )

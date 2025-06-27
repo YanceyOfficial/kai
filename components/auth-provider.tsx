@@ -1,5 +1,6 @@
 import { OAUTH_REDIRECT_URL } from '@/shared/constants'
 import type { UserInfo } from '@/shared/types'
+import { isTokenExpiringSoon } from '@/shared/utils'
 import * as AuthSession from 'expo-auth-session'
 import * as SecureStore from 'expo-secure-store'
 import {
@@ -8,11 +9,10 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState
 } from 'react'
 
-const authConfig = {
+export const authConfig = {
   clientId: process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID!,
   redirectUri: AuthSession.makeRedirectUri({ scheme: OAUTH_REDIRECT_URL })
 }
@@ -28,7 +28,6 @@ const AuthContext = createContext<{
 } | null>(null)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const refreshTimer = useRef<number | NodeJS.Timeout | null>(null)
   const [loading, setLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
 
@@ -50,10 +49,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await SecureStore.deleteItemAsync('access_token')
     await SecureStore.deleteItemAsync('refresh_token')
     setUserInfo(null)
-    if (refreshTimer.current) {
-      clearInterval(refreshTimer.current)
-      refreshTimer.current = null
-    }
   }, [])
 
   const updateRefreshToken = useCallback(async () => {
@@ -93,16 +88,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       )) as UserInfo
 
       setUserInfo(info)
-
-      if (refreshTimer.current) clearInterval(refreshTimer.current)
-      refreshTimer.current = setInterval(updateRefreshToken, 10_000)
     } catch (err) {
       console.warn('Fetching user info failed:', err)
       setUserInfo(null)
     } finally {
       setLoading(false)
     }
-  }, [discovery, updateRefreshToken])
+  }, [discovery])
 
   useEffect(() => {
     const handleAuthResult = async () => {
@@ -140,20 +132,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const bootstrap = async () => {
       const accessToken = await SecureStore.getItemAsync('access_token')
-      if (accessToken) {
+      if (!accessToken ) return
+
+      if (isTokenExpiringSoon(accessToken)) {
+        await updateRefreshToken()
         await loadUserInfo()
-      } else {
-        setLoading(false)
       }
     }
 
     bootstrap()
-    return () => {
-      if (refreshTimer.current) {
-        clearInterval(refreshTimer.current)
-      }
-    }
-  }, [loadUserInfo])
+  }, [loadUserInfo, updateRefreshToken])
 
   return (
     <AuthContext.Provider

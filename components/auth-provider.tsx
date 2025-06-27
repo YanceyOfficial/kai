@@ -132,12 +132,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const bootstrap = async () => {
       const accessToken = await SecureStore.getItemAsync('access_token')
-      if (!accessToken ) return
+      if (!accessToken) return
 
       if (isTokenExpiringSoon(accessToken)) {
         await updateRefreshToken()
-        await loadUserInfo()
       }
+      await loadUserInfo()
     }
 
     bootstrap()

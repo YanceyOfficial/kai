@@ -5,10 +5,10 @@ import React, { FC, ReactNode } from 'react'
 import { Pressable, Text, useColorScheme } from 'react-native'
 
 export const outlinedStyles = (isDarkMode: boolean) => ({
-  green: 'border-2 border-b-0 border-[#58a700]',
-  blue: 'border-2 border-b-0 border-[#1899d6]',
-  red: 'border-2 border-b-0 border-[#ea2b2b]',
-  white: `border-2 border-b-0 ${isDarkMode ? 'border-[#37464f]' : 'border-[#e5e5e5]'}`
+  green: 'border-2 border-[#58a700]',
+  blue: 'border-2 border-[#1899d6]',
+  red: 'border-2 border-[#ea2b2b]',
+  white: `border-2 ${isDarkMode ? 'border-[#37464f]' : 'border-[#e5e5e5]'}`
 })
 
 export const wrapperStyles = (isDarkMode: boolean) => ({

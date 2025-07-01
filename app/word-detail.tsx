@@ -8,9 +8,9 @@ import { fetcher } from '@/shared/fetcher'
 import { FactorAction, WordList, WordType } from '@/shared/types'
 import { cn } from '@/shared/utils'
 import { isPlayingAtom } from '@/stores/global'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import { useAtomValue } from 'jotai'
-import { FC, useMemo, useState } from 'react'
+import { FC, useCallback, useMemo, useState } from 'react'
 import { View } from 'react-native'
 import { AnimatableValue, useSharedValue } from 'react-native-reanimated'
 import useSWR from 'swr'
@@ -19,7 +19,7 @@ import { shuffle } from 'yancey-js-util'
 const WordItemScreen: FC = () => {
   const router = useRouter()
   const params = useLocalSearchParams()
-  const { isLoading, data } = useSWR<WordList>(
+  const { isLoading, data, mutate } = useSWR<WordList>(
     (params.wordType as unknown as WordType) === WordType.Challenging
       ? '/word/challenging'
       : `/word?page=${params.page}&pageSize=${DEFAULT_PAGE_SIZE}`
@@ -77,6 +77,14 @@ const WordItemScreen: FC = () => {
       }
     }, 250)
   }
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        mutate(undefined)
+      }
+    }, [mutate])
+  )
 
   if (isLoading || !wordInfo) return <Loading fullScreen />
 

@@ -11,8 +11,8 @@ export default function SignIn() {
 
   return (
     <SafeAreaViewWrapper hideHeader>
-      <View className="flex items-center justify-center">
-        <LoginIcon classNames="mt-20" />
+      <View className="flex items-center justify-center pt-20">
+        <LoginIcon />
         <DuolingoLogoIcon classNames="mt-10 mb-5" />
         <Text
           className="text-center text-lg text-[#777]"

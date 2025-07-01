@@ -10,9 +10,9 @@ import { AnswerStatus, Quiz, QuizType, WordList } from '@/shared/types'
 import { checkAnswer } from '@/shared/utils'
 import { answerInfoAtom, quizIdxAtom } from '@/stores/quiz'
 import { useAudioPlayer } from 'expo-audio'
-import { useLocalSearchParams } from 'expo-router'
+import { useFocusEffect, useLocalSearchParams } from 'expo-router'
 import { useAtom } from 'jotai'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { View } from 'react-native'
 import { AnimatableValue } from 'react-native-reanimated'
 import useSWR from 'swr'
@@ -24,7 +24,7 @@ const QuizScreen = () => {
   const wrongAudio = useAudioPlayer(require('@/assets/audios/wrong.mp3'))
   const [quizIdx, setQuizIdx] = useAtom(quizIdxAtom)
   const [answerInfo, setAnswerInfo] = useAtom(answerInfoAtom)
-  const { isLoading, data } = useSWR<WordList>(
+  const { isLoading, data, mutate } = useSWR<WordList>(
     `/word?page=${params.page}&pageSize=${DEFAULT_PAGE_SIZE}`
   )
   const quizzes = useMemo(() => {
@@ -71,9 +71,11 @@ const QuizScreen = () => {
     const isCorrect = checkAnswer(answerInfo, quiz)
     if (isCorrect) {
       setAnswerInfo({ ...answerInfo, status: AnswerStatus.Correct })
+      rightAudio.seekTo(0)
       rightAudio.play()
     } else {
       setAnswerInfo({ ...answerInfo, status: AnswerStatus.Wrong })
+      wrongAudio.seekTo(0)
       wrongAudio.play()
     }
   }
@@ -110,6 +112,14 @@ const QuizScreen = () => {
         return null
     }
   }
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        mutate(undefined)
+      }
+    }, [mutate])
+  )
 
   if (isLoading || !quiz) return <Loading fullScreen />
 

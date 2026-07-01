@@ -133,9 +133,14 @@ struct SwiftDataTests {
         let repo = VocabularyRepository(context: try cleanContext())
         let now = Date(timeIntervalSince1970: 2_000_000)
 
+        let earlierDueWord = VocabularyEntry(lemma: "earlierdue", kind: .word, language: .english)
+        var earlierDueScheduling = earlierDueWord.scheduling
+        earlierDueScheduling.due = now.addingTimeInterval(-120) // already due, earlier
+        earlierDueWord.reschedule(earlierDueScheduling)
+
         let dueWord = VocabularyEntry(lemma: "due", kind: .word, language: .english)
         var dueScheduling = dueWord.scheduling
-        dueScheduling.due = now.addingTimeInterval(-60) // already due
+        dueScheduling.due = now.addingTimeInterval(-60) // already due, later
         dueWord.reschedule(dueScheduling)
 
         let futureWord = VocabularyEntry(lemma: "future", kind: .word, language: .english)
@@ -148,6 +153,7 @@ struct SwiftDataTests {
         jpScheduling.due = now.addingTimeInterval(-60)
         jpWord.reschedule(jpScheduling)
 
+        _ = try repo.insertIfAbsent(earlierDueWord)
         _ = try repo.insertIfAbsent(dueWord)
         _ = try repo.insertIfAbsent(futureWord)
         _ = try repo.insertIfAbsent(jpWord)
@@ -160,19 +166,24 @@ struct SwiftDataTests {
         #expect(dueWord.dueAt == dueWord.scheduling.due)
 
         let due = try repo.dueEntries(for: .english, asOf: now)
-        #expect(due.map(\.lemma) == ["due"])
+        #expect(due.count == 2)
+        #expect(due.map(\.lemma) == ["earlierdue", "due"])
+        #expect(due[0].dueAt < due[1].dueAt)
     }
 
     @Test("Review log is written and read back by entry ID")
     func logAndFetchReviewLogs() throws {
         let repo = VocabularyRepository(context: try cleanContext())
         let entryID = UUID()
+        let base = Date(timeIntervalSince1970: 1_000_000)
 
-        try repo.logReview(ReviewLog(entryID: entryID, rating: .again, quizType: .fillInBlank, elapsedMs: 800, isCorrect: false))
-        try repo.logReview(ReviewLog(entryID: entryID, rating: .good, quizType: .singleChoice, elapsedMs: 1500, isCorrect: true))
+        try repo.logReview(ReviewLog(entryID: entryID, rating: .again, quizType: .fillInBlank, elapsedMs: 800, isCorrect: false, timestamp: base))
+        try repo.logReview(ReviewLog(entryID: entryID, rating: .good, quizType: .singleChoice, elapsedMs: 1500, isCorrect: true, timestamp: base.addingTimeInterval(60)))
         try repo.logReview(ReviewLog(entryID: UUID(), rating: .easy, quizType: .singleChoice, elapsedMs: 500, isCorrect: true))
 
         let logs = try repo.reviewLogs(entryID: entryID)
         #expect(logs.count == 2)
+        #expect(logs.first?.rating == .again)
+        #expect(logs.last?.rating == .good)
     }
 }

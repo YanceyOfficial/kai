@@ -1,7 +1,7 @@
 import Foundation
 
-/// KaiCore 包的元信息。schemaVersion 用于未来 SwiftData 迁移标记。
+/// Metadata for the KaiCore package. schemaVersion is used for future SwiftData migration marking.
 public enum KaiCoreInfo {
-    /// 当前数据 schema 版本号。
+    /// Current data schema version number.
     public static let schemaVersion = 1
 }

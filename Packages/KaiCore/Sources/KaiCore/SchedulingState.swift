@@ -1,21 +1,21 @@
 import Foundation
 
-/// 词条的 FSRS 调度状态。作为 Codable 值类型嵌入词条。
-/// stability/difficulty 的具体演化由 KaiFSRS 包负责(后续 Plan)。
+/// Entry's FSRS scheduling state. Embedded as a Codable value type in entries.
+/// Specific evolution of stability/difficulty is handled by KaiFSRS package (future plan).
 public struct SchedulingState: Codable, Hashable, Sendable {
-    /// 记忆稳定度 S(天)。新词为 0。
+    /// Memory stability S (days). New entries are 0.
     public var stability: Double
-    /// 记忆难度 D(FSRS 内部量,约 1...10)。新词为 0(待首次评级初始化)。
+    /// Memory difficulty D (FSRS internal measure, ~1...10). New entries are 0 (pending initialization on first review).
     public var difficulty: Double
-    /// 下次到期时间。
+    /// Next due date/time.
     public var due: Date
-    /// 上次复习时间。
+    /// Last review date/time.
     public var lastReview: Date?
-    /// 累计复习次数。
+    /// Total review count.
     public var reps: Int
-    /// 累计遗忘(lapse)次数。
+    /// Total lapse count.
     public var lapses: Int
-    /// 学习阶段。
+    /// Learning stage.
     public var state: LearningState
 
     public init(
@@ -36,7 +36,7 @@ public struct SchedulingState: Codable, Hashable, Sendable {
         self.state = state
     }
 
-    /// 新词的初始状态:立即到期(可马上学),尚无稳定度/难度。
+    /// Initial state for new entries: due immediately (can start learning), no stability/difficulty yet.
     public static func new(now: Date = .now) -> SchedulingState {
         SchedulingState(
             stability: 0,

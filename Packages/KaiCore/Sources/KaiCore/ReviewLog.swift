@@ -1,11 +1,11 @@
 import Foundation
 import SwiftData
 
-/// 一次作答记录。既用于 FSRS 参数优化,也用于统计看板。
+/// A single review response record. Used for both FSRS parameter optimization and statistics dashboard.
 @Model
 public final class ReviewLog {
     public var id: UUID = UUID()
-    /// 关联词条的 id(弱引用,避免 CloudKit 关系约束)。
+    /// Associated entry's ID (weak reference to avoid CloudKit relationship constraints).
     public var entryID: UUID = UUID()
     public var timestamp: Date = Date()
     public var ratingRaw: Int = ReviewRating.good.rawValue

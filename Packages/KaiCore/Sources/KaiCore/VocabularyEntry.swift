@@ -1,18 +1,18 @@
 import Foundation
 import SwiftData
 
-/// 一个词条(单词或短语)及其 AI 生成内容与 FSRS 调度状态。
-/// CloudKit 兼容:所有持久属性有默认值或可选;去重在仓储层做,不用 .unique。
+/// A vocabulary entry (word or phrase) with its AI-generated content and FSRS scheduling state.
+/// CloudKit compatible: all persistent attributes have default values or are optional; deduplication is done at the repository layer, no use of .unique.
 @Model
 public final class VocabularyEntry {
-    /// 稳定主键。
+    /// Stable primary key.
     public var id: UUID = UUID()
-    /// 原文(保留大小写用于展示)。
+    /// Original text (preserve case for display).
     public var lemma: String = ""
-    /// 归一化小写键,供去重查询(避免在 #Predicate 里做大小写转换)。
+    /// Normalized lowercase key for deduplication queries (avoid case conversion in #Predicate).
     public var lemmaKey: String = ""
 
-    /// kind/language/source 以 raw 持久化,保证谓词查询稳定。
+    /// kind/language/source persisted as raw values to ensure stable predicate queries.
     public var kindRaw: String = EntryKind.word.rawValue
     public var languageRaw: String = LanguageDomain.english.rawValue
     public var sourceRaw: String = EntrySource.manual.rawValue
@@ -44,7 +44,7 @@ public final class VocabularyEntry {
         dueAt = state.due
     }
 
-    // MARK: 强类型访问器
+    // MARK: Strongly Typed Accessors
 
     public var kind: EntryKind {
         get { EntryKind(rawValue: kindRaw) ?? .word }

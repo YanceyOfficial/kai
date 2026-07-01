@@ -1,6 +1,6 @@
 import Foundation
 
-/// 一条例句:英文原句 + 中文翻译 + 来源风格。作为 Codable 值类型嵌入词条。
+/// A single example sentence: English original + Chinese translation + source style. Embedded as a Codable value type in entries.
 public struct Example: Codable, Hashable, Sendable {
     public var sentence: String
     public var translation: String

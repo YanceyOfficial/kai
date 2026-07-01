@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import KaiCore
 
-@Test("新词 SchedulingState 初始为 new 且到期即刻")
+@Test("New entry SchedulingState initializes to new and due immediately")
 func newSchedulingDefaults() {
     let now = Date(timeIntervalSince1970: 1_000_000)
     let s = SchedulingState.new(now: now)
@@ -15,9 +15,9 @@ func newSchedulingDefaults() {
     #expect(s.lastReview == nil)
 }
 
-@Test("Example 可 Codable 往返")
+@Test("Example roundtrips through Codable encoding/decoding")
 func exampleCodableRoundTrip() throws {
-    let ex = Example(sentence: "He is eccentric.", translation: "他很古怪。", source: .plain)
+    let ex = Example(sentence: "He is eccentric.", translation: "He is very eccentric.", source: .plain)
     let data = try JSONEncoder().encode(ex)
     let decoded = try JSONDecoder().decode(Example.self, from: data)
     #expect(decoded == ex)

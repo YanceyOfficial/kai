@@ -33,7 +33,20 @@ public final class VocabularyEntry {
     public var updatedAt: Date = Date()
 
     /// 内嵌的 FSRS 调度状态。
+    /// 注意:`@Model` 宏会重写存储属性的存取器,`didSet` 观察者在实测中不会触发,
+    /// 所以不要依赖它同步 `dueAt`——一律通过 `reschedule(_:)` 修改调度状态。
     public var scheduling: SchedulingState = SchedulingState.new()
+
+    /// `scheduling.due` 的顶层镜像,供 `#Predicate` 查询到期词条(SwiftData
+    /// 无法对内嵌 Codable 结构的子字段做过滤查询)。只能通过 `reschedule(_:)` 修改,
+    /// 以保证与 `scheduling.due` 保持一致。
+    public private(set) var dueAt: Date = Date()
+
+    /// 同时更新调度状态与其 `dueAt` 镜像的唯一入口。
+    public func reschedule(_ state: SchedulingState) {
+        scheduling = state
+        dueAt = state.due
+    }
 
     // MARK: 强类型访问器
 
@@ -90,5 +103,6 @@ public final class VocabularyEntry {
         self.createdAt = now
         self.updatedAt = now
         self.scheduling = SchedulingState.new(now: now)
+        self.dueAt = self.scheduling.due
     }
 }

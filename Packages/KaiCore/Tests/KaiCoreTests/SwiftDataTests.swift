@@ -125,4 +125,54 @@ struct SwiftDataTests {
         try repo.delete(entry)
         #expect(try repo.entries(for: .english).isEmpty)
     }
+
+    // MARK: - Review log + due-date query (Task 6)
+
+    @Test("Due entries: due <= now matches, future due does not, isolated by language")
+    func dueEntriesFiltering() throws {
+        let repo = VocabularyRepository(context: try cleanContext())
+        let now = Date(timeIntervalSince1970: 2_000_000)
+
+        let dueWord = VocabularyEntry(lemma: "due", kind: .word, language: .english)
+        var dueScheduling = dueWord.scheduling
+        dueScheduling.due = now.addingTimeInterval(-60) // already due
+        dueWord.reschedule(dueScheduling)
+
+        let futureWord = VocabularyEntry(lemma: "future", kind: .word, language: .english)
+        var futureScheduling = futureWord.scheduling
+        futureScheduling.due = now.addingTimeInterval(3600) // due in the future
+        futureWord.reschedule(futureScheduling)
+
+        let jpWord = VocabularyEntry(lemma: "kana", kind: .word, language: .japanese)
+        var jpScheduling = jpWord.scheduling
+        jpScheduling.due = now.addingTimeInterval(-60)
+        jpWord.reschedule(jpScheduling)
+
+        _ = try repo.insertIfAbsent(dueWord)
+        _ = try repo.insertIfAbsent(futureWord)
+        _ = try repo.insertIfAbsent(jpWord)
+
+        // The mirrored top-level `dueAt` property must stay in sync with
+        // `scheduling.due`. `@Model` does not honor `didSet` observers on stored
+        // properties, so both fields are set together via `reschedule(_:)`,
+        // since SwiftData `#Predicate` cannot filter on a sub-field of an
+        // embedded Codable struct.
+        #expect(dueWord.dueAt == dueWord.scheduling.due)
+
+        let due = try repo.dueEntries(for: .english, asOf: now)
+        #expect(due.map(\.lemma) == ["due"])
+    }
+
+    @Test("Review log is written and read back by entry ID")
+    func logAndFetchReviewLogs() throws {
+        let repo = VocabularyRepository(context: try cleanContext())
+        let entryID = UUID()
+
+        try repo.logReview(ReviewLog(entryID: entryID, rating: .again, quizType: .fillInBlank, elapsedMs: 800, isCorrect: false))
+        try repo.logReview(ReviewLog(entryID: entryID, rating: .good, quizType: .singleChoice, elapsedMs: 1500, isCorrect: true))
+        try repo.logReview(ReviewLog(entryID: UUID(), rating: .easy, quizType: .singleChoice, elapsedMs: 500, isCorrect: true))
+
+        let logs = try repo.reviewLogs(entryID: entryID)
+        #expect(logs.count == 2)
+    }
 }

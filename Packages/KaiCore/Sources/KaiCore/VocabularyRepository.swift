@@ -8,6 +8,9 @@ public protocol VocabularyRepositoryProtocol {
     func entry(lemma: String, language: LanguageDomain) throws -> VocabularyEntry?
     func entries(for language: LanguageDomain) throws -> [VocabularyEntry]
     func delete(_ entry: VocabularyEntry) throws
+    func logReview(_ log: ReviewLog) throws
+    func dueEntries(for language: LanguageDomain, asOf now: Date) throws -> [VocabularyEntry]
+    func reviewLogs(entryID: UUID) throws -> [ReviewLog]
 }
 
 /// SwiftData-backed vocabulary repository implementation.
@@ -53,5 +56,32 @@ public final class VocabularyRepository: VocabularyRepositoryProtocol {
     public func delete(_ entry: VocabularyEntry) throws {
         context.delete(entry)
         try context.save()
+    }
+
+    /// Writes a single review log entry.
+    public func logReview(_ log: ReviewLog) throws {
+        context.insert(log)
+        try context.save()
+    }
+
+    /// Fetches entries for the given language whose due date is not later than `now`, sorted by due date ascending.
+    /// Filters on the top-level `dueAt` mirror (kept in sync with `scheduling.due`), since SwiftData
+    /// `#Predicate` cannot filter on a sub-field of an embedded Codable struct.
+    public func dueEntries(for language: LanguageDomain, asOf now: Date) throws -> [VocabularyEntry] {
+        let lang = language.rawValue
+        let descriptor = FetchDescriptor<VocabularyEntry>(
+            predicate: #Predicate { $0.languageRaw == lang && $0.dueAt <= now },
+            sortBy: [SortDescriptor(\.dueAt, order: .forward)]
+        )
+        return try context.fetch(descriptor)
+    }
+
+    /// Fetches all review logs for a given entry, sorted by timestamp ascending.
+    public func reviewLogs(entryID: UUID) throws -> [ReviewLog] {
+        let descriptor = FetchDescriptor<ReviewLog>(
+            predicate: #Predicate { $0.entryID == entryID },
+            sortBy: [SortDescriptor(\.timestamp, order: .forward)]
+        )
+        return try context.fetch(descriptor)
     }
 }

@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/primary.swiftdeps"
+  },
+  "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.derived/runner.swift": {
+    "dependencies": "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/runner.d",
+    "object": "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/runner.dia"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/primary.swiftdeps"
+  },
+  "/Users/yanceyleo/Code/kai/Packages/KaiCore/Sources/KaiCore/KaiCore.swift": {
+    "dependencies": "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/KaiCore.d",
+    "object": "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/KaiCore.swift.o",
+    "swiftmodule": "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/KaiCore~partial.swiftmodule",
+    "swift-dependencies": "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/KaiCore.swiftdeps",
+    "diagnostics": "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/KaiCore.dia"
+  }
+}

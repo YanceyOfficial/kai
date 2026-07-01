@@ -1,0 +1,602 @@
+{
+  "builtTestProducts" : [
+    {
+      "binaryPath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.xctest/Contents/MacOS/KaiCorePackageTests",
+      "packagePath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore",
+      "productName" : "KaiCorePackageTests"
+    }
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.KaiCore-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/sources",
+      "importPath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/Sources/KaiCore/KaiCore.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "KaiCore",
+      "moduleOutputPath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules/KaiCore.swiftmodule",
+      "objects" : [
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/KaiCore.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/include/KaiCore-Swift.h",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "kaicore"
+      ],
+      "outputFileMapPath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/KaiCore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules/KaiCore.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/Sources/KaiCore/KaiCore.swift"
+      ],
+      "tempsPath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.KaiCorePackageTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/sources",
+      "importPath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.derived/runner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules/KaiCoreTests.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "KaiCorePackageTests",
+      "moduleOutputPath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules/KaiCorePackageTests.swiftmodule",
+      "objects" : [
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/runner.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/include/KaiCorePackageTests-Swift.h",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "kaicore"
+      ],
+      "outputFileMapPath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules/KaiCorePackageTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.derived/runner.swift"
+      ],
+      "tempsPath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.KaiCoreTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCoreTests.build/sources",
+      "importPath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/Tests/KaiCoreTests/SmokeTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules/KaiCore.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCoreTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "KaiCoreTests",
+      "moduleOutputPath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules/KaiCoreTests.swiftmodule",
+      "objects" : [
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCoreTests.build/SmokeTests.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "kaicore"
+      ],
+      "outputFileMapPath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCoreTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCoreTests.build/SmokeTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules/KaiCoreTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/yanceyleo/Code/kai/Packages/KaiCore/Tests/KaiCoreTests/SmokeTests.swift"
+      ],
+      "tempsPath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCoreTests.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "KaiCore" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "KaiCore",
+      "-package-name",
+      "kaicore",
+      "-c",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/Sources/KaiCore/KaiCore.swift",
+      "-I",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/include/KaiCore-Swift.h",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "kaicore",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "KaiCorePackageTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "KaiCorePackageTests",
+      "-package-name",
+      "kaicore",
+      "-c",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.derived/runner.swift",
+      "-I",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/include/KaiCorePackageTests-Swift.h",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "kaicore",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "KaiCoreTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "KaiCoreTests",
+      "-package-name",
+      "kaicore",
+      "-c",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/Tests/KaiCoreTests/SmokeTests.swift",
+      "-I",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "kaicore",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "KaiCore" : [
+
+    ],
+    "KaiCorePackageTests" : [
+      "KaiCoreTests",
+      "KaiCore"
+    ],
+    "KaiCoreTests" : [
+      "KaiCore"
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+    "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.derived/runner.swift" : {
+      "inputs" : [
+
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.derived/runner.swift"
+        }
+      ]
+    }
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/Sources/KaiCore/KaiCore.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/sources"
+    },
+    "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.derived/runner.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/sources"
+    },
+    "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCore.build/KaiCore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCoreTests.build/SmokeTests.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCorePackageTests.product/Objects.LinkFileList"
+    },
+    "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCoreTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/Tests/KaiCoreTests/SmokeTests.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/KaiCoreTests.build/sources"
+    },
+    "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/yanceyleo/Code/kai/Packages/KaiCore/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

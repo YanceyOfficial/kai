@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Swift Package Manager
+.build/
+Packages/**/.build/
+.swiftpm/
+*.xcworkspace/xcuserdata/
+Package.resolved
+
+# Xcode
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# Tuist
+Derived/
+*.xcodeproj
+*.xcworkspace
+!*.xcworkspace/contents.xcworkspacedata
+.tuist-version
+Tuist/.build/
+
+# Superpowers SDD scratch (progress ledger is git-ignored)
+.superpowers/

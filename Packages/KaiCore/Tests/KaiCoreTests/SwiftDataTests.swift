@@ -106,4 +106,23 @@ struct SwiftDataTests {
         #expect(try repo.entries(for: .english).count == 2)
         #expect(try repo.entry(lemma: "APPLE", language: .english)?.lemma == "apple")
     }
+
+    @Test("entries(for:) returns entries in createdAt ascending order")
+    func entriesSortedByCreatedAt() throws {
+        let repo = VocabularyRepository(context: try cleanContext())
+        let base = Date(timeIntervalSince1970: 1_000_000)
+        _ = try repo.insertIfAbsent(VocabularyEntry(lemma: "second", kind: .word, language: .english, now: base.addingTimeInterval(100)))
+        _ = try repo.insertIfAbsent(VocabularyEntry(lemma: "first", kind: .word, language: .english, now: base))
+        #expect(try repo.entries(for: .english).map(\.lemma) == ["first", "second"])
+    }
+
+    @Test("delete removes an entry")
+    func deleteRemovesEntry() throws {
+        let repo = VocabularyRepository(context: try cleanContext())
+        let entry = VocabularyEntry(lemma: "temp", kind: .word, language: .english)
+        _ = try repo.insertIfAbsent(entry)
+        #expect(try repo.entries(for: .english).count == 1)
+        try repo.delete(entry)
+        #expect(try repo.entries(for: .english).isEmpty)
+    }
 }

@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-/// 词条仓储协议。UI/服务层依赖协议而非具体实现,便于替换与测试。
+/// Repository protocol for vocabulary entries. Consumers depend on the protocol, not the concrete type, for substitutability and testing.
 public protocol VocabularyRepositoryProtocol {
     @discardableResult
     func insertIfAbsent(_ entry: VocabularyEntry) throws -> Bool
@@ -10,7 +10,7 @@ public protocol VocabularyRepositoryProtocol {
     func delete(_ entry: VocabularyEntry) throws
 }
 
-/// 基于 SwiftData 的词条仓储实现。
+/// SwiftData-backed vocabulary repository implementation.
 public final class VocabularyRepository: VocabularyRepositoryProtocol {
     private let context: ModelContext
 
@@ -18,7 +18,7 @@ public final class VocabularyRepository: VocabularyRepositoryProtocol {
         self.context = context
     }
 
-    /// 若同语言下不存在相同 lemma(大小写不敏感)则插入并返回 true,否则返回 false。
+    /// Inserts an entry if no entry with the same lemma (case-insensitive) exists in the same language, returning true; otherwise returns false.
     @discardableResult
     public func insertIfAbsent(_ entry: VocabularyEntry) throws -> Bool {
         if try self.entry(lemma: entry.lemma, language: entry.language) != nil {
@@ -29,7 +29,7 @@ public final class VocabularyRepository: VocabularyRepositoryProtocol {
         return true
     }
 
-    /// 按归一化 lemma + 语言精确查一条。
+    /// Fetches an entry by normalized lemma and language, returning nil if not found.
     public func entry(lemma: String, language: LanguageDomain) throws -> VocabularyEntry? {
         let key = lemma.lowercased()
         let lang = language.rawValue
@@ -40,7 +40,7 @@ public final class VocabularyRepository: VocabularyRepositoryProtocol {
         return try context.fetch(descriptor).first
     }
 
-    /// 按语言隔离取全部词条,按创建时间升序。
+    /// Fetches all entries for the specified language, sorted by createdAt in ascending order.
     public func entries(for language: LanguageDomain) throws -> [VocabularyEntry] {
         let lang = language.rawValue
         var descriptor = FetchDescriptor<VocabularyEntry>(

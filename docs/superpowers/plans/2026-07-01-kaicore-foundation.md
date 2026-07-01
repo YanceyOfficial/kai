@@ -16,7 +16,7 @@
 - 测试框架统一用 **Swift Testing**(`import Testing` / `@Test` / `#expect`),不用 XCTest。
 - 数据模型 **CloudKit 兼容**:每个持久属性都有默认值或为可选;不使用 `@Attribute(.unique)`;去重在代码层做。
 - 枚举可查询字段(language / kind / source / state / quizType)以 **raw String/Int** 持久化,并提供强类型计算访问器,保证 `#Predicate` 查询稳定。
-- 所有代码写中文文档注释(`///`),风格贴合 Apple SwiftUI/SwiftData 官方示例。
+- 源码/公共声明写中文 `///` 文档注释,风格贴合 Apple SwiftUI/SwiftData 官方示例;测试函数以 `@Test("中文描述")` 标签自文档,无需额外 `///`。
 - 工作分支:`feature/native-english-mvp`。每个 Task 结束提交一次。
 
 ---

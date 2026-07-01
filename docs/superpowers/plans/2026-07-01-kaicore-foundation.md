@@ -12,7 +12,8 @@
 
 - Swift 工具链:Apple Swift 6.3.x(命令行已具备)。
 - 平台下限:`.macOS(.v14)`、`.iOS(.v17)`(SwiftData 要求;KaiCore 声明两者,测试在 macOS 跑)。
-- **完整 Xcode 仅后续 Plan(app/UI/扩展/模拟器)需要;本 Plan 只需命令行 Swift。** 若 `swift test` 在纯 Command Line Tools 下报 SwiftData 宏不可用,安装完整 Xcode 后即可解决(见 Task 4 备注)。
+- **KaiCore 的官方测试命令是 iOS 模拟器宿主(非 `swift test`)**:`xcodebuild test -scheme KaiCore -destination 'platform=iOS Simulator,name=iPhone 17 Pro'`。原因:SwiftData `#Predicate` 取数在 **macOS 测试宿主**下会 SIGTRAP 崩溃,在 iOS(App 真实目标平台)上正常。纯值/逻辑测试(Task 1–3)仍可用 `swift test` 快速跑,但**任何涉及 SwiftData 的测试必须走 iOS 模拟器**。
+- **SwiftData 测试稳定性铁律**:所有 SwiftData 相关测试放进**同一个 `@Suite(.serialized)` 套件**,并**共享进程内单一 in-memory `ModelContainer`**(每个测试用 `ModelContext.delete(model:)` 清库保证隔离)。SwiftData 在一个进程里并发创建多个容器会崩溃——见 `Tests/KaiCoreTests/SwiftDataTests.swift`。
 - 测试框架统一用 **Swift Testing**(`import Testing` / `@Test` / `#expect`),不用 XCTest。
 - 数据模型 **CloudKit 兼容**:每个持久属性都有默认值或为可选;不使用 `@Attribute(.unique)`;去重在代码层做。
 - 枚举可查询字段(language / kind / source / state / quizType)以 **raw String/Int** 持久化,并提供强类型计算访问器,保证 `#Predicate` 查询稳定。

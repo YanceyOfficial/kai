@@ -1,8 +1,11 @@
 import SwiftUI
 
 /// The signature study card in the "Ink & Paper" aesthetic: a washi-paper card
-/// showing a word with a vermilion brush underline; tapping springs it over in 3D
-/// to reveal the meaning. A vermilion hanko seal stamps the card once it is learned.
+/// showing a word with a vermilion brush underline; flipping springs it over in
+/// 3D to reveal the meaning. A vermilion hanko seal stamps it once learned.
+///
+/// The reveal state is externally controlled via `isRevealed` so a review session
+/// can coordinate the card with its rating controls.
 public struct FlipCard: View {
     private let word: String
     private let phonetic: String
@@ -11,7 +14,7 @@ public struct FlipCard: View {
     private let translation: String
     private let isLearned: Bool
 
-    @State private var showBack = false
+    @Binding private var isRevealed: Bool
 
     public init(
         word: String,
@@ -19,7 +22,8 @@ public struct FlipCard: View {
         explanation: String,
         example: String,
         translation: String,
-        isLearned: Bool = false
+        isLearned: Bool = false,
+        isRevealed: Binding<Bool>
     ) {
         self.word = word
         self.phonetic = phonetic
@@ -27,11 +31,12 @@ public struct FlipCard: View {
         self.example = example
         self.translation = translation
         self.isLearned = isLearned
+        self._isRevealed = isRevealed
     }
 
     public var body: some View {
         ZStack {
-            if showBack {
+            if isRevealed {
                 back.rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
             } else {
                 front
@@ -42,16 +47,17 @@ public struct FlipCard: View {
         .padding(KaiSpacing.l)
         .background(cardSurface)
         .overlay(alignment: .topTrailing) {
-            if isLearned {
+            // Only on the front: the seal must not be mirrored by the card's flip.
+            if isLearned && !isRevealed {
                 SealBadge().padding(KaiSpacing.m)
             }
         }
-        .rotation3DEffect(.degrees(showBack ? 180 : 0), axis: (x: 0, y: 1, z: 0))
-        .animation(.spring(response: 0.55, dampingFraction: 0.72), value: showBack)
+        .rotation3DEffect(.degrees(isRevealed ? 180 : 0), axis: (x: 0, y: 1, z: 0))
+        .animation(.spring(response: 0.55, dampingFraction: 0.72), value: isRevealed)
         .contentShape(Rectangle())
-        .onTapGesture { showBack.toggle() }
+        .onTapGesture { isRevealed.toggle() }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(showBack ? explanation : word)
+        .accessibilityLabel(isRevealed ? explanation : word)
         .accessibilityHint("Double-tap to flip the card")
     }
 
@@ -125,7 +131,7 @@ public struct FlipCard: View {
 // MARK: - Details
 
 /// A tapered horizontal brush stroke (thicker in the middle, thin at the ends),
-/// evoking a single sumi/vermilion brush mark.
+/// evoking a single vermilion brush mark.
 struct InkBrushUnderline: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
@@ -167,6 +173,7 @@ struct SealBadge: View {
 }
 
 #Preview {
+    @Previewable @State var revealed = false
     ZStack {
         KaiColor.washi.ignoresSafeArea()
         FlipCard(
@@ -175,7 +182,8 @@ struct SealBadge: View {
             explanation: "adj. 古怪的，异乎寻常的",
             example: "My uncle is something of an eccentric.",
             translation: "我叔叔有点古怪。",
-            isLearned: true
+            isLearned: true,
+            isRevealed: $revealed
         )
         .padding(KaiSpacing.l)
     }

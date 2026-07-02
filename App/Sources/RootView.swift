@@ -1,50 +1,35 @@
 import SwiftUI
-import KaiUI
 
-/// Temporary showcase root: the "Ink & Paper" home surface with the signature
-/// FlipCard. Replaced by the real navigation and screens in a later plan.
+/// Temporary showcase root hosting the review loop with a sample deck.
+/// Replaced by real navigation + data-driven decks in a later plan.
 struct RootView: View {
+    private let sampleDeck: [ReviewCardData] = [
+        ReviewCardData(
+            word: "eccentric",
+            phonetic: "/ɪkˈsɛntrɪk/",
+            explanation: "adj. 古怪的，异乎寻常的",
+            example: "My uncle is something of an eccentric.",
+            translation: "我叔叔有点古怪。",
+            isLearned: true
+        ),
+        ReviewCardData(
+            word: "obsession",
+            phonetic: "/əbˈsɛʃ.ən/",
+            explanation: "n. 痴迷；萦绕于心的念头",
+            example: "Finding his birth mother became an obsession.",
+            translation: "找到生母成了他挥之不去的执念。"
+        ),
+        ReviewCardData(
+            word: "meticulous",
+            phonetic: "/məˈtɪk.jə.ləs/",
+            explanation: "adj. 一丝不苟的，极为细致的",
+            example: "She kept meticulous records of every review.",
+            translation: "她把每次复习都记录得一丝不苟。"
+        ),
+    ]
+
     var body: some View {
-        ZStack {
-            KaiColor.washi.ignoresSafeArea()
-
-            VStack(spacing: KaiSpacing.xl) {
-                header
-
-                FlipCard(
-                    word: "eccentric",
-                    phonetic: "/ɪkˈsɛntrɪk/",
-                    explanation: "adj. 古怪的，异乎寻常的",
-                    example: "My uncle is something of an eccentric.",
-                    translation: "我叔叔有点古怪。",
-                    isLearned: true
-                )
-
-                Spacer()
-            }
-            .padding(KaiSpacing.l)
-        }
-    }
-
-    private var header: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: KaiSpacing.xs) {
-                Text("Kai")
-                    .font(KaiFont.display(40, weight: .bold))
-                    .foregroundStyle(KaiColor.sumi)
-                Text("甲斐 · today's words")
-                    .font(KaiFont.body(15, weight: .medium))
-                    .foregroundStyle(KaiColor.inkSecondary)
-            }
-            Spacer()
-            Text("3")
-                .font(KaiFont.display(34, weight: .bold))
-                .foregroundStyle(KaiColor.vermilion)
-                + Text(" due")
-                .font(KaiFont.body(15, weight: .medium))
-                .foregroundStyle(KaiColor.inkSecondary)
-        }
-        .padding(.top, KaiSpacing.s)
+        ReviewSessionView(deck: sampleDeck)
     }
 }
 

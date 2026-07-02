@@ -106,4 +106,30 @@ public struct FSRSScheduler: Sendable {
         if rating.rawValue >= 3 { sInc = max(sInc, 1.0) }
         return stability * sInc
     }
+
+    /// Schedules a review. Pass `state: nil` for a brand-new card. `elapsedDays`
+    /// is the time since the last review (0 for a same-day review).
+    public func review(state: FSRSMemoryState?, rating: FSRSRating, elapsedDays: Double) -> FSRSReviewResult {
+        // New card: use the initial state directly.
+        guard let state else {
+            let initial = initialState(rating)
+            return FSRSReviewResult(state: initial, intervalDays: nextInterval(stability: initial.stability))
+        }
+
+        let newDifficulty = nextDifficulty(state.difficulty, rating: rating)
+        let newStability: Double
+
+        if elapsedDays <= 0 {
+            // Same-day review: short-term stability path.
+            newStability = shortTermStability(stability: state.stability, rating: rating)
+        } else {
+            let r = retrievability(elapsedDays: elapsedDays, stability: state.stability)
+            newStability = rating == .again
+                ? stabilityAfterLapse(difficulty: state.difficulty, stability: state.stability, retrievability: r)
+                : stabilityAfterRecall(difficulty: state.difficulty, stability: state.stability, retrievability: r, rating: rating)
+        }
+
+        let newState = FSRSMemoryState(stability: newStability, difficulty: newDifficulty)
+        return FSRSReviewResult(state: newState, intervalDays: nextInterval(stability: newStability))
+    }
 }

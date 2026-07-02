@@ -24,3 +24,6 @@ Tuist/.build/
 
 # Superpowers SDD scratch (progress ledger is git-ignored)
 .superpowers/
+
+# SourceKit-LSP build server config (machine-specific DerivedData path)
+buildServer.json

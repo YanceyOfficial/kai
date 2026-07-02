@@ -59,3 +59,16 @@ func claudeHTTPError() async throws {
         _ = try await provider.generateCards(lemmas: ["x"], language: .english, literaryExamples: false)
     }
 }
+
+@Test("ClaudeProvider throws missingAPIKey for empty key")
+func claudeMissingAPIKey() async throws {
+    final class StubTransport: HTTPTransport, @unchecked Sendable {
+        func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+            fatalError("Should not be called")
+        }
+    }
+    let provider = ClaudeProvider(apiKey: "", transport: StubTransport())
+    await #expect(throws: AIError.missingAPIKey) {
+        _ = try await provider.generateCards(lemmas: ["x"], language: .english, literaryExamples: false)
+    }
+}

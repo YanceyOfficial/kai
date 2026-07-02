@@ -1,6 +1,6 @@
 import Foundation
 
-/// A minimal JSON-Schema builder that serializes deterministically for structured-output requests.
+/// A minimal JSON-Schema builder that serializes to standard JSON Schema for structured-output requests.
 public indirect enum JSONSchema: Encodable, Sendable {
     case string
     case stringEnum([String])

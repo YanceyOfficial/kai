@@ -18,9 +18,11 @@ public struct ClaudeProvider: LLMProvider {
 
     public func generateCards(lemmas: [String], language: LanguageDomain, literaryExamples: Bool) async throws -> [GeneratedCard] {
         guard !apiKey.isEmpty else { throw AIError.missingAPIKey }
+        let cleaned = lemmas.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        guard !cleaned.isEmpty else { return [] }
         let prompt = PromptBuilder(language: language, literaryExamples: literaryExamples)
 
-        // Body is assembled as an Encodable so the schema serializes deterministically.
+        // Body is assembled as an Encodable so the schema serializes to standard JSON Schema.
         struct Body: Encodable {
             let model: String
             let max_tokens: Int
@@ -35,7 +37,7 @@ public struct ClaudeProvider: LLMProvider {
             model: model,
             max_tokens: maxTokens,
             system: prompt.systemPrompt(),
-            messages: [["role": "user", "content": prompt.cardUserPrompt(lemmas: lemmas)]],
+            messages: [["role": "user", "content": prompt.cardUserPrompt(lemmas: cleaned)]],
             output_config: OutputConfig(format: Format(schema: CardSchema.cardBatch))
         )
 
@@ -46,7 +48,17 @@ public struct ClaudeProvider: LLMProvider {
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.httpBody = try JSONEncoder().encode(body)
 
-        let (data, response) = try await transport.send(request)
+        let data: Data
+        let response: HTTPURLResponse
+        do {
+            (data, response) = try await transport.send(request)
+        } catch let error as AIError {
+            throw error
+        } catch is CancellationError {
+            throw AIError.cancelled
+        } catch {
+            throw AIError.transport(String(describing: error))
+        }
         guard (200...299).contains(response.statusCode) else {
             throw AIError.http(status: response.statusCode, body: String(decoding: data, as: UTF8.self))
         }

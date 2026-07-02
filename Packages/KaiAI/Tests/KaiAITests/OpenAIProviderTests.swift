@@ -37,3 +37,34 @@ func openAIGenerateCards() async throws {
     #expect(js["strict"] as? Bool == true)
     #expect(js["schema"] != nil)
 }
+
+@Test("OpenAIProvider maps non-2xx to AIError.http")
+func openAIHTTPError() async throws {
+    final class ErrorTransport: HTTPTransport, @unchecked Sendable {
+        func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+            let resp = HTTPURLResponse(url: request.url!, statusCode: 401, httpVersion: nil, headerFields: nil)!
+            return (Data("unauthorized".utf8), resp)
+        }
+    }
+    let provider = OpenAIProvider(apiKey: "bad", transport: ErrorTransport())
+    await #expect(throws: AIError.http(status: 401, body: "unauthorized")) {
+        _ = try await provider.generateCards(lemmas: ["x"], language: .english, literaryExamples: false)
+    }
+}
+
+@Test("OpenAIProvider throws emptyResponse for empty choices")
+func openAIEmptyChoices() async throws {
+    final class StubTransport: HTTPTransport, @unchecked Sendable {
+        let responseBody: Data
+        init(responseBody: Data) { self.responseBody = responseBody }
+        func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+            let resp = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+            return (responseBody, resp)
+        }
+    }
+    let env = try JSONSerialization.data(withJSONObject: ["choices": []])
+    let provider = OpenAIProvider(apiKey: "k", transport: StubTransport(responseBody: env))
+    await #expect(throws: AIError.emptyResponse) {
+        _ = try await provider.generateCards(lemmas: ["x"], language: .english, literaryExamples: false)
+    }
+}

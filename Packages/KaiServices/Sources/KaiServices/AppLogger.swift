@@ -20,10 +20,10 @@ public struct OSLogSink: LogSink {
     public func write(_ level: LogLevel, category: String, message: String) {
         let logger = Logger(subsystem: subsystem, category: category)
         switch level {
-        case .debug: logger.debug("\(message, privacy: .public)")
-        case .info: logger.info("\(message, privacy: .public)")
-        case .warning: logger.warning("\(message, privacy: .public)")
-        case .error: logger.error("\(message, privacy: .public)")
+        case .debug: logger.debug("\(message)")
+        case .info: logger.info("\(message)")
+        case .warning: logger.warning("\(message)")
+        case .error: logger.error("\(message)")
         }
     }
 }

@@ -26,6 +26,6 @@ public struct QuietHours: Sendable {
         let endIsNextDay = wraps && hour >= startHour
         let dayStart = calendar.startOfDay(for: date)
         let base = endIsNextDay ? calendar.date(byAdding: .day, value: 1, to: dayStart)! : dayStart
-        return calendar.date(byAdding: .hour, value: endHour, to: base)!
+        return calendar.date(bySettingHour: endHour, minute: 0, second: 0, of: base)!
     }
 }

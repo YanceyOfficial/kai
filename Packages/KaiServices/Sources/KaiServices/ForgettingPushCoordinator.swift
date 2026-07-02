@@ -23,6 +23,8 @@ public struct ForgettingPushCoordinator: Sendable {
                 ForgettingReminder(id: $0.id, fireDate: quietHours.adjusted($0.fireDate, calendar: calendar))
             }
         }
-        try await sink.schedule(reminders)
+        // iOS keeps only the 64 soonest pending local notifications; keep those.
+        let capped = Array(reminders.sorted { $0.fireDate < $1.fireDate }.prefix(64))
+        try await sink.schedule(capped)
     }
 }

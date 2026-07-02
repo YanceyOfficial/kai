@@ -32,3 +32,29 @@ func coordinatorRefresh() async throws {
     let hour = cal.component(.hour, from: scheduled[0].fireDate)
     #expect(hour == 8)
 }
+
+@Test("Coordinator caps scheduled reminders at 64")
+func coordinatorCaps64Reminders() async throws {
+    let sink = RecordingSink()
+    var cal = Calendar(identifier: .gregorian); cal.timeZone = TimeZone(identifier: "UTC")!
+    let coord = ForgettingPushCoordinator(
+        scheduler: ForgettingScheduler(retentionThreshold: 0.9),
+        quietHours: nil,
+        sink: sink,
+        calendar: cal
+    )
+    let lastReview = cal.date(from: DateComponents(year: 2026, month: 1, day: 1, hour: 12))!
+
+    // Create 70 items with the same lastReview but increasing stability to ensure different fire dates.
+    var items: [ReviewableItem] = []
+    for i in 0..<70 {
+        let item = ReviewableItem(id: UUID(), stability: Double(i) * 0.1 + 0.5, lastReview: lastReview)
+        items.append(item)
+    }
+
+    try await coord.refresh(items: items, now: lastReview)
+
+    let (scheduled, cancels) = await sink.snapshot()
+    #expect(cancels == 1)
+    #expect(scheduled.count == 64)
+}

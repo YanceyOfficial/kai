@@ -39,4 +39,25 @@ public struct FSRSScheduler: Sendable {
         let rounded = Int(raw.rounded())
         return min(max(rounded, 1), maximumInterval)
     }
+
+    /// Clamps a difficulty value to the valid 1...10 range.
+    private func clampDifficulty(_ d: Double) -> Double {
+        min(max(d, 1.0), 10.0)
+    }
+
+    /// Initial stability for a first review with the given rating: S0(G) = w[G-1].
+    public func initialStability(_ rating: FSRSRating) -> Double {
+        w[rating.rawValue - 1]
+    }
+
+    /// Initial difficulty for a first review: D0(G) = w[4] - e^(w[5]*(G-1)) + 1, clamped to 1...10.
+    public func initialDifficulty(_ rating: FSRSRating) -> Double {
+        let g = Double(rating.rawValue)
+        return clampDifficulty(w[4] - exp(w[5] * (g - 1.0)) + 1.0)
+    }
+
+    /// The memory state produced by a first review with the given rating.
+    public func initialState(_ rating: FSRSRating) -> FSRSMemoryState {
+        FSRSMemoryState(stability: initialStability(rating), difficulty: initialDifficulty(rating))
+    }
 }

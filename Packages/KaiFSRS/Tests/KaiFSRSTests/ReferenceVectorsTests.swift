@@ -57,3 +57,21 @@ func matchesReferenceMixed() {
         RefStep(rating: .easy,  elapsed: 5, stability: 15.98554608, difficulty: 7.64712644, interval: 16),
     ], "mixed")
 }
+
+@Test("Matches ts-fsrs reference for same-day (short-term) reviews")
+func matchesReferenceShortTerm() {
+    // A first Good review, then an immediate same-day (elapsed 0) review, exercises
+    // the short-term stability path (validated against ts-fsrs with short-term enabled).
+    let initial = scheduler.review(state: nil, rating: .good, elapsedDays: 0).state
+
+    // Same-day Good: for G >= 3 the increase factor clamps to 1, so stability is
+    // unchanged; difficulty still updates.
+    let sameDayGood = scheduler.review(state: initial, rating: .good, elapsedDays: 0).state
+    #expect(approxEqual(sameDayGood.stability, 2.3065))
+    #expect(approxEqual(sameDayGood.difficulty, 2.11121424))
+
+    // Same-day Again: the short-term formula (not the lapse formula) reduces stability.
+    let sameDayAgain = scheduler.review(state: initial, rating: .again, elapsedDays: 0).state
+    #expect(approxEqual(sameDayAgain.stability, 0.77508398))
+    #expect(approxEqual(sameDayAgain.difficulty, 7.39450274))
+}

@@ -10,6 +10,12 @@ public struct FSRSScheduler: Sendable {
     /// Upper bound on any scheduled interval, in days.
     public let maximumInterval: Int
 
+    /// The forgetting-curve decay exponent (negative). Precomputed from w[20].
+    private let decay: Double
+
+    /// Curve factor chosen so retrievability is exactly 0.9 when elapsed == stability. Precomputed.
+    private let factor: Double
+
     public init(
         parameters: FSRSParameters = .fsrs6Default,
         requestRetention: Double = 0.9,
@@ -18,17 +24,17 @@ public struct FSRSScheduler: Sendable {
         self.parameters = parameters
         self.requestRetention = requestRetention
         self.maximumInterval = maximumInterval
+        // Precompute the curve constants once; they depend only on immutable parameters
+        // and are hot when the optimizer replays long review histories.
+        let d = -parameters.weights[20]
+        self.decay = d
+        self.factor = pow(0.9, 1.0 / d) - 1.0
     }
 
     private var w: [Double] { parameters.weights }
 
-    /// The forgetting-curve decay exponent (negative).
-    private var decay: Double { -w[20] }
-
-    /// Curve factor chosen so retrievability is exactly 0.9 when elapsed == stability.
-    private var factor: Double { pow(0.9, 1.0 / decay) - 1.0 }
-
     /// Probability of recall after `elapsedDays` given `stability` (power forgetting curve).
+    /// Precondition: `stability > 0` and `elapsedDays >= 0`; other inputs yield NaN.
     public func retrievability(elapsedDays: Double, stability: Double) -> Double {
         pow(1.0 + factor * elapsedDays / stability, decay)
     }

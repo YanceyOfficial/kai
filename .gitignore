@@ -19,7 +19,6 @@ xcuserdata/
 Derived/
 *.xcodeproj
 *.xcworkspace
-!*.xcworkspace/contents.xcworkspacedata
 .tuist-version
 Tuist/.build/
 

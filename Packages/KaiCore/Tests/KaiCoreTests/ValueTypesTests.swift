@@ -22,3 +22,12 @@ func exampleCodableRoundTrip() throws {
     let decoded = try JSONDecoder().decode(Example.self, from: data)
     #expect(decoded == ex)
 }
+
+@Test("SchedulingState round-trips through Codable")
+func schedulingStateCodableRoundTrip() throws {
+    let now = Date(timeIntervalSince1970: 1_000_000)
+    let state = SchedulingState(stability: 2.5, difficulty: 5.0, due: now, lastReview: now, reps: 3, lapses: 1, state: .review)
+    let data = try JSONEncoder().encode(state)
+    let decoded = try JSONDecoder().decode(SchedulingState.self, from: data)
+    #expect(decoded == state)
+}

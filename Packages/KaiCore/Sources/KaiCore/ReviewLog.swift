@@ -30,7 +30,6 @@ public final class ReviewLog {
         isCorrect: Bool,
         timestamp: Date = .now
     ) {
-        self.id = UUID()
         self.entryID = entryID
         self.ratingRaw = rating.rawValue
         self.quizTypeRaw = quizType.rawValue

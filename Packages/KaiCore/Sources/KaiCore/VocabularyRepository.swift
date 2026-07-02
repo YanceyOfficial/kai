@@ -46,10 +46,10 @@ public final class VocabularyRepository: VocabularyRepositoryProtocol {
     /// Fetches all entries for the specified language, sorted by createdAt in ascending order.
     public func entries(for language: LanguageDomain) throws -> [VocabularyEntry] {
         let lang = language.rawValue
-        var descriptor = FetchDescriptor<VocabularyEntry>(
-            predicate: #Predicate { $0.languageRaw == lang }
+        let descriptor = FetchDescriptor<VocabularyEntry>(
+            predicate: #Predicate { $0.languageRaw == lang },
+            sortBy: [SortDescriptor(\.createdAt, order: .forward)]
         )
-        descriptor.sortBy = [SortDescriptor(\.createdAt, order: .forward)]
         return try context.fetch(descriptor)
     }
 

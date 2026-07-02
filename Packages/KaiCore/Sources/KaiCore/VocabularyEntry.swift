@@ -30,6 +30,7 @@ public final class VocabularyEntry {
     public var tags: [String] = []
     public var isMarked: Bool = false
     public var createdAt: Date = Date()
+    /// Timestamp of the last content edit (lemma, explanation, examples, etc.). Scheduling changes do NOT bump this — review recency lives in scheduling.lastReview and ReviewLog.
     public var updatedAt: Date = Date()
 
     /// Embedded FSRS scheduling state. Mutate only via reschedule(_:) so the queryable dueAt mirror stays in sync.
@@ -38,7 +39,7 @@ public final class VocabularyEntry {
     /// Top-level mirror of scheduling.due, kept in sync by reschedule(_:). SwiftData #Predicate cannot filter on a sub-field of the embedded Codable scheduling struct, so due-date queries use this field instead.
     public private(set) var dueAt: Date = Date()
 
-    /// Updates the scheduling state and keeps the dueAt mirror consistent. This is the only supported way to change scheduling.
+    /// Updates the scheduling state and keeps the dueAt mirror consistent. This is the only supported way to change scheduling. Intentionally does not touch updatedAt (that tracks content edits only).
     public func reschedule(_ state: SchedulingState) {
         scheduling = state
         dueAt = state.due
@@ -78,7 +79,6 @@ public final class VocabularyEntry {
         isMarked: Bool = false,
         now: Date = .now
     ) {
-        self.id = UUID()
         self.lemma = lemma
         self.lemmaKey = lemma.lowercased()
         self.kindRaw = kind.rawValue

@@ -21,5 +21,7 @@ func phraseExcludesSyllableQuizzes() {
 @Test("Review rating raw values conform to FSRS convention")
 func ratingRawValues() {
     #expect(ReviewRating.again.rawValue == 1)
+    #expect(ReviewRating.hard.rawValue == 2)
+    #expect(ReviewRating.good.rawValue == 3)
     #expect(ReviewRating.easy.rawValue == 4)
 }

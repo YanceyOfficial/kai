@@ -12,7 +12,7 @@ Native Apple rewrite of the "Kai" flashcard app for memorizing difficult vocabul
   - `KaiCore` — SwiftData models, enums, value types, `VocabularyRepository`. **CloudKit-compatible** modeling (defaults/optionals, no `@Attribute(.unique)`, code-layer dedupe). Sync is off for now.
   - `KaiFSRS` — pure FSRS-6 spaced-repetition algorithm. Zero dependencies. Validated against ts-fsrs.
   - `KaiAI` — `LLMProvider` protocol + Claude/OpenAI structured-output over `URLSession` (`HTTPTransport` is injectable). Produces Codable DTOs, not SwiftData. Depends on KaiCore (enums only).
-  - `KaiServices` — logging (`os.Logger`), Keychain (`SecretStore`), FSRS-driven forgetting-push scheduling + quiet hours, Vision OCR. Depends on KaiFSRS. Pattern: **protocol + pure (tested) logic + thin platform adapter (compiled, not unit-tested)**.
+  - `KaiServices` — logging (`os.Logger`), Keychain (`SecretStore`), FSRS-driven forgetting-push scheduling + quiet hours, Vision OCR, word pronunciation (Youdao dictvoice URL + `AVPlayer`). Depends on KaiFSRS. Pattern: **protocol + pure (tested) logic + thin platform adapter (compiled, not unit-tested)**.
 - `docs/superpowers/` — design spec (`specs/`) and per-package TDD implementation plans (`plans/`).
 
 ## Build / run / test
@@ -58,6 +58,7 @@ xcodebuild build -workspace kai-ios.xcworkspace -scheme kai-ios -destination 'pl
 
 ## Status (2026-07)
 
-Kernel complete and green: KaiCore (16 tests), KaiFSRS (23), KaiAI (18), KaiServices (13);
-Tuist app scaffold builds and launches in the simulator. Next: `KaiUI` (Toast, flip card,
-quiz widgets, Swift Charts) and the app's feature screens.
+Kernel complete and green: KaiCore (16 tests), KaiFSRS (23), KaiAI (18), KaiServices (18);
+Tuist app scaffold builds and launches in the simulator. KaiUI review loop (flip card,
+rating bar, haptics) is in place with auto-playing word pronunciation. Next: wire the
+review loop to real KaiCore/KaiFSRS data, then quiz widgets and Swift Charts.

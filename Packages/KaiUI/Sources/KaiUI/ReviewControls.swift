@@ -34,6 +34,8 @@ public struct RatingBar: View {
         HStack(spacing: KaiSpacing.s) {
             ForEach(ReviewRating.allCases, id: \.self) { rating in
                 Button {
+                    // "Again" earns a firmer thud; the rest get a crisp selection tick.
+                    if rating == .again { KaiHaptics.impact(.rigid) } else { KaiHaptics.selection() }
                     onRate(rating)
                 } label: {
                     Text(rating.label)
@@ -50,7 +52,7 @@ public struct RatingBar: View {
                                 .strokeBorder(rating.tint.opacity(0.55), lineWidth: 1.5)
                         )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(KaiPressStyle())
             }
         }
     }
@@ -85,7 +87,10 @@ public struct KaiPrimaryButton: View {
     }
 
     public var body: some View {
-        Button(action: action) {
+        Button {
+            KaiHaptics.impact(.light)
+            action()
+        } label: {
             Text(title)
                 .font(KaiFont.body(17, weight: .semibold))
                 .foregroundStyle(KaiColor.cardFace)
@@ -96,6 +101,6 @@ public struct KaiPrimaryButton: View {
                         .fill(KaiColor.sumi)
                 )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(KaiPressStyle())
     }
 }

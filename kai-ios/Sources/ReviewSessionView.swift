@@ -1,5 +1,6 @@
 import SwiftUI
 import KaiUI
+import KaiServices
 
 /// One card's display content for a review session. The app maps KaiCore entries
 /// into this value type; wiring to the real repository + FSRS comes in a later plan.
@@ -22,6 +23,11 @@ struct ReviewSessionView: View {
     @State private var revealed = false
     @State private var showDone = false
 
+    /// Plays word pronunciations via Youdao's dictvoice audio (US accent for now).
+    @State private var pronouncer = PronunciationPlayer()
+    /// User setting: auto-play the pronunciation when each card appears.
+    @AppStorage("autoPlayPronunciation") private var autoPlayPronunciation = true
+
     var body: some View {
         ZStack {
             KaiColor.washi.ignoresSafeArea()
@@ -39,7 +45,9 @@ struct ReviewSessionView: View {
                         example: card.example,
                         translation: card.translation,
                         isLearned: card.isLearned,
-                        isRevealed: $revealed
+                        autoPlays: autoPlayPronunciation,
+                        isRevealed: $revealed,
+                        onSpeak: { pronouncer.play(card.word, accent: .us) }
                     )
                     .id(card.id)   // reset flip animation per card
 
@@ -105,7 +113,10 @@ struct ReviewSessionView: View {
         withAnimation {
             revealed = false
             index += 1
-            if index >= deck.count { showDone = true }
+            if index >= deck.count {
+                showDone = true
+                KaiHaptics.success()
+            }
         }
     }
 

@@ -1,24 +1,50 @@
 import SwiftUI
-import KaiCore
-import KaiFSRS
-import KaiAI
-import KaiServices
+import KaiUI
 
-/// Temporary root view that proves the four local packages link and their public
-/// API is reachable from the app target. Replaced by the real UI in a later plan.
+/// Temporary showcase root: the "Ink & Paper" home surface with the signature
+/// FlipCard. Replaced by the real navigation and screens in a later plan.
 struct RootView: View {
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Kai 甲斐")
-                .font(.largeTitle.bold())
-            Text("Core schema v\(KaiCoreInfo.schemaVersion)")
-                .foregroundStyle(.secondary)
-            Text("FSRS-6 weights: \(FSRSParameters.fsrs6Default.weights.count)")
-                .foregroundStyle(.secondary)
-            Text("Quiz types: \(QuizType.allCases.count)")
-                .foregroundStyle(.secondary)
+        ZStack {
+            KaiColor.washi.ignoresSafeArea()
+
+            VStack(spacing: KaiSpacing.xl) {
+                header
+
+                FlipCard(
+                    word: "eccentric",
+                    phonetic: "/ɪkˈsɛntrɪk/",
+                    explanation: "adj. 古怪的，异乎寻常的",
+                    example: "My uncle is something of an eccentric.",
+                    translation: "我叔叔有点古怪。",
+                    isLearned: true
+                )
+
+                Spacer()
+            }
+            .padding(KaiSpacing.l)
         }
-        .padding()
+    }
+
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: KaiSpacing.xs) {
+                Text("Kai")
+                    .font(KaiFont.display(40, weight: .bold))
+                    .foregroundStyle(KaiColor.sumi)
+                Text("甲斐 · today's words")
+                    .font(KaiFont.body(15, weight: .medium))
+                    .foregroundStyle(KaiColor.inkSecondary)
+            }
+            Spacer()
+            Text("3")
+                .font(KaiFont.display(34, weight: .bold))
+                .foregroundStyle(KaiColor.vermilion)
+                + Text(" due")
+                .font(KaiFont.body(15, weight: .medium))
+                .foregroundStyle(KaiColor.inkSecondary)
+        }
+        .padding(.top, KaiSpacing.s)
     }
 }
 

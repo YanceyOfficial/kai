@@ -10,6 +10,7 @@ let project = Project(
         .local(path: "Packages/KaiFSRS"),
         .local(path: "Packages/KaiAI"),
         .local(path: "Packages/KaiServices"),
+        .local(path: "Packages/KaiUI"),
     ],
     settings: .settings(
         base: [
@@ -33,6 +34,7 @@ let project = Project(
                 .package(product: "KaiFSRS"),
                 .package(product: "KaiAI"),
                 .package(product: "KaiServices"),
+                .package(product: "KaiUI"),
             ]
         ),
         .target(

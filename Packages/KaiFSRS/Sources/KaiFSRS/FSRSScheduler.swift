@@ -50,10 +50,17 @@ public struct FSRSScheduler: Sendable {
         w[rating.rawValue - 1]
     }
 
+    /// Raw (unclamped) initial difficulty: D0(G) = w[4] - e^(w[5]*(G-1)) + 1.
+    /// Mean reversion targets this raw value, matching the FSRS-6 reference; the
+    /// clamped form is only used as an actual difficulty value.
+    private func initialDifficultyRaw(_ rating: FSRSRating) -> Double {
+        let g = Double(rating.rawValue)
+        return w[4] - exp(w[5] * (g - 1.0)) + 1.0
+    }
+
     /// Initial difficulty for a first review: D0(G) = w[4] - e^(w[5]*(G-1)) + 1, clamped to 1...10.
     public func initialDifficulty(_ rating: FSRSRating) -> Double {
-        let g = Double(rating.rawValue)
-        return clampDifficulty(w[4] - exp(w[5] * (g - 1.0)) + 1.0)
+        clampDifficulty(initialDifficultyRaw(rating))
     }
 
     /// The memory state produced by a first review with the given rating.
@@ -67,7 +74,7 @@ public struct FSRSScheduler: Sendable {
         let g = Double(rating.rawValue)
         let deltaD = -w[6] * (g - 3.0)
         let damped = difficulty + (10.0 - difficulty) * deltaD / 9.0
-        let reverted = w[7] * initialDifficulty(.easy) + (1.0 - w[7]) * damped
+        let reverted = w[7] * initialDifficultyRaw(.easy) + (1.0 - w[7]) * damped
         return clampDifficulty(reverted)
     }
 

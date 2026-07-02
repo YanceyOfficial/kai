@@ -60,4 +60,14 @@ public struct FSRSScheduler: Sendable {
     public func initialState(_ rating: FSRSRating) -> FSRSMemoryState {
         FSRSMemoryState(stability: initialStability(rating), difficulty: initialDifficulty(rating))
     }
+
+    /// Updates difficulty after a review: grade delta, linear damping toward 10,
+    /// then mean reversion toward the Easy-grade initial difficulty. Clamped to 1...10.
+    public func nextDifficulty(_ difficulty: Double, rating: FSRSRating) -> Double {
+        let g = Double(rating.rawValue)
+        let deltaD = -w[6] * (g - 3.0)
+        let damped = difficulty + (10.0 - difficulty) * deltaD / 9.0
+        let reverted = w[7] * initialDifficulty(.easy) + (1.0 - w[7]) * damped
+        return clampDifficulty(reverted)
+    }
 }

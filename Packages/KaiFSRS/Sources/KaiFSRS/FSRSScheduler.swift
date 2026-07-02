@@ -70,4 +70,40 @@ public struct FSRSScheduler: Sendable {
         let reverted = w[7] * initialDifficulty(.easy) + (1.0 - w[7]) * damped
         return clampDifficulty(reverted)
     }
+
+    /// New stability after a successful recall (rating hard/good/easy).
+    public func stabilityAfterRecall(
+        difficulty: Double, stability: Double, retrievability: Double, rating: FSRSRating
+    ) -> Double {
+        let hardPenalty = rating == .hard ? w[15] : 1.0
+        let easyBonus = rating == .easy ? w[16] : 1.0
+        let sInc = exp(w[8])
+            * (11.0 - difficulty)
+            * pow(stability, -w[9])
+            * (exp((1.0 - retrievability) * w[10]) - 1.0)
+            * hardPenalty
+            * easyBonus
+        return stability * (1.0 + sInc)
+    }
+
+    /// New stability after a lapse (rating again). Capped so it cannot exceed
+    /// the pre-lapse stability adjusted by the short-term factor.
+    public func stabilityAfterLapse(
+        difficulty: Double, stability: Double, retrievability: Double
+    ) -> Double {
+        let sf = w[11]
+            * pow(difficulty, -w[12])
+            * (pow(stability + 1.0, w[13]) - 1.0)
+            * exp((1.0 - retrievability) * w[14])
+        let cap = stability / exp(w[17] * w[18])
+        return min(sf, cap)
+    }
+
+    /// New stability for a same-day (short-term) review. Good/Easy never reduce stability.
+    public func shortTermStability(stability: Double, rating: FSRSRating) -> Double {
+        let g = Double(rating.rawValue)
+        var sInc = exp(w[17] * (g - 3.0 + w[18])) * pow(stability, -w[19])
+        if rating.rawValue >= 3 { sInc = max(sInc, 1.0) }
+        return stability * sInc
+    }
 }

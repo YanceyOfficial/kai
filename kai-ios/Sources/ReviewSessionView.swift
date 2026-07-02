@@ -45,6 +45,7 @@ struct ReviewSessionView: View {
 
                     Spacer()
                     controls
+                        .padding(.bottom, KaiSpacing.s)
                 } else {
                     completed
                 }

@@ -64,26 +64,25 @@ public struct FlipCard: View {
     // MARK: Faces
 
     private var front: some View {
-        VStack(spacing: KaiSpacing.m) {
-            Spacer()
-            VStack(spacing: KaiSpacing.s) {
-                Text(word)
-                    .font(KaiFont.display(46, weight: .bold))
-                    .foregroundStyle(KaiColor.sumi)
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-                InkBrushUnderline()
-                    .fill(KaiColor.vermilion)
-                    .frame(width: 120, height: 9)
-                Text(phonetic)
-                    .font(KaiFont.phonetic(17))
-                    .foregroundStyle(KaiColor.inkSecondary)
-                    .padding(.top, KaiSpacing.xs)
-            }
-            Spacer()
+        VStack(spacing: KaiSpacing.s) {
+            Text(word)
+                .font(KaiFont.display(46, weight: .bold))
+                .foregroundStyle(KaiColor.sumi)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+            InkBrushUnderline()
+                .fill(KaiColor.vermilion)
+                .frame(width: 120, height: 9)
+            Text(phonetic)
+                .font(KaiFont.phonetic(17))
+                .foregroundStyle(KaiColor.inkSecondary)
+                .padding(.top, KaiSpacing.xs)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)   // truly center the word block
+        .overlay(alignment: .bottom) {
             Text("tap to reveal")
                 .font(KaiFont.body(13, weight: .medium))
-                .foregroundStyle(KaiColor.inkSecondary.opacity(0.7))
+                .foregroundStyle(KaiColor.inkSecondary.opacity(0.6))
                 .textCase(.uppercase)
                 .tracking(1.5)
         }
@@ -119,7 +118,14 @@ public struct FlipCard: View {
 
     private var cardSurface: some View {
         RoundedRectangle(cornerRadius: 24, style: .continuous)
-            .fill(KaiColor.cardFace)
+            .fill(
+                // A whisper of a top-to-bottom warm gradient gives the paper depth.
+                LinearGradient(
+                    colors: [KaiColor.cardFace, Color(hex: 0xF5EDDC)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .strokeBorder(KaiColor.hairline, lineWidth: 1)
@@ -159,15 +165,15 @@ struct InkBrushUnderline: Shape {
 struct SealBadge: View {
     var body: some View {
         Text("判")
-            .font(.system(size: 22, weight: .heavy, design: .serif))
+            .font(.system(size: 18, weight: .heavy, design: .serif))
             .foregroundStyle(KaiColor.cardFace)
-            .frame(width: 44, height: 44)
+            .frame(width: 38, height: 38)
             .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(KaiColor.vermilion)
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(KaiColor.vermilion.opacity(0.9))
             )
-            .rotationEffect(.degrees(-8))
-            .shadow(color: KaiColor.vermilion.opacity(0.35), radius: 6, x: 0, y: 3)
+            .rotationEffect(.degrees(-7))
+            .shadow(color: KaiColor.vermilion.opacity(0.22), radius: 4, x: 0, y: 2)
             .accessibilityLabel("Learned")
     }
 }

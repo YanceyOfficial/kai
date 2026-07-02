@@ -1,10 +1,7 @@
 import ProjectDescription
 
-/// Tuist project for the Kai app. The four feature packages live under Packages/
-/// as local Swift packages; the app target links their products. Regenerate the
-/// Xcode project with `tuist generate` (the generated .xcodeproj is git-ignored).
 let project = Project(
-    name: "Kai",
+    name: "kai-ios",
     packages: [
         .local(path: "Packages/KaiCore"),
         .local(path: "Packages/KaiFSRS"),
@@ -12,23 +9,27 @@ let project = Project(
         .local(path: "Packages/KaiServices"),
         .local(path: "Packages/KaiUI"),
     ],
-    settings: .settings(
-        base: [
-            "SWIFT_VERSION": "6.0",
-        ]
-    ),
+    settings: .settings(base: ["SWIFT_VERSION": "6.0"]),
     targets: [
         .target(
-            name: "Kai",
+            name: "kai-ios",
             destinations: .iOS,
             product: .app,
-            bundleId: "app.yancey.kai",
+            bundleId: "dev.tuist.kai-ios",
             deploymentTargets: .iOS("17.0"),
-            infoPlist: .extendingDefault(with: [
-                "UILaunchScreen": ["UIColorName": ""],
-                "CFBundleDisplayName": "Kai",
-            ]),
-            sources: ["App/Sources/**"],
+            infoPlist: .extendingDefault(
+                with: [
+                    "UILaunchScreen": [
+                        "UIColorName": "",
+                        "UIImageName": "",
+                    ],
+                    "CFBundleDisplayName": "Kai",
+                ]
+            ),
+            buildableFolders: [
+                "kai-ios/Sources",
+                "kai-ios/Resources",
+            ],
             dependencies: [
                 .package(product: "KaiCore"),
                 .package(product: "KaiFSRS"),
@@ -38,16 +39,15 @@ let project = Project(
             ]
         ),
         .target(
-            name: "KaiTests",
+            name: "kai-iosTests",
             destinations: .iOS,
             product: .unitTests,
-            bundleId: "app.yancey.kaiTests",
-            deploymentTargets: .iOS("17.0"),
+            bundleId: "dev.tuist.kai-iosTests",
             infoPlist: .default,
-            sources: ["App/Tests/**"],
-            dependencies: [
-                .target(name: "Kai"),
-            ]
+            buildableFolders: [
+                "kai-ios/Tests"
+            ],
+            dependencies: [.target(name: "kai-ios")]
         ),
     ]
 )

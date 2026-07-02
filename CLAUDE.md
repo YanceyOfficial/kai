@@ -6,8 +6,8 @@ Native Apple rewrite of the "Kai" flashcard app for memorizing difficult vocabul
 
 ## Layout
 
-- `Project.swift` — **Tuist** manifest. The Xcode project/workspace are generated, not committed.
-- `App/` — the app target (`Kai`, bundle `app.yancey.kai`, Swift 6, iOS 17+). `App/Sources`, `App/Tests`.
+- Organized per the **Tuist standard template** (`tuist init`): `Project.swift` + `Tuist.swift` + `Tuist/Package.swift`. The Xcode project/workspace are generated (`tuist generate`), not committed.
+- `kai-ios/` — the app target (`kai-ios`, product module `KaiIos`, bundle `dev.tuist.kai-ios`, Swift 6, iOS 17+). Uses Tuist `buildableFolders`: `kai-ios/Sources` (app code), `kai-ios/Resources` (assets), `kai-ios/Tests`.
 - `Packages/` — local Swift packages (the kernel; no UI):
   - `KaiCore` — SwiftData models, enums, value types, `VocabularyRepository`. **CloudKit-compatible** modeling (defaults/optionals, no `@Attribute(.unique)`, code-layer dedupe). Sync is off for now.
   - `KaiFSRS` — pure FSRS-6 spaced-repetition algorithm. Zero dependencies. Validated against ts-fsrs.
@@ -23,10 +23,10 @@ Requires Xcode 26.x + Tuist. Prefix commands with `export PATH="/opt/homebrew/bi
 # Generate the Xcode project (after cloning or editing Project.swift / packages)
 tuist generate
 # (for VSCode/SourceKit-LSP indexing) regenerate the build-server config afterward:
-xcode-build-server config -workspace Kai.xcworkspace -scheme Kai
+xcode-build-server config -workspace kai-ios.xcworkspace -scheme kai-ios
 
-# Build & run the app in the simulator
-xcodebuild build -workspace Kai.xcworkspace -scheme Kai -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+# Build & run the app in the simulator (product is kai_ios.app, bundle dev.tuist.kai-ios)
+xcodebuild build -workspace kai-ios.xcworkspace -scheme kai-ios -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
 ### Testing rules (important)

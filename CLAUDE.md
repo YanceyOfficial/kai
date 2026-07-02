@@ -38,9 +38,10 @@ xcodebuild build -workspace kai-ios.xcworkspace -scheme kai-ios -destination 'pl
   swift test --package-path Packages/KaiServices
   ```
 - **KaiCore (and any SwiftData test) MUST run on the iOS Simulator** — SwiftData `#Predicate`
-  fetches SIGTRAP on the macOS test host:
+  fetches SIGTRAP on the macOS test host. Run from the package directory, using the
+  package's own scheme (independent of the Tuist workspace):
   ```bash
-  xcodebuild test -scheme KaiCore -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+  (cd Packages/KaiCore && xcodebuild test -scheme KaiCore -destination 'platform=iOS Simulator,name=iPhone 17 Pro')
   ```
   All SwiftData tests live in ONE `@Suite(.serialized)` sharing a single in-memory
   `ModelContainer` (concurrent container creation crashes SwiftData). See

@@ -153,8 +153,8 @@ struct QuizSessionView: View {
     private var completed: some View {
         VStack(spacing: KaiSpacing.m) {
             Spacer()
-            Text("完")
-                .font(KaiFont.display(64, weight: .bold))
+            Text("Done")
+                .font(KaiFont.display(48, weight: .bold))
                 .foregroundStyle(KaiColor.vermilion)
             Text(questions.isEmpty
                  ? "Nothing to quiz right now."
@@ -162,10 +162,13 @@ struct QuizSessionView: View {
                 .font(KaiFont.body(17, weight: .medium))
                 .foregroundStyle(KaiColor.sumi)
             if let onClose {
+                // Chained after a review: always offer an exit, even if empty.
                 KaiPrimaryButton("Back to review", action: onClose)
                     .padding(.top, KaiSpacing.m)
                     .frame(maxWidth: 220)
-            } else {
+            } else if !questions.isEmpty {
+                // Standalone: only offer "Quiz again" when there was something to quiz —
+                // otherwise the reload would just land on this empty screen again.
                 KaiPrimaryButton("Quiz again") { restart() }
                     .padding(.top, KaiSpacing.m)
                     .frame(maxWidth: 220)

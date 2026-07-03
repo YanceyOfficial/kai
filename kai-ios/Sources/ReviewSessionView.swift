@@ -59,6 +59,9 @@ struct ReviewSessionView: View {
     @State private var quizStore: QuizStore?
     /// The words rated in this group, offered as a follow-up quiz on completion.
     @State private var reviewedIDs: [UUID] = []
+    /// True while re-playing the just-completed cards ("Review again"): a pure practice
+    /// pass that advances without rating, so it doesn't re-feed FSRS.
+    @State private var isReplay = false
 
     @State private var index = 0
     @State private var revealed = false
@@ -143,8 +146,11 @@ struct ReviewSessionView: View {
     private func controls(for card: ReviewCardData) -> some View {
         if revealed {
             RatingBar { rating in
-                store.rate(card, rating.core)
-                reviewedIDs.append(card.id)
+                // On a replay pass, just advance — don't re-rate or re-feed FSRS.
+                if !isReplay {
+                    store.rate(card, rating.core)
+                    reviewedIDs.append(card.id)
+                }
                 advance()
             }
         } else {
@@ -157,16 +163,14 @@ struct ReviewSessionView: View {
     private var completed: some View {
         VStack(spacing: KaiSpacing.m) {
             Spacer()
-            Text("完")
-                .font(KaiFont.display(64, weight: .bold))
+            Text("Done")
+                .font(KaiFont.display(48, weight: .bold))
                 .foregroundStyle(KaiColor.vermilion)
             if reviewedIDs.isEmpty {
+                // Nothing was due, so there is nothing to replay — no button here.
                 Text("All caught up for now.")
                     .font(KaiFont.body(17, weight: .medium))
                     .foregroundStyle(KaiColor.sumi)
-                KaiPrimaryButton("Review again") { restart() }
-                    .padding(.top, KaiSpacing.m)
-                    .frame(maxWidth: 220)
             } else {
                 Text("Reviewed \(reviewedIDs.count) — lock it in with a quick quiz.")
                     .font(KaiFont.body(17, weight: .medium))
@@ -175,7 +179,7 @@ struct ReviewSessionView: View {
                 KaiPrimaryButton("Start quiz") { startQuiz() }
                     .padding(.top, KaiSpacing.s)
                     .frame(maxWidth: 240)
-                Button("Review again") { restart() }
+                Button("Review again") { replay() }
                     .font(KaiFont.body(15, weight: .medium))
                     .foregroundStyle(KaiColor.inkSecondary)
                     .padding(.top, KaiSpacing.xs)
@@ -196,21 +200,35 @@ struct ReviewSessionView: View {
         }
     }
 
-    private func restart() {
-        store.load(newLimit: newWordsPerDay)
-        reviewedIDs = []
+    /// Re-plays the just-completed cards for another practice pass over the same
+    /// snapshot. Keeps `reviewedIDs` so a quiz is still offered; `isReplay` makes the
+    /// pass advance without re-rating.
+    private func replay() {
+        isReplay = true
         withAnimation {
             index = 0
             revealed = false
         }
     }
 
-    /// Chains a quiz over the words just reviewed. Falls back to restarting if none
+    /// Loads a fresh due session from the store (used after a follow-up quiz), resetting
+    /// replay state so ratings feed FSRS again.
+    private func loadFreshSession() {
+        store.load(newLimit: newWordsPerDay)
+        reviewedIDs = []
+        isReplay = false
+        withAnimation {
+            index = 0
+            revealed = false
+        }
+    }
+
+    /// Chains a quiz over the words just reviewed. Falls back to a replay pass if none
     /// of them can form a question (e.g. missing meanings).
     private func startQuiz() {
         let quiz = QuizStore(context: modelContext)
         quiz.load(entryIDs: reviewedIDs)
-        guard !quiz.questions.isEmpty else { restart(); return }
+        guard !quiz.questions.isEmpty else { replay(); return }
         quizStore = quiz
         withAnimation { phase = .quiz }
     }
@@ -218,7 +236,7 @@ struct ReviewSessionView: View {
     private func endQuiz() {
         quizStore = nil
         withAnimation { phase = .review }
-        restart()
+        loadFreshSession()
     }
 }
 

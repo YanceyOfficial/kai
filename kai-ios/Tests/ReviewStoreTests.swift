@@ -9,34 +9,36 @@ import KaiCore
 @MainActor
 @Suite(.serialized)
 struct ReviewStoreTests {
-    private func makeStore() throws -> (ReviewStore, ModelContext) {
+    /// Fresh store + a seeded starter deck, plus the repository for assertions.
+    private func makeSeededStore() throws -> (ReviewStore, VocabularyRepository) {
         let container = try KaiModelContainer.inMemory()
         let context = ModelContext(container)
-        return (ReviewStore(context: context), context)
+        let repository = VocabularyRepository(context: context)
+        try StarterSeed.seedIfEmpty(repository)
+        return (ReviewStore(context: context), repository)
     }
 
-    @Test("load() seeds a starter deck on an empty store")
-    func loadSeeds() throws {
-        let (store, _) = try makeStore()
+    @Test("StarterSeed fills an empty deck and is idempotent")
+    func seedIsIdempotent() throws {
+        let container = try KaiModelContainer.inMemory()
+        let repository = VocabularyRepository(context: ModelContext(container))
+        try StarterSeed.seedIfEmpty(repository)
+        try StarterSeed.seedIfEmpty(repository)
+        #expect(try repository.entries(for: .english).count == 3)
+    }
+
+    @Test("load() snapshots the due deck")
+    func loadSnapshotsDue() throws {
+        let (store, _) = try makeSeededStore()
         store.load()
         #expect(store.cards.count == 3)
         #expect(store.cards.contains { $0.word == "eccentric" })
     }
 
-    @Test("Seeding runs only once — a second load does not duplicate entries")
-    func seedIsIdempotent() throws {
-        let (store, context) = try makeStore()
-        store.load()
-        store.load()
-        let all = try VocabularyRepository(context: context).entries(for: .english)
-        #expect(all.count == 3)
-    }
-
     @Test("Rating every card writes a log per card and clears the due deck")
     func ratingPersistsAndClearsDue() throws {
-        let (store, context) = try makeStore()
+        let (store, repo) = try makeSeededStore()
         store.load()
-        let repo = VocabularyRepository(context: context)
 
         for card in store.cards {
             store.rate(card, .good)
@@ -47,8 +49,7 @@ struct ReviewStoreTests {
         #expect(due.isEmpty)
 
         // Every card produced exactly one review log.
-        let allEntries = try repo.entries(for: .english)
-        for entry in allEntries {
+        for entry in try repo.entries(for: .english) {
             let logs = try repo.reviewLogs(entryID: entry.id)
             #expect(logs.count == 1)
             #expect(logs.first?.rating == .good)
@@ -59,9 +60,8 @@ struct ReviewStoreTests {
 
     @Test("An 'again' rating records a lapse and relearning state")
     func againRecordsLapse() throws {
-        let (store, context) = try makeStore()
+        let (store, repo) = try makeSeededStore()
         store.load()
-        let repo = VocabularyRepository(context: context)
         let card = try #require(store.cards.first)
 
         store.rate(card, .again)

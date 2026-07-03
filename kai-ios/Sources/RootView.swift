@@ -3,27 +3,25 @@ import SwiftData
 import KaiCore
 import KaiUI
 
-/// App root: builds the review store from the shared SwiftData context and hosts
-/// the review loop. Real navigation (decks, entry authoring, stats) comes later.
+/// App root: seeds the starter deck once, then hosts the tab shell. Real navigation
+/// (decks, entry authoring, stats) lives inside the tabs.
 struct RootView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var store: ReviewStore?
+    @State private var seeded = false
 
     var body: some View {
         ZStack {
             KaiColor.washi.ignoresSafeArea()
-            if let store {
-                ReviewSessionView(store: store)
+            if seeded {
+                MainTabView()
             } else {
-                ProgressView()
-                    .tint(KaiColor.vermilion)
+                ProgressView().tint(KaiColor.vermilion)
             }
         }
         .task {
-            guard store == nil else { return }
-            let store = ReviewStore(context: modelContext)
-            store.load()
-            self.store = store
+            guard !seeded else { return }
+            try? StarterSeed.seedIfEmpty(VocabularyRepository(context: modelContext))
+            seeded = true
         }
     }
 }

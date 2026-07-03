@@ -11,6 +11,7 @@ public protocol VocabularyRepositoryProtocol {
     func logReview(_ log: ReviewLog) throws
     func dueEntries(for language: LanguageDomain, asOf now: Date) throws -> [VocabularyEntry]
     func reviewLogs(entryID: UUID) throws -> [ReviewLog]
+    func allReviewLogs() throws -> [ReviewLog]
 }
 
 /// SwiftData-backed vocabulary repository implementation.
@@ -80,6 +81,15 @@ public final class VocabularyRepository: VocabularyRepositoryProtocol {
     public func reviewLogs(entryID: UUID) throws -> [ReviewLog] {
         let descriptor = FetchDescriptor<ReviewLog>(
             predicate: #Predicate { $0.entryID == entryID },
+            sortBy: [SortDescriptor(\.timestamp, order: .forward)]
+        )
+        return try context.fetch(descriptor)
+    }
+
+    /// Fetches every review log across all entries, sorted by timestamp ascending.
+    /// Used by the statistics dashboard.
+    public func allReviewLogs() throws -> [ReviewLog] {
+        let descriptor = FetchDescriptor<ReviewLog>(
             sortBy: [SortDescriptor(\.timestamp, order: .forward)]
         )
         return try context.fetch(descriptor)

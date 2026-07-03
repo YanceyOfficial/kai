@@ -56,6 +56,9 @@ struct ReviewStoreTests {
             #expect(entry.scheduling.reps == 1)
             #expect(entry.scheduling.state == .review)
         }
+
+        // allReviewLogs sees every log across entries (used by the stats dashboard).
+        #expect(try repo.allReviewLogs().count == 3)
     }
 
     @Test("An 'again' rating records a lapse and relearning state")

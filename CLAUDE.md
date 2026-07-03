@@ -58,9 +58,21 @@ xcodebuild build -workspace kai-ios.xcworkspace -scheme kai-ios -destination 'pl
 
 ## Status (2026-07)
 
-Kernel complete and green: KaiCore (20 tests), KaiFSRS (23), KaiAI (18), KaiServices (18).
-The review loop is data-backed: `ReviewStore` seeds a starter deck, loads due entries
-via `VocabularyRepository`, and on each rating reschedules through `ReviewScheduler`/FSRS,
-persists, and writes a `ReviewLog` (5 app tests in `kai-iosTests`, run on the simulator).
-Flip card has haptics + auto-playing pronunciation. Next: entry authoring (batch paste /
-share / OCR), quiz widgets, and the Swift Charts stats dashboard.
+Kernel green: KaiCore (20 tests), KaiFSRS (23), KaiAI (18), KaiServices (18). App green:
+18 tests in `kai-iosTests` (run on the simulator).
+
+The app is a `MainTabView` shell — Review / Quiz / Words / Stats / Settings — over one
+SwiftData store (starter deck seeded once at launch by `StarterSeed`):
+- **Review** — `ReviewStore` loads due entries and, on each rating, reschedules through
+  `ReviewScheduler`/FSRS, persists, and writes a `ReviewLog`. Flip card has haptics and
+  auto-playing Youdao pronunciation (accent/auto-play from Settings via `@AppStorage`).
+- **Quiz** — single-choice meaning quiz (`QuizGenerator` pure + `QuizStore`) that also
+  feeds FSRS (correct → good, wrong → again).
+- **Words** — list + authoring (`AddWordsView`: single form or batch paste via
+  `PastedWordsParser`); swipe to delete.
+- **Stats** — Swift Charts dashboard (`StatsAggregator` pure): word/learned/due counts,
+  7-day review bars, accuracy.
+- **Settings** — pronunciation accent + auto-play.
+
+Next: AI enrichment (KaiAI — auto phonetic/examples/mnemonics), share extension + OCR
+intake, more quiz types, and the daily story.

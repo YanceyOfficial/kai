@@ -15,20 +15,16 @@ struct MainTabView: View {
                 .tag(0)
                 .tabItem { Label("Review", systemImage: "rectangle.on.rectangle.angled") }
 
-            QuizTab()
-                .tag(1)
-                .tabItem { Label("Quiz", systemImage: "questionmark.circle") }
-
             WordsListView()
-                .tag(2)
+                .tag(1)
                 .tabItem { Label("Words", systemImage: "text.book.closed") }
 
             StatsView()
-                .tag(3)
+                .tag(2)
                 .tabItem { Label("Stats", systemImage: "chart.bar.xaxis") }
 
             SettingsView()
-                .tag(4)
+                .tag(3)
                 .tabItem { Label("Settings", systemImage: "gearshape") }
         }
         .tint(KaiColor.vermilion)
@@ -36,10 +32,9 @@ struct MainTabView: View {
 
     private static func initialSelection() -> Int {
         switch UserDefaults.standard.string(forKey: "startTab") {
-        case "Quiz": return 1
-        case "Words": return 2
-        case "Stats": return 3
-        case "Settings": return 4
+        case "Words": return 1
+        case "Stats": return 2
+        case "Settings": return 3
         default: return 0
         }
     }
@@ -64,29 +59,6 @@ private struct ReviewTab: View {
         .task {
             let store = store ?? ReviewStore(context: modelContext)
             store.load(newLimit: newWordsPerDay)
-            self.store = store
-        }
-    }
-}
-
-/// Hosts the quiz session, rebuilding its store and regenerating questions each time
-/// the tab appears.
-private struct QuizTab: View {
-    @Environment(\.modelContext) private var modelContext
-    @State private var store: QuizStore?
-
-    var body: some View {
-        ZStack {
-            KaiColor.washi.ignoresSafeArea()
-            if let store {
-                QuizSessionView(store: store)
-            } else {
-                ProgressView().tint(KaiColor.vermilion)
-            }
-        }
-        .task {
-            let store = store ?? QuizStore(context: modelContext)
-            store.load()
             self.store = store
         }
     }

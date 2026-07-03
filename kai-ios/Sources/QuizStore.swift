@@ -28,14 +28,32 @@ final class QuizStore {
         do {
             let all = try repository.entries(for: .english)
             let due = try repository.dueEntries(for: .english, asOf: now)
-            entriesByID = Dictionary(all.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-            var rng = SystemRandomNumberGenerator()
-            questions = generator.makeQuiz(due: due, pool: all, using: &rng)
+            build(targets: due, pool: all)
         } catch {
             logger.error("Failed to build quiz: \(error.localizedDescription)", category: "quiz")
             questions = []
             entriesByID = [:]
         }
+    }
+
+    /// Builds a quiz over a specific set of entries (e.g. the words just reviewed),
+    /// still using the whole deck as the distractor pool.
+    func load(entryIDs: [UUID], now: Date = .now) {
+        do {
+            let all = try repository.entries(for: .english)
+            let byID = Dictionary(all.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            build(targets: entryIDs.compactMap { byID[$0] }, pool: all)
+        } catch {
+            logger.error("Failed to build quiz: \(error.localizedDescription)", category: "quiz")
+            questions = []
+            entriesByID = [:]
+        }
+    }
+
+    private func build(targets: [VocabularyEntry], pool: [VocabularyEntry]) {
+        entriesByID = Dictionary(pool.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var rng = SystemRandomNumberGenerator()
+        questions = generator.makeQuiz(due: targets, pool: pool, using: &rng)
     }
 
     /// Grades an answer: reschedules via FSRS, persists, logs, and returns whether it

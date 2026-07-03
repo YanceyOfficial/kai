@@ -85,6 +85,15 @@ struct QuizStoreTests {
         #expect(store.questions.count == 3)
     }
 
+    @Test("load(entryIDs:) builds questions only for the given words")
+    func loadForSpecificIDs() throws {
+        let (store, repo) = try makeSeededStore()
+        let target = try #require(repo.entries(for: .english).first)
+        store.load(entryIDs: [target.id])
+        #expect(store.questions.count == 1)
+        #expect(store.questions.first?.id == target.id)
+    }
+
     @Test("A correct answer grades good and logs it")
     func correctAnswerGradesGood() throws {
         let (store, repo) = try makeSeededStore()

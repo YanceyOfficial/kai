@@ -52,6 +52,14 @@ struct ReviewCardData: Identifiable {
 struct ReviewSessionView: View {
     let store: ReviewStore
 
+    @Environment(\.modelContext) private var modelContext
+
+    private enum Phase { case review, quiz }
+    @State private var phase: Phase = .review
+    @State private var quizStore: QuizStore?
+    /// The words rated in this group, offered as a follow-up quiz on completion.
+    @State private var reviewedIDs: [UUID] = []
+
     @State private var index = 0
     @State private var revealed = false
     @State private var showDone = false
@@ -73,35 +81,43 @@ struct ReviewSessionView: View {
         ZStack {
             KaiColor.washi.ignoresSafeArea()
 
-            VStack(spacing: KaiSpacing.l) {
-                header
-                SessionProgressBar(progress: cards.isEmpty ? 0 : Double(index) / Double(cards.count))
-
-                if index < cards.count {
-                    let card = cards[index]
-                    FlipCard(
-                        word: card.word,
-                        phonetic: card.phonetic,
-                        explanation: card.explanation,
-                        example: card.example,
-                        translation: card.translation,
-                        isLearned: card.isLearned,
-                        autoPlays: autoPlayPronunciation,
-                        isRevealed: $revealed,
-                        onSpeak: { pronouncer.play(card.word, accent: accent) }
-                    )
-                    .id(card.id)   // reset flip animation per card
-
-                    Spacer()
-                    controls(for: card)
-                        .padding(.bottom, KaiSpacing.s)
-                } else {
-                    completed
-                }
+            if phase == .quiz, let quizStore {
+                QuizSessionView(store: quizStore, onClose: endQuiz)
+            } else {
+                reviewContent
             }
-            .padding(KaiSpacing.l)
         }
         .kaiToast("Nice — deck complete", isPresented: $showDone)
+    }
+
+    private var reviewContent: some View {
+        VStack(spacing: KaiSpacing.l) {
+            header
+            SessionProgressBar(progress: cards.isEmpty ? 0 : Double(index) / Double(cards.count))
+
+            if index < cards.count {
+                let card = cards[index]
+                FlipCard(
+                    word: card.word,
+                    phonetic: card.phonetic,
+                    explanation: card.explanation,
+                    example: card.example,
+                    translation: card.translation,
+                    isLearned: card.isLearned,
+                    autoPlays: autoPlayPronunciation,
+                    isRevealed: $revealed,
+                    onSpeak: { pronouncer.play(card.word, accent: accent) }
+                )
+                .id(card.id)   // reset flip animation per card
+
+                Spacer()
+                controls(for: card)
+                    .padding(.bottom, KaiSpacing.s)
+            } else {
+                completed
+            }
+        }
+        .padding(KaiSpacing.l)
     }
 
     // MARK: Pieces
@@ -128,6 +144,7 @@ struct ReviewSessionView: View {
         if revealed {
             RatingBar { rating in
                 store.rate(card, rating.core)
+                reviewedIDs.append(card.id)
                 advance()
             }
         } else {
@@ -143,14 +160,29 @@ struct ReviewSessionView: View {
             Text("完")
                 .font(KaiFont.display(64, weight: .bold))
                 .foregroundStyle(KaiColor.vermilion)
-            Text("All caught up for now.")
-                .font(KaiFont.body(17, weight: .medium))
-                .foregroundStyle(KaiColor.sumi)
-            KaiPrimaryButton("Review again") { restart() }
-                .padding(.top, KaiSpacing.m)
-                .frame(maxWidth: 220)
+            if reviewedIDs.isEmpty {
+                Text("All caught up for now.")
+                    .font(KaiFont.body(17, weight: .medium))
+                    .foregroundStyle(KaiColor.sumi)
+                KaiPrimaryButton("Review again") { restart() }
+                    .padding(.top, KaiSpacing.m)
+                    .frame(maxWidth: 220)
+            } else {
+                Text("Reviewed \(reviewedIDs.count) — lock it in with a quick quiz.")
+                    .font(KaiFont.body(17, weight: .medium))
+                    .foregroundStyle(KaiColor.sumi)
+                    .multilineTextAlignment(.center)
+                KaiPrimaryButton("Start quiz") { startQuiz() }
+                    .padding(.top, KaiSpacing.s)
+                    .frame(maxWidth: 240)
+                Button("Review again") { restart() }
+                    .font(KaiFont.body(15, weight: .medium))
+                    .foregroundStyle(KaiColor.inkSecondary)
+                    .padding(.top, KaiSpacing.xs)
+            }
             Spacer()
         }
+        .padding(.horizontal, KaiSpacing.l)
     }
 
     private func advance() {
@@ -166,10 +198,27 @@ struct ReviewSessionView: View {
 
     private func restart() {
         store.load(newLimit: newWordsPerDay)
+        reviewedIDs = []
         withAnimation {
             index = 0
             revealed = false
         }
+    }
+
+    /// Chains a quiz over the words just reviewed. Falls back to restarting if none
+    /// of them can form a question (e.g. missing meanings).
+    private func startQuiz() {
+        let quiz = QuizStore(context: modelContext)
+        quiz.load(entryIDs: reviewedIDs)
+        guard !quiz.questions.isEmpty else { restart(); return }
+        quizStore = quiz
+        withAnimation { phase = .quiz }
+    }
+
+    private func endQuiz() {
+        quizStore = nil
+        withAnimation { phase = .review }
+        restart()
     }
 }
 

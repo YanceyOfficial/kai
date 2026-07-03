@@ -6,6 +6,9 @@ import KaiServices
 /// through `QuizStore` (correct → good, wrong → again).
 struct QuizSessionView: View {
     let store: QuizStore
+    /// When set (the quiz was chained after a review), completion offers "Back to
+    /// review" and calls this instead of restarting.
+    var onClose: (() -> Void)? = nil
 
     @State private var index = 0
     @State private var selected: Int?
@@ -158,9 +161,15 @@ struct QuizSessionView: View {
                  : "\(correctCount) of \(questions.count) correct.")
                 .font(KaiFont.body(17, weight: .medium))
                 .foregroundStyle(KaiColor.sumi)
-            KaiPrimaryButton("Quiz again") { restart() }
-                .padding(.top, KaiSpacing.m)
-                .frame(maxWidth: 220)
+            if let onClose {
+                KaiPrimaryButton("Back to review", action: onClose)
+                    .padding(.top, KaiSpacing.m)
+                    .frame(maxWidth: 220)
+            } else {
+                KaiPrimaryButton("Quiz again") { restart() }
+                    .padding(.top, KaiSpacing.m)
+                    .frame(maxWidth: 220)
+            }
             Spacer()
         }
     }

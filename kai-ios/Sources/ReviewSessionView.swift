@@ -156,7 +156,7 @@ struct ReviewSessionView: View {
     @ViewBuilder
     private func controls(for card: ReviewCardData) -> some View {
         if revealed {
-            RatingBar { rating in
+            RatingBar(interval: { store.previewInterval(for: card, rating: $0.core) }) { rating in
                 // On a replay pass, just advance — don't re-rate or re-feed FSRS.
                 if !isReplay {
                     store.rate(card, rating.core)

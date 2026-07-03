@@ -42,6 +42,14 @@ final class ReviewStore {
         }
     }
 
+    /// The interval a given rating would schedule for a card right now (e.g. "1d"),
+    /// so the rating buttons can preview what each choice does. Empty for unknown cards.
+    func previewInterval(for card: ReviewCardData, rating: ReviewRating, now: Date = .now) -> String {
+        guard let entry = entriesByID[card.id] else { return "" }
+        let next = scheduler.next(entry.scheduling, rating: rating, now: now)
+        return IntervalFormatter.short(from: now, to: next.due)
+    }
+
     /// Applies a rating to a card: reschedules it via FSRS, persists the new state,
     /// and writes a `ReviewLog`. Unknown cards are ignored.
     func rate(_ card: ReviewCardData, _ rating: ReviewRating, now: Date = .now) {

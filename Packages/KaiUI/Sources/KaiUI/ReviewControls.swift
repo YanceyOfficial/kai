@@ -13,22 +13,33 @@ public enum ReviewRating: String, CaseIterable, Sendable {
         }
     }
 
-    /// Restrained tint per rating, staying within the Ink & Paper palette.
+    /// Restrained, difficulty-coded tint per rating (red → amber → pine → blue).
     var tint: Color {
         switch self {
         case .again: return KaiColor.vermilion
         case .hard: return Color(hex: 0xB07A2E)   // muted amber
-        case .good: return KaiColor.sumi          // ink (the expected default)
-        case .easy: return Color(hex: 0x3E7C63)   // muted pine
+        case .good: return Color(hex: 0x3E7C63)   // muted pine
+        case .easy: return Color(hex: 0x3E6D8C)   // muted slate blue
         }
     }
 }
 
-/// The four-way rating row shown once the card is revealed. "Good" is filled ink;
-/// the others are outlined in their tint.
+/// The four-way rating row shown once the card is revealed: consistent soft-tinted
+/// cards, color-coded by difficulty, each with an optional next-interval caption so the
+/// learner knows what each choice schedules.
 public struct RatingBar: View {
     private let onRate: (ReviewRating) -> Void
-    public init(onRate: @escaping (ReviewRating) -> Void) { self.onRate = onRate }
+    private let interval: (ReviewRating) -> String?
+
+    /// - Parameter interval: returns the next-review interval caption for a rating
+    ///   (e.g. "1d"), or nil to omit it.
+    public init(
+        interval: @escaping (ReviewRating) -> String? = { _ in nil },
+        onRate: @escaping (ReviewRating) -> Void
+    ) {
+        self.interval = interval
+        self.onRate = onRate
+    }
 
     public var body: some View {
         HStack(spacing: KaiSpacing.s) {
@@ -38,19 +49,26 @@ public struct RatingBar: View {
                     if rating == .again { KaiHaptics.impact(.rigid) } else { KaiHaptics.selection() }
                     onRate(rating)
                 } label: {
-                    Text(rating.label)
-                        .font(KaiFont.body(15, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 54)
-                        .foregroundStyle(rating == .good ? KaiColor.cardFace : rating.tint)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(rating == .good ? rating.tint : KaiColor.cardFace)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .strokeBorder(rating.tint.opacity(0.55), lineWidth: 1.5)
-                        )
+                    VStack(spacing: 2) {
+                        Text(rating.label)
+                            .font(KaiFont.body(15, weight: .semibold))
+                            .foregroundStyle(rating.tint)
+                        if let caption = interval(rating), !caption.isEmpty {
+                            Text(caption)
+                                .font(KaiFont.body(11, weight: .medium))
+                                .foregroundStyle(rating.tint.opacity(0.65))
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 60)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(rating.tint.opacity(0.14))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(rating.tint.opacity(0.22), lineWidth: 1)
+                    )
                 }
                 .buttonStyle(KaiPressStyle())
             }

@@ -46,6 +46,23 @@ public struct FSRSScheduler: Sendable {
         return min(max(rounded, 1), maximumInterval)
     }
 
+    /// Applies interval "fuzz" — a small random spread — so cards scheduled together don't
+    /// all fall due on the exact same day (the ts-fsrs fuzz ranges). Intervals below ~2.5
+    /// days are left unchanged. Deterministic given `rng`.
+    public func fuzzedInterval<G: RandomNumberGenerator>(_ interval: Int, using rng: inout G) -> Int {
+        guard interval >= 3 else { return interval }
+        let ranges: [(start: Double, end: Double, factor: Double)] = [
+            (2.5, 7.0, 0.15), (7.0, 20.0, 0.1), (20.0, .infinity, 0.05),
+        ]
+        let i = Double(interval)
+        var delta = 1.0
+        for r in ranges { delta += r.factor * max(min(i, r.end) - r.start, 0.0) }
+        let minI = max(2, Int((i - delta).rounded()))
+        let maxI = min(maximumInterval, Int((i + delta).rounded()))
+        guard maxI > minI else { return interval }
+        return Int.random(in: minI...maxI, using: &rng)
+    }
+
     /// Clamps a difficulty value to the valid 1...10 range.
     private func clampDifficulty(_ d: Double) -> Double {
         min(max(d, 1.0), 10.0)

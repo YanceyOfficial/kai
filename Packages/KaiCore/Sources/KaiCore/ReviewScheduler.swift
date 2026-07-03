@@ -10,9 +10,12 @@ import KaiFSRS
 /// caller passes `now` and persists the returned state.
 public struct ReviewScheduler: Sendable {
     private let fsrs: FSRSScheduler
+    /// Whether to apply interval fuzz. Disabled in tests for deterministic assertions.
+    private let fuzz: Bool
 
-    public init(fsrs: FSRSScheduler = FSRSScheduler()) {
+    public init(fsrs: FSRSScheduler = FSRSScheduler(), fuzz: Bool = true) {
         self.fsrs = fsrs
+        self.fuzz = fuzz
     }
 
     /// Seconds per day, used to turn an FSRS interval (whole days) into a due date.
@@ -40,15 +43,17 @@ public struct ReviewScheduler: Sendable {
             ? nil
             : FSRSMemoryState(stability: state.stability, difficulty: state.difficulty)
 
-        // Days since the last review (0 for a new or same-instant review).
+        // Whole days since the last review — floored, so any same-day review (learning
+        // re-drills, a chained quiz, several reviews in a day) counts as elapsed 0 and
+        // takes FSRS's short-term stability path, matching ts-fsrs.
         let elapsedDays: Double = state.lastReview.map { last in
-            max(0, now.timeIntervalSince(last) / Self.secondsPerDay)
+            (max(0, now.timeIntervalSince(last)) / Self.secondsPerDay).rounded(.down)
         } ?? 0
 
         let result = fsrs.review(state: priorState, rating: grade, elapsedDays: elapsedDays)
 
         // Cards not yet graduated take short learning steps; everyone else uses the
-        // FSRS day interval.
+        // FSRS day interval (with fuzz so cards don't clump on one day).
         let inLearningPhase = state.state == .new || state.state == .learning || state.state == .relearning
         let interval: TimeInterval
         let nextState: LearningState
@@ -60,7 +65,7 @@ public struct ReviewScheduler: Sendable {
             interval = Self.hardLearningStep
             nextState = .learning
         default:
-            interval = Double(result.intervalDays) * Self.secondsPerDay
+            interval = Double(fuzzedDays(result.intervalDays)) * Self.secondsPerDay
             nextState = .review
         }
 
@@ -70,8 +75,17 @@ public struct ReviewScheduler: Sendable {
             due: now.addingTimeInterval(interval),
             lastReview: now,
             reps: state.reps + 1,
-            lapses: state.lapses + (rating == .again ? 1 : 0),
+            // A lapse only counts when a *graduated* word is failed; re-drills of a
+            // still-learning/relearning word don't each add a lapse.
+            lapses: state.lapses + (rating == .again && state.state == .review ? 1 : 0),
             state: nextState
         )
+    }
+
+    /// The day interval with fuzz applied (when enabled).
+    private func fuzzedDays(_ days: Int) -> Int {
+        guard fuzz else { return days }
+        var rng = SystemRandomNumberGenerator()
+        return fsrs.fuzzedInterval(days, using: &rng)
     }
 }

@@ -68,17 +68,19 @@ struct ReviewStoreTests {
         #expect(try repo.allReviewLogs().count == 3)
     }
 
-    @Test("An 'again' rating records a lapse and relearning state")
-    func againRecordsLapse() throws {
+    @Test("An 'again' rating relearns the word, logs it, and re-queues it")
+    func againRelearnsAndRequeues() throws {
         let (store, repo) = try makeSeededStore()
         store.load()
         let card = try #require(store.cards.first)
+        let countBefore = store.cards.count
 
         store.rate(card, .again)
 
         let entry = try #require(repo.entries(for: .english).first { $0.id == card.id })
-        #expect(entry.scheduling.lapses == 1)
         #expect(entry.scheduling.state == .relearning)
+        #expect(entry.scheduling.lapses == 0)                 // a new word can't lapse
         #expect(try repo.reviewLogs(entryID: entry.id).first?.rating == .again)
+        #expect(store.cards.count == countBefore + 1)         // re-drilled this session
     }
 }

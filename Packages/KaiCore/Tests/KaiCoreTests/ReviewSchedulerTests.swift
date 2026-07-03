@@ -6,7 +6,7 @@ import Testing
 /// (`swift test --filter ReviewScheduler`) as well as on the simulator.
 @Suite("ReviewScheduler")
 struct ReviewSchedulerTests {
-    private let scheduler = ReviewScheduler()
+    private let scheduler = ReviewScheduler(fuzz: false)   // deterministic intervals
     private let now = Date(timeIntervalSince1970: 1_700_000_000)
 
     @Test("First review of a new card seeds memory state and bumps reps")
@@ -21,12 +21,36 @@ struct ReviewSchedulerTests {
         #expect(next.due > now)              // scheduled at least a day out
     }
 
-    @Test("Again on a new card counts a lapse and enters relearning")
-    func againCountsLapse() {
+    @Test("Again on a new card enters relearning but is not a lapse")
+    func newAgainIsNotLapse() {
         let next = scheduler.next(.new(now: now), rating: .again, now: now)
-        #expect(next.lapses == 1)
+        #expect(next.lapses == 0)          // a word never learned can't lapse
         #expect(next.state == .relearning)
         #expect(next.reps == 1)
+    }
+
+    @Test("Again on a graduated (review) card counts a lapse")
+    func reviewAgainIsLapse() {
+        let prior = SchedulingState(
+            stability: 20, difficulty: 5,
+            due: now, lastReview: now.addingTimeInterval(-20 * 86_400),
+            reps: 5, lapses: 0, state: .review
+        )
+        let next = scheduler.next(prior, rating: .again, now: now)
+        #expect(next.lapses == 1)
+        #expect(next.state == .relearning)
+    }
+
+    @Test("Same-day reviews floor elapsed to 0 (short-term path)")
+    func sameDayFloorsElapsed() {
+        let base = SchedulingState(stability: 20, difficulty: 5, due: now, lastReview: now,
+                                   reps: 3, lapses: 0, state: .review)
+        let twelveHoursAgo = SchedulingState(stability: 20, difficulty: 5, due: now,
+                                             lastReview: now.addingTimeInterval(-12 * 3_600),
+                                             reps: 3, lapses: 0, state: .review)
+        let a = scheduler.next(base, rating: .good, now: now)
+        let b = scheduler.next(twelveHoursAgo, rating: .good, now: now)
+        #expect(abs(a.stability - b.stability) < 1e-9)   // both elapsed → 0, same result
     }
 
     @Test("The due date matches the FSRS interval in whole days")

@@ -20,8 +20,8 @@ let project = Project(
             infoPlist: .extendingDefault(
                 with: [
                     "UILaunchScreen": [
-                        "UIColorName": "LaunchBackground",
-                        "UIImageName": "LaunchLogo",
+                        "UIColorName": "",
+                        "UIImageName": "",
                     ],
                     "CFBundleDisplayName": "Kai",
                 ]

@@ -9,7 +9,7 @@ Native Apple rewrite of the "Kai" flashcard app for memorizing difficult vocabul
 - Organized per the **Tuist standard template** (`tuist init`): `Project.swift` + `Tuist.swift` + `Tuist/Package.swift`. The Xcode project/workspace are generated (`tuist generate`), not committed.
 - `kai-ios/` — the app target (`kai-ios`, product module `KaiIos`, bundle `dev.tuist.kai-ios`, Swift 6, iOS 17+). Uses Tuist `buildableFolders`: `kai-ios/Sources` (app code), `kai-ios/Resources` (assets), `kai-ios/Tests`.
 - `Packages/` — local Swift packages (the kernel; no UI):
-  - `KaiCore` — SwiftData models, enums, value types, `VocabularyRepository`. **CloudKit-compatible** modeling (defaults/optionals, no `@Attribute(.unique)`, code-layer dedupe). Sync is off for now.
+  - `KaiCore` — SwiftData models, enums, value types, `VocabularyRepository`, and `ReviewScheduler` (bridges the persisted `SchedulingState` to KaiFSRS). **CloudKit-compatible** modeling (defaults/optionals, no `@Attribute(.unique)`, code-layer dedupe). Sync is off for now. Depends on KaiFSRS.
   - `KaiFSRS` — pure FSRS-6 spaced-repetition algorithm. Zero dependencies. Validated against ts-fsrs.
   - `KaiAI` — `LLMProvider` protocol + Claude/OpenAI structured-output over `URLSession` (`HTTPTransport` is injectable). Produces Codable DTOs, not SwiftData. Depends on KaiCore (enums only).
   - `KaiServices` — logging (`os.Logger`), Keychain (`SecretStore`), FSRS-driven forgetting-push scheduling + quiet hours, Vision OCR, word pronunciation (Youdao dictvoice URL + `AVPlayer`). Depends on KaiFSRS. Pattern: **protocol + pure (tested) logic + thin platform adapter (compiled, not unit-tested)**.
@@ -58,7 +58,9 @@ xcodebuild build -workspace kai-ios.xcworkspace -scheme kai-ios -destination 'pl
 
 ## Status (2026-07)
 
-Kernel complete and green: KaiCore (16 tests), KaiFSRS (23), KaiAI (18), KaiServices (18);
-Tuist app scaffold builds and launches in the simulator. KaiUI review loop (flip card,
-rating bar, haptics) is in place with auto-playing word pronunciation. Next: wire the
-review loop to real KaiCore/KaiFSRS data, then quiz widgets and Swift Charts.
+Kernel complete and green: KaiCore (20 tests), KaiFSRS (23), KaiAI (18), KaiServices (18).
+The review loop is data-backed: `ReviewStore` seeds a starter deck, loads due entries
+via `VocabularyRepository`, and on each rating reschedules through `ReviewScheduler`/FSRS,
+persists, and writes a `ReviewLog` (5 app tests in `kai-iosTests`, run on the simulator).
+Flip card has haptics + auto-playing pronunciation. Next: entry authoring (batch paste /
+share / OCR), quiz widgets, and the Swift Charts stats dashboard.

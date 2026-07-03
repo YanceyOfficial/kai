@@ -7,8 +7,11 @@ let package = Package(
     products: [
         .library(name: "KaiCore", targets: ["KaiCore"])
     ],
+    dependencies: [
+        .package(path: "../KaiFSRS")
+    ],
     targets: [
-        .target(name: "KaiCore"),
+        .target(name: "KaiCore", dependencies: ["KaiFSRS"]),
         .testTarget(name: "KaiCoreTests", dependencies: ["KaiCore"])
     ]
 )

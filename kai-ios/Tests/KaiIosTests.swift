@@ -1,5 +1,5 @@
 import Testing
-@testable import KaiIos
+@testable import kai_ios
 
 struct KaiIosTests {
 

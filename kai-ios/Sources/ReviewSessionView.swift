@@ -1,23 +1,56 @@
 import SwiftUI
 import KaiUI
 import KaiServices
+import KaiCore
 
-/// One card's display content for a review session. The app maps KaiCore entries
-/// into this value type; wiring to the real repository + FSRS comes in a later plan.
+/// One card's display content for a review session, projected from a `VocabularyEntry`.
 struct ReviewCardData: Identifiable {
-    let id = UUID()
+    /// Matches the backing entry's id so the store can apply ratings to it.
+    let id: UUID
     let word: String
     let phonetic: String
     let explanation: String
     let example: String
     let translation: String
-    var isLearned: Bool = false
+    var isLearned: Bool
+
+    init(
+        id: UUID = UUID(),
+        word: String,
+        phonetic: String,
+        explanation: String,
+        example: String,
+        translation: String,
+        isLearned: Bool = false
+    ) {
+        self.id = id
+        self.word = word
+        self.phonetic = phonetic
+        self.explanation = explanation
+        self.example = example
+        self.translation = translation
+        self.isLearned = isLearned
+    }
+
+    /// Projects a persisted entry into display data, using its first example sentence.
+    init(entry: VocabularyEntry) {
+        let example = entry.examples.first
+        self.init(
+            id: entry.id,
+            word: entry.lemma,
+            phonetic: entry.phonetic,
+            explanation: entry.explanation,
+            example: example?.sentence ?? "",
+            translation: example?.translation ?? "",
+            isLearned: entry.scheduling.state == .review
+        )
+    }
 }
 
 /// The core learning loop: flip a card, reveal the meaning, self-rate, advance.
-/// Progress is shown at the top; a toast celebrates completion.
+/// Ratings flow to `ReviewStore`, which reschedules via FSRS and persists.
 struct ReviewSessionView: View {
-    let deck: [ReviewCardData]
+    let store: ReviewStore
 
     @State private var index = 0
     @State private var revealed = false
@@ -28,16 +61,18 @@ struct ReviewSessionView: View {
     /// User setting: auto-play the pronunciation when each card appears.
     @AppStorage("autoPlayPronunciation") private var autoPlayPronunciation = true
 
+    private var cards: [ReviewCardData] { store.cards }
+
     var body: some View {
         ZStack {
             KaiColor.washi.ignoresSafeArea()
 
             VStack(spacing: KaiSpacing.l) {
                 header
-                SessionProgressBar(progress: deck.isEmpty ? 0 : Double(index) / Double(deck.count))
+                SessionProgressBar(progress: cards.isEmpty ? 0 : Double(index) / Double(cards.count))
 
-                if index < deck.count {
-                    let card = deck[index]
+                if index < cards.count {
+                    let card = cards[index]
                     FlipCard(
                         word: card.word,
                         phonetic: card.phonetic,
@@ -52,7 +87,7 @@ struct ReviewSessionView: View {
                     .id(card.id)   // reset flip animation per card
 
                     Spacer()
-                    controls
+                    controls(for: card)
                         .padding(.bottom, KaiSpacing.s)
                 } else {
                     completed
@@ -76,16 +111,19 @@ struct ReviewSessionView: View {
                     .foregroundStyle(KaiColor.inkSecondary)
             }
             Spacer()
-            Text("\(min(index + 1, deck.count)) / \(deck.count)")
+            Text("\(min(index + 1, cards.count)) / \(cards.count)")
                 .font(KaiFont.phonetic(16))
                 .foregroundStyle(KaiColor.inkSecondary)
         }
     }
 
     @ViewBuilder
-    private var controls: some View {
+    private func controls(for card: ReviewCardData) -> some View {
         if revealed {
-            RatingBar { _ in advance() }
+            RatingBar { rating in
+                store.rate(card, rating.core)
+                advance()
+            }
         } else {
             KaiPrimaryButton("Show answer") {
                 withAnimation { revealed = true }
@@ -113,7 +151,7 @@ struct ReviewSessionView: View {
         withAnimation {
             revealed = false
             index += 1
-            if index >= deck.count {
+            if index >= cards.count {
                 showDone = true
                 KaiHaptics.success()
             }
@@ -121,9 +159,23 @@ struct ReviewSessionView: View {
     }
 
     private func restart() {
+        store.load()
         withAnimation {
             index = 0
             revealed = false
+        }
+    }
+}
+
+/// Maps the UI's rating (KaiUI) to the domain rating (KaiCore). The two enums are
+/// deliberately separate so the design system carries no domain dependency.
+private extension KaiUI.ReviewRating {
+    var core: KaiCore.ReviewRating {
+        switch self {
+        case .again: return .again
+        case .hard: return .hard
+        case .good: return .good
+        case .easy: return .easy
         }
     }
 }

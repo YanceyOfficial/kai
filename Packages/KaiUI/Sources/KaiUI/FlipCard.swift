@@ -146,14 +146,7 @@ public struct FlipCard: View {
 
     private var cardSurface: some View {
         RoundedRectangle(cornerRadius: 24, style: .continuous)
-            .fill(
-                // A whisper of a top-to-bottom warm gradient gives the paper depth.
-                LinearGradient(
-                    colors: [KaiColor.cardFace, Color(hex: 0xF5EDDC)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
+            .fill(KaiColor.cardFace)
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .strokeBorder(KaiColor.hairline, lineWidth: 1)

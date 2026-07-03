@@ -1,24 +1,58 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - Palette
 
-/// The "Ink & Paper" (墨) palette: warm washi paper, sumi ink, one vermilion accent.
+/// A neutral, mainstream palette with one vermilion accent, adapting to light and
+/// dark mode. Names are kept from the earlier "Ink & Paper" system for stability,
+/// but map to semantic roles: `washi` = app background, `cardFace` = surface,
+/// `sumi` = primary text, `inkSecondary` = secondary text, `vermilion` = accent.
 public enum KaiColor {
-    /// Warm washi-paper background.
-    public static let washi = Color(hex: 0xF3EBDD)
-    /// A slightly lighter paper for card faces, to lift them off the background.
-    public static let cardFace = Color(hex: 0xFBF4E6)
-    /// Sumi ink — primary text and strokes.
-    public static let sumi = Color(hex: 0x1C1A17)
-    /// Muted warm ink for secondary text.
-    public static let inkSecondary = Color(hex: 0x6B6357)
-    /// Vermilion — the single accent (brush strokes, the hanko seal).
-    public static let vermilion = Color(hex: 0xC8402F)
-    /// Soft paper shadow.
-    public static let shadow = Color(hex: 0x1C1A17).opacity(0.14)
-    /// Hairline ink border.
-    public static let hairline = Color(hex: 0x1C1A17).opacity(0.12)
+    /// App background — light neutral gray / near-black.
+    public static let washi = adaptive(light: 0xF2F2F6, dark: 0x111113)
+    /// Card / grouped surface — white / elevated dark.
+    public static let cardFace = adaptive(light: 0xFFFFFF, dark: 0x1D1D21)
+    /// Primary text.
+    public static let sumi = adaptive(light: 0x1A1A1E, dark: 0xF3F3F6)
+    /// Secondary / muted text.
+    public static let inkSecondary = adaptive(light: 0x6C6C74, dark: 0x9A9AA2)
+    /// The brand accent — a touch brighter in dark mode for contrast.
+    public static let vermilion = adaptive(light: 0xC8402F, dark: 0xE45A44)
+    /// Soft elevation shadow.
+    public static let shadow = adaptiveTranslucent(light: (0x000000, 0.10), dark: (0x000000, 0.55))
+    /// Hairline separator.
+    public static let hairline = adaptiveTranslucent(light: (0x000000, 0.10), dark: (0xFFFFFF, 0.14))
 }
+
+// MARK: Adaptive color helpers
+
+/// A color that resolves differently in light vs. dark mode (UIKit); falls back to
+/// the light value where UIKit is unavailable.
+func adaptive(light: UInt, dark: UInt) -> Color {
+    #if canImport(UIKit)
+    Color(UIColor { $0.userInterfaceStyle == .dark ? uiColor(dark, 1) : uiColor(light, 1) })
+    #else
+    Color(hex: light)
+    #endif
+}
+
+/// Like `adaptive`, but each mode carries its own opacity (for hairlines/shadows).
+func adaptiveTranslucent(light: (hex: UInt, alpha: Double), dark: (hex: UInt, alpha: Double)) -> Color {
+    #if canImport(UIKit)
+    Color(UIColor { $0.userInterfaceStyle == .dark ? uiColor(dark.hex, dark.alpha) : uiColor(light.hex, light.alpha) })
+    #else
+    Color(hex: light.hex, alpha: light.alpha)
+    #endif
+}
+
+#if canImport(UIKit)
+private func uiColor(_ hex: UInt, _ alpha: Double) -> UIColor {
+    let c = KaiColor.rgbComponents(hex: hex)
+    return UIColor(red: c.red, green: c.green, blue: c.blue, alpha: alpha)
+}
+#endif
 
 public extension Color {
     /// Creates a color from a 24-bit hex value, e.g. `Color(hex: 0xC8402F)`.

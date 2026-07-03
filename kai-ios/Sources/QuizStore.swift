@@ -3,9 +3,10 @@ import SwiftData
 import KaiCore
 import KaiServices
 
-/// Owns a quiz session. Like `ReviewStore`, it feeds spaced repetition: a correct
-/// answer grades the card "good", a wrong answer grades it "again", and either way
-/// the card is rescheduled through FSRS and a `ReviewLog` is written.
+/// Owns a quiz session. The quiz is a **double-check** run after reviewing a group:
+/// the review already graded each word, so a correct answer is a no-op here, while a
+/// wrong answer re-grades the word as "again" (reschedule + `ReviewLog`) — catching a
+/// word you thought you knew but didn't.
 @MainActor
 @Observable
 final class QuizStore {
@@ -56,21 +57,21 @@ final class QuizStore {
         questions = generator.makeQuiz(due: targets, pool: pool, using: &rng)
     }
 
-    /// Grades an answer: reschedules via FSRS, persists, logs, and returns whether it
-    /// was correct so the view can show feedback.
+    /// Grades an answer and returns whether it was correct. A correct answer is a no-op
+    /// (the preceding review already scheduled the word); a wrong answer re-grades the
+    /// word as "again" and logs it, so the miss feeds spaced repetition exactly once.
     @discardableResult
     func answer(_ question: QuizQuestion, selectedIndex: Int, now: Date = .now) -> Bool {
         let correct = selectedIndex == question.correctIndex
-        guard let entry = entriesByID[question.id] else { return correct }
+        guard !correct, let entry = entriesByID[question.id] else { return correct }
 
-        let rating: ReviewRating = correct ? .good : .again
-        entry.reschedule(scheduler.next(entry.scheduling, rating: rating, now: now))
+        entry.reschedule(scheduler.next(entry.scheduling, rating: .again, now: now))
         let log = ReviewLog(
             entryID: entry.id,
-            rating: rating,
+            rating: .again,
             quizType: .singleChoice,
             elapsedMs: 0,
-            isCorrect: correct,
+            isCorrect: false,
             timestamp: now
         )
         do {

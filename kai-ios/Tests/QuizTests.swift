@@ -94,31 +94,32 @@ struct QuizStoreTests {
         #expect(store.questions.first?.id == target.id)
     }
 
-    @Test("A correct answer grades good and logs it")
-    func correctAnswerGradesGood() throws {
+    @Test("A correct answer is a no-op — the review already graded it")
+    func correctAnswerIsNoOp() throws {
         let (store, repo) = try makeSeededStore()
         store.load()
         let question = try #require(store.questions.first)
 
         #expect(store.answer(question, selectedIndex: question.correctIndex) == true)
-
-        let logs = try repo.reviewLogs(entryID: question.id)
-        #expect(logs.count == 1)
-        #expect(logs.first?.rating == .good)
-        #expect(logs.first?.isCorrect == true)
+        // No second reschedule/log: the quiz is a double-check, not a separate review.
+        #expect(try repo.reviewLogs(entryID: question.id).isEmpty)
     }
 
-    @Test("A wrong answer grades again and records a lapse")
+    @Test("A wrong answer re-grades a graduated word as again (the double-check catch)")
     func wrongAnswerGradesAgain() throws {
         let (store, repo) = try makeSeededStore()
         store.load()
         let question = try #require(store.questions.first)
-        let wrongIndex = (question.correctIndex + 1) % question.options.count
+        let entry = try #require(repo.entries(for: .english).first { $0.id == question.id })
+        // Simulate the word having graduated to review before the quiz.
+        entry.reschedule(SchedulingState(
+            stability: 10, difficulty: 5, due: Date(), lastReview: Date(),
+            reps: 3, lapses: 0, state: .review))
 
+        let wrongIndex = (question.correctIndex + 1) % question.options.count
         #expect(store.answer(question, selectedIndex: wrongIndex) == false)
 
-        let entry = try #require(repo.entries(for: .english).first { $0.id == question.id })
-        #expect(entry.scheduling.lapses == 1)
+        #expect(entry.scheduling.lapses == 1)          // a graduated word failing is a lapse
         #expect(try repo.reviewLogs(entryID: question.id).first?.rating == .again)
     }
 }

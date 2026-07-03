@@ -56,10 +56,14 @@ struct ReviewSessionView: View {
     @State private var revealed = false
     @State private var showDone = false
 
-    /// Plays word pronunciations via Youdao's dictvoice audio (US accent for now).
+    /// Plays word pronunciations via Youdao's dictvoice audio.
     @State private var pronouncer = PronunciationPlayer()
     /// User setting: auto-play the pronunciation when each card appears.
     @AppStorage("autoPlayPronunciation") private var autoPlayPronunciation = true
+    /// User setting: which accent to pronounce in.
+    @AppStorage("pronunciationAccent") private var accentRaw = Accent.us.rawValue
+
+    private var accent: Accent { Accent(rawValue: accentRaw) ?? .us }
 
     private var cards: [ReviewCardData] { store.cards }
 
@@ -82,7 +86,7 @@ struct ReviewSessionView: View {
                         isLearned: card.isLearned,
                         autoPlays: autoPlayPronunciation,
                         isRevealed: $revealed,
-                        onSpeak: { pronouncer.play(card.word, accent: .us) }
+                        onSpeak: { pronouncer.play(card.word, accent: accent) }
                     )
                     .id(card.id)   // reset flip animation per card
 

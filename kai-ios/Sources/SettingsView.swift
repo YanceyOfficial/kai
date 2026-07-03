@@ -7,6 +7,7 @@ import KaiUI
 /// directly by the review loop, so no wiring or observers are needed. The AI API key
 /// is kept in the Keychain via `AIConfigStore`.
 struct SettingsView: View {
+    @AppStorage("appearance") private var appearanceRaw = AppAppearance.system.rawValue
     @AppStorage("autoPlayPronunciation") private var autoPlay = true
     @AppStorage("pronunciationAccent") private var accentRaw = Accent.us.rawValue
     @AppStorage("newWordsPerDay") private var newWordsPerDay = 10
@@ -21,6 +22,14 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Picker("Appearance", selection: $appearanceRaw) {
+                        ForEach(AppAppearance.allCases) { Text($0.label).tag($0.rawValue) }
+                    }
+                } header: {
+                    Text("Appearance")
+                }
+
                 Section {
                     Picker("New words per session", selection: $newWordsPerDay) {
                         ForEach(newWordOptions, id: \.self) { Text("\($0)").tag($0) }
@@ -51,15 +60,15 @@ struct SettingsView: View {
                     SecureField("API key", text: $apiKey)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
-                    TextField("Model (optional)", text: $model)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
+                    Picker("Model", selection: $model) {
+                        ForEach(AIModelCatalog.models(for: aiKind), id: \.self) { Text($0).tag($0) }
+                    }
                 } header: {
                     Text("AI enrichment")
                 } footer: {
                     Text(apiKey.isEmpty
                          ? "Add an API key to auto-generate phonetics, meanings, and examples when adding words. Stored in the Keychain."
-                         : "Key stored in the Keychain. Leave the model blank to use the provider default.")
+                         : "Key stored in the Keychain.")
                 }
 
                 Section {
@@ -68,6 +77,11 @@ struct SettingsView: View {
                     Text("About")
                 } footer: {
                     Text("Kai · 甲斐 — local English review with FSRS spaced repetition.")
+                }
+
+                Section {} footer: {
+                    Text(Self.copyright)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
             .scrollContentBackground(.hidden)
@@ -81,15 +95,21 @@ struct SettingsView: View {
         .tint(KaiColor.vermilion)
     }
 
-    /// Loads the stored key/model for the currently selected provider into the fields.
+    /// Loads the stored key/model for the currently selected provider into the fields,
+    /// resolving the model to a valid catalog entry so the picker has a selection.
     private func loadAIFields() {
         apiKey = AIConfigStore.apiKey(for: aiKind)
-        model = AIConfigStore.model(for: aiKind)
+        model = AIModelCatalog.resolved(AIConfigStore.model(for: aiKind), for: aiKind)
     }
 
     private static var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         return "\(version) (\(build))"
+    }
+
+    /// Copyright line with the current year computed at runtime.
+    private static var copyright: String {
+        "Copyright © \(Calendar.current.component(.year, from: Date())) Yancey Inc."
     }
 }

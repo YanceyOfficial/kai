@@ -9,6 +9,10 @@ struct KaiIosApp: App {
     /// The on-disk SwiftData container backing the app (CloudKit sync off for now).
     private let container: ModelContainer
 
+    /// User appearance preference (system / light / dark).
+    @AppStorage("appearance") private var appearanceRaw = AppAppearance.system.rawValue
+    private var appearance: AppAppearance { AppAppearance(rawValue: appearanceRaw) ?? .system }
+
     init() {
         do {
             container = try KaiModelContainer.onDisk()
@@ -21,6 +25,7 @@ struct KaiIosApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .preferredColorScheme(appearance.colorScheme)
         }
         .modelContainer(container)
     }

@@ -59,7 +59,7 @@ struct WordsListView: View {
         } else {
             List {
                 ForEach(filteredEntries) { entry in
-                    row(entry)
+                    NavigationLink { WordDetailView(entry: entry) } label: { row(entry) }
                         .listRowBackground(KaiColor.cardFace)
                 }
                 .onDelete(perform: delete)

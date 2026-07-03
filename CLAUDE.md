@@ -59,20 +59,21 @@ xcodebuild build -workspace kai-ios.xcworkspace -scheme kai-ios -destination 'pl
 ## Status (2026-07)
 
 Kernel green: KaiCore (20 tests), KaiFSRS (23), KaiAI (18), KaiServices (18). App green:
-18 tests in `kai-iosTests` (run on the simulator).
+26 tests in `kai-iosTests` (run on the simulator).
 
 The app is a `MainTabView` shell — Review / Quiz / Words / Stats / Settings — over one
-SwiftData store (starter deck seeded once at launch by `StarterSeed`):
-- **Review** — `ReviewStore` loads due entries and, on each rating, reschedules through
-  `ReviewScheduler`/FSRS, persists, and writes a `ReviewLog`. Flip card has haptics and
-  auto-playing Youdao pronunciation (accent/auto-play from Settings via `@AppStorage`).
-- **Quiz** — single-choice meaning quiz (`QuizGenerator` pure + `QuizStore`) that also
-  feeds FSRS (correct → good, wrong → again).
-- **Words** — list + authoring (`AddWordsView`: single form or batch paste via
-  `PastedWordsParser`); swipe to delete.
-- **Stats** — Swift Charts dashboard (`StatsAggregator` pure): word/learned/due counts,
-  7-day review bars, accuracy.
-- **Settings** — pronunciation accent + auto-play.
+SwiftData store (starter deck seeded once at launch by `StarterSeed`). Neutral palette
+with light/dark support (`KaiColor` adaptive) and a vermilion accent.
+- **Review** — `ReviewStore.load(newLimit:)` composes a session (up to N new words
+  interleaved with due review words via `SessionComposer`); each rating reschedules
+  through `ReviewScheduler`/FSRS, persists, and writes a `ReviewLog`. Flip card has
+  haptics and auto-playing Youdao pronunciation. Finishing a group offers a chained quiz.
+- **Quiz** — single-choice meaning quiz (`QuizGenerator` pure + `QuizStore`) that feeds
+  FSRS (correct → good, wrong → again); also reachable as a follow-up to a review group.
+- **Words** — searchable list + authoring (`AddWordsView`: single form, batch paste via
+  `PastedWordsParser`, or **AI** generation via KaiAI); swipe to delete.
+- **Stats** — Swift Charts dashboard (`StatsAggregator` pure): counts, 7-day bars, accuracy.
+- **Settings** — new-words-per-session, pronunciation accent/auto-play, and AI provider +
+  API key (`AIConfigStore`, key stored in the Keychain).
 
-Next: AI enrichment (KaiAI — auto phonetic/examples/mnemonics), share extension + OCR
-intake, more quiz types, and the daily story.
+Next: share extension + OCR intake, more quiz types, the daily story, and iCloud sync.

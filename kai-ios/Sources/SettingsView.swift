@@ -1,15 +1,22 @@
 import SwiftUI
 import KaiServices
+import KaiAI
 import KaiUI
 
 /// App settings. Pronunciation preferences are persisted via `@AppStorage` and read
-/// directly by the review loop, so no wiring or observers are needed.
+/// directly by the review loop, so no wiring or observers are needed. The AI API key
+/// is kept in the Keychain via `AIConfigStore`.
 struct SettingsView: View {
     @AppStorage("autoPlayPronunciation") private var autoPlay = true
     @AppStorage("pronunciationAccent") private var accentRaw = Accent.us.rawValue
     @AppStorage("newWordsPerDay") private var newWordsPerDay = 10
+    @AppStorage("aiProvider") private var aiProviderRaw = LLMProviderKind.claude.rawValue
+
+    @State private var apiKey = ""
+    @State private var model = ""
 
     private let newWordOptions = [5, 10, 15, 20, 30]
+    private var aiKind: LLMProviderKind { LLMProviderKind(rawValue: aiProviderRaw) ?? .claude }
 
     var body: some View {
         NavigationStack {
@@ -37,6 +44,25 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Picker("Provider", selection: $aiProviderRaw) {
+                        Text("Claude").tag(LLMProviderKind.claude.rawValue)
+                        Text("OpenAI").tag(LLMProviderKind.openai.rawValue)
+                    }
+                    SecureField("API key", text: $apiKey)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    TextField("Model (optional)", text: $model)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                } header: {
+                    Text("AI enrichment")
+                } footer: {
+                    Text(apiKey.isEmpty
+                         ? "Add an API key to auto-generate phonetics, meanings, and examples when adding words. Stored in the Keychain."
+                         : "Key stored in the Keychain. Leave the model blank to use the provider default.")
+                }
+
+                Section {
                     LabeledContent("Version", value: Self.appVersion)
                 } header: {
                     Text("About")
@@ -47,8 +73,18 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
             .background(KaiColor.washi)
             .navigationTitle("Settings")
+            .onAppear(perform: loadAIFields)
+            .onChange(of: aiProviderRaw) { loadAIFields() }
+            .onChange(of: apiKey) { AIConfigStore.setApiKey(apiKey, for: aiKind) }
+            .onChange(of: model) { AIConfigStore.setModel(model, for: aiKind) }
         }
         .tint(KaiColor.vermilion)
+    }
+
+    /// Loads the stored key/model for the currently selected provider into the fields.
+    private func loadAIFields() {
+        apiKey = AIConfigStore.apiKey(for: aiKind)
+        model = AIConfigStore.model(for: aiKind)
     }
 
     private static var appVersion: String {

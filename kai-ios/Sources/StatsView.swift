@@ -14,6 +14,10 @@ struct StatsView: View {
     @State private var bars: [DayBar] = []
     @State private var accuracy: Double?
     @State private var totalReviews = 0
+    @State private var streak = 0
+    @State private var curve: [RecallPoint] = []
+    @State private var atRisk = 0
+    @State private var maturityCounts: [MaturityCount] = []
 
     var body: some View {
         NavigationStack {
@@ -22,6 +26,9 @@ struct StatsView: View {
                 ScrollView {
                     VStack(spacing: KaiSpacing.l) {
                         summaryRow
+                        secondRow
+                        forgettingCard
+                        maturityCard
                         reviewsCard
                         accuracyCard
                     }
@@ -40,6 +47,110 @@ struct StatsView: View {
             statCard(value: "\(totalWords)", label: "Words")
             statCard(value: "\(learnedWords)", label: "Learned")
             statCard(value: "\(dueWords)", label: "Due")
+        }
+    }
+
+    private var secondRow: some View {
+        HStack(spacing: KaiSpacing.m) {
+            statCard(value: "\(streak)", label: "Day streak")
+            statCard(value: "\(atRisk)", label: "At risk · 7d")
+        }
+    }
+
+    /// The deck's aggregate forgetting curve: predicted recall over the next 30 days.
+    private var forgettingCard: some View {
+        VStack(alignment: .leading, spacing: KaiSpacing.m) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Forgetting curve")
+                    .font(KaiFont.body(15, weight: .semibold))
+                    .foregroundStyle(KaiColor.sumi)
+                Spacer()
+                if let now = curve.first?.recall {
+                    Text("\(Int((now * 100).rounded()))% recall now")
+                        .font(KaiFont.body(13, weight: .medium))
+                        .foregroundStyle(KaiColor.inkSecondary)
+                }
+            }
+
+            if curve.isEmpty {
+                emptyHint("Review some words to model your memory.")
+            } else {
+                Chart {
+                    ForEach(curve) { point in
+                        LineMark(
+                            x: .value("Day", point.dayOffset),
+                            y: .value("Recall", point.recall)
+                        )
+                        .foregroundStyle(KaiColor.vermilion)
+                        .interpolationMethod(.monotone)
+                        .lineStyle(StrokeStyle(lineWidth: 2))
+                    }
+                    RuleMark(y: .value("Target", 0.9))
+                        .foregroundStyle(KaiColor.inkSecondary.opacity(0.5))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                        .annotation(position: .top, alignment: .trailing) {
+                            Text("90% target")
+                                .font(KaiFont.body(10))
+                                .foregroundStyle(KaiColor.inkSecondary)
+                        }
+                }
+                .chartYScale(domain: 0...1)
+                .chartYAxis { AxisMarks(position: .leading, values: [0, 0.5, 1]) { value in
+                    AxisValueLabel {
+                        if let d = value.as(Double.self) { Text("\(Int(d * 100))%") }
+                    }
+                } }
+                .chartXAxis { AxisMarks(values: [0, 7, 14, 21, 30]) { value in
+                    AxisValueLabel { if let d = value.as(Int.self) { Text("\(d)d") } }
+                } }
+                .frame(height: 180)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(KaiSpacing.l)
+        .background(cardBackground)
+    }
+
+    /// Memory maturity: how many words are new / learning / young / mature.
+    private var maturityCard: some View {
+        VStack(alignment: .leading, spacing: KaiSpacing.m) {
+            Text("Memory maturity")
+                .font(KaiFont.body(15, weight: .semibold))
+                .foregroundStyle(KaiColor.sumi)
+
+            if maturityCounts.allSatisfy({ $0.count == 0 }) {
+                emptyHint("Add words to see your deck's maturity.")
+            } else {
+                Chart(maturityCounts) { item in
+                    BarMark(
+                        x: .value("Count", item.count),
+                        y: .value("Maturity", item.bucket.rawValue)
+                    )
+                    .foregroundStyle(maturityColor(item.bucket))
+                    .cornerRadius(4)
+                    .annotation(position: .trailing) {
+                        Text("\(item.count)")
+                            .font(KaiFont.body(11, weight: .medium))
+                            .foregroundStyle(KaiColor.inkSecondary)
+                    }
+                }
+                .chartYScale(domain: MaturityBucket.allCases.reversed().map(\.rawValue))
+                .chartXAxis(.hidden)
+                .frame(height: 150)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(KaiSpacing.l)
+        .background(cardBackground)
+    }
+
+    /// Single-hue sequential ramp: new (light) → mature (full vermilion).
+    private func maturityColor(_ bucket: MaturityBucket) -> Color {
+        switch bucket {
+        case .new: return KaiColor.vermilion.opacity(0.30)
+        case .learning: return KaiColor.vermilion.opacity(0.50)
+        case .young: return KaiColor.vermilion.opacity(0.72)
+        case .mature: return KaiColor.vermilion
         }
     }
 
@@ -140,5 +251,16 @@ struct StatsView: View {
         bars = StatsAggregator.reviewsByDay(logs.map(\.timestamp), lastDays: 7, now: now)
         accuracy = StatsAggregator.accuracy(logs.map(\.isCorrect))
         totalReviews = logs.count
+        streak = StatsAggregator.streak(reviewDates: logs.map(\.timestamp), now: now)
+
+        // Memories that have been reviewed at least once model the forgetting curve.
+        let memories: [(stability: Double, elapsedDays: Double)] = entries.compactMap { entry in
+            let s = entry.scheduling
+            guard s.stability > 0, let last = s.lastReview else { return nil }
+            return (s.stability, max(0, now.timeIntervalSince(last) / 86_400))
+        }
+        curve = StatsAggregator.forgettingCurve(memories, overDays: 30)
+        atRisk = StatsAggregator.atRisk(memories, threshold: 0.9, within: 7)
+        maturityCounts = StatsAggregator.maturity(entries.map { ($0.scheduling.state, $0.scheduling.stability) })
     }
 }

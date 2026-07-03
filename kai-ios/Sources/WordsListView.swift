@@ -10,8 +10,18 @@ struct WordsListView: View {
 
     @State private var entries: [VocabularyEntry] = []
     @State private var showingAdd = false
+    @State private var searchText = ""
 
     private var repository: VocabularyRepository { VocabularyRepository(context: modelContext) }
+
+    /// Entries filtered by the search field (matches lemma or meaning, case-insensitive).
+    private var filteredEntries: [VocabularyEntry] {
+        let query = searchText.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !query.isEmpty else { return entries }
+        return entries.filter {
+            $0.lemma.lowercased().contains(query) || $0.explanation.lowercased().contains(query)
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -20,6 +30,7 @@ struct WordsListView: View {
                 content
             }
             .navigationTitle("Words")
+            .searchable(text: $searchText, prompt: "Search words")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button { showingAdd = true } label: {
@@ -43,9 +54,11 @@ struct WordsListView: View {
             } description: {
                 Text("Tap + to add words to study.")
             }
+        } else if filteredEntries.isEmpty {
+            ContentUnavailableView.search(text: searchText)
         } else {
             List {
-                ForEach(entries) { entry in
+                ForEach(filteredEntries) { entry in
                     row(entry)
                         .listRowBackground(KaiColor.cardFace)
                 }
@@ -82,8 +95,9 @@ struct WordsListView: View {
     }
 
     private func delete(at offsets: IndexSet) {
+        let visible = filteredEntries
         for index in offsets {
-            try? repository.delete(entries[index])
+            try? repository.delete(visible[index])
         }
         reload()
     }

@@ -3,6 +3,7 @@ import SwiftData
 import KaiCore
 import KaiAI
 import KaiUI
+import KaiServices
 
 /// Authoring sheet. Both modes generate everything with AI — the user only supplies
 /// the word(s); the model fills in phonetics, meanings, examples, and notes.
@@ -10,6 +11,7 @@ import KaiUI
 struct AddWordsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(ToastCenter.self) private var toast
 
     private enum Mode: String, CaseIterable, Identifiable {
         case single = "Single"
@@ -138,15 +140,36 @@ struct AddWordsView: View {
 
         generating = true
         defer { generating = false }
-        do {
-            let provider = ProviderFactory.make(config)
-            let cards = try await provider.generateCards(lemmas: words, language: .english, literaryExamples: false)
-            for card in cards {
-                try? repository.insertIfAbsent(AICardMapper.entry(from: card))
-            }
-            dismiss()
-        } catch {
-            errorMessage = error.localizedDescription
+
+        // Chunked so a large batch can't blow the model's token budget; best-effort so a
+        // failed chunk doesn't lose the words that did generate.
+        let provider = ProviderFactory.make(config)
+        let outcome = await provider.generateCards(
+            lemmas: words, language: .english, literaryExamples: false, chunkSize: Self.aiChunkSize)
+
+        var added = 0
+        for card in outcome.cards {
+            if (try? repository.insertIfAbsent(AICardMapper.entry(from: card))) == true { added += 1 }
         }
+
+        // Nothing generated at all — surface the first error and stay on the form.
+        if outcome.cards.isEmpty {
+            let message = outcome.failures.first ?? "Generation failed."
+            AppLog.shared.error("Generation failed: \(message)", category: "ai")
+            errorMessage = message
+            return
+        }
+
+        if outcome.hasFailures {
+            AppLog.shared.warning("Batch generation: \(outcome.failures.count) chunk(s) failed", category: "ai")
+            toast.show("Added \(added) · \(outcome.failures.count) batch\(outcome.failures.count == 1 ? "" : "es") failed")
+        } else {
+            toast.show("Added \(added) word\(added == 1 ? "" : "s")")
+        }
+        dismiss()
     }
+
+    /// Words per AI request. Cards are content-rich (bilingual, collocations, quizzes),
+    /// so keep chunks small to stay well under output-token limits.
+    private static let aiChunkSize = 8
 }

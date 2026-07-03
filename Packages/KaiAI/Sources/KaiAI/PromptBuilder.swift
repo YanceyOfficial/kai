@@ -46,4 +46,21 @@ public struct PromptBuilder: Sendable {
             .filter { !$0.isEmpty }
         return "Generate cards for these items:\n" + cleaned.map { "- \($0)" }.joined(separator: "\n")
     }
+
+    /// The system prompt for the daily story: a short passage using the review words,
+    /// with a Chinese translation.
+    public func storySystemPrompt() -> String {
+        [
+            "You are a language teacher writing a short study passage for native Chinese speakers learning \(languageName).",
+            "Write a SHORT, natural, coherent \(languageName) passage of about 80–120 words that uses every given word at least once, in a way that makes each word's meaning clear from context.",
+            "Keep the language simple and memorable. Then provide a faithful Chinese translation of the whole passage in the `translation` field.",
+        ].joined(separator: "\n")
+    }
+
+    /// The user prompt listing the words the story must include.
+    public func storyUserPrompt(words: [String]) -> String {
+        let cleaned = words.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        return "Use all of these words in one short passage:\n" + cleaned.map { "- \($0)" }.joined(separator: "\n")
+    }
 }

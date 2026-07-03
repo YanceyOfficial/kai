@@ -12,6 +12,8 @@ public protocol VocabularyRepositoryProtocol {
     func dueEntries(for language: LanguageDomain, asOf now: Date) throws -> [VocabularyEntry]
     func reviewLogs(entryID: UUID) throws -> [ReviewLog]
     func allReviewLogs() throws -> [ReviewLog]
+    func dailyStory(for language: LanguageDomain, on day: Date) throws -> DailyStory?
+    func upsertDailyStory(_ story: DailyStory) throws
 }
 
 /// SwiftData-backed vocabulary repository implementation.
@@ -93,5 +95,26 @@ public final class VocabularyRepository: VocabularyRepositoryProtocol {
             sortBy: [SortDescriptor(\.timestamp, order: .forward)]
         )
         return try context.fetch(descriptor)
+    }
+
+    /// Returns the cached story for the given day+language, or nil.
+    public func dailyStory(for language: LanguageDomain, on day: Date) throws -> DailyStory? {
+        let start = Calendar.current.startOfDay(for: day)
+        let lang = language.rawValue
+        var descriptor = FetchDescriptor<DailyStory>(
+            predicate: #Predicate { $0.day == start && $0.languageRaw == lang }
+        )
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first
+    }
+
+    /// Saves `story`, replacing any existing story for the same day+language first, so
+    /// there is at most one per day (regeneration overwrites).
+    public func upsertDailyStory(_ story: DailyStory) throws {
+        if let existing = try dailyStory(for: story.language, on: story.day) {
+            context.delete(existing)
+        }
+        context.insert(story)
+        try context.save()
     }
 }

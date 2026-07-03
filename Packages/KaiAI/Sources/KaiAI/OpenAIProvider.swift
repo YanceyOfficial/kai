@@ -22,6 +22,29 @@ public struct OpenAIProvider: LLMProvider {
         guard !cleaned.isEmpty else { return [] }
         let prompt = PromptBuilder(language: language, literaryExamples: literaryExamples)
 
+        let json = try await send(system: prompt.systemPrompt(),
+                                  user: prompt.cardUserPrompt(lemmas: cleaned),
+                                  schemaName: "word_cards", schema: CardSchema.cardBatch)
+        do { return try JSONDecoder().decode(GeneratedCardBatch.self, from: json).cards }
+        catch { throw AIError.decoding("Cards: \(error)") }
+    }
+
+    public func generateStory(words: [String], language: LanguageDomain) async throws -> GeneratedStory {
+        guard !apiKey.isEmpty else { throw AIError.missingAPIKey }
+        let cleaned = words.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        guard !cleaned.isEmpty else { throw AIError.emptyResponse }
+        let prompt = PromptBuilder(language: language, literaryExamples: false)
+
+        let json = try await send(system: prompt.storySystemPrompt(),
+                                  user: prompt.storyUserPrompt(words: cleaned),
+                                  schemaName: "daily_story", schema: StorySchema.story)
+        do { return try JSONDecoder().decode(GeneratedStory.self, from: json) }
+        catch { throw AIError.decoding("Story: \(error)") }
+    }
+
+    // MARK: Shared structured-output plumbing
+
+    private func send(system: String, user: String, schemaName: String, schema: JSONSchema) async throws -> Data {
         struct Body: Encodable {
             let model: String
             let messages: [[String: String]]
@@ -29,15 +52,15 @@ public struct OpenAIProvider: LLMProvider {
             let max_completion_tokens: Int
         }
         struct ResponseFormat: Encodable { let type = "json_schema"; let json_schema: Schema }
-        struct Schema: Encodable { let name = "word_cards"; let strict = true; let schema: JSONSchema }
+        struct Schema: Encodable { let name: String; let strict = true; let schema: JSONSchema }
 
         let body = Body(
             model: model,
             messages: [
-                ["role": "system", "content": prompt.systemPrompt()],
-                ["role": "user", "content": prompt.cardUserPrompt(lemmas: cleaned)],
+                ["role": "system", "content": system],
+                ["role": "user", "content": user],
             ],
-            response_format: ResponseFormat(json_schema: Schema(schema: CardSchema.cardBatch)),
+            response_format: ResponseFormat(json_schema: Schema(name: schemaName, schema: schema)),
             max_completion_tokens: maxTokens
         )
 
@@ -47,6 +70,23 @@ public struct OpenAIProvider: LLMProvider {
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.httpBody = try JSONEncoder().encode(body)
 
+        let data = try await transportSend(request)
+
+        struct Envelope: Decodable {
+            struct Choice: Decodable { struct Message: Decodable { let content: String? }; let message: Message }
+            let choices: [Choice]
+        }
+        let envelope: Envelope
+        do { envelope = try JSONDecoder().decode(Envelope.self, from: data) }
+        catch { throw AIError.decoding("Envelope: \(error)") }
+        guard let text = envelope.choices.first?.message.content,
+              let jsonData = text.data(using: .utf8) else {
+            throw AIError.emptyResponse
+        }
+        return jsonData
+    }
+
+    private func transportSend(_ request: URLRequest) async throws -> Data {
         let data: Data
         let response: HTTPURLResponse
         do {
@@ -61,19 +101,6 @@ public struct OpenAIProvider: LLMProvider {
         guard (200...299).contains(response.statusCode) else {
             throw AIError.http(status: response.statusCode, body: String(decoding: data, as: UTF8.self))
         }
-
-        struct Envelope: Decodable {
-            struct Choice: Decodable { struct Message: Decodable { let content: String? }; let message: Message }
-            let choices: [Choice]
-        }
-        let envelope: Envelope
-        do { envelope = try JSONDecoder().decode(Envelope.self, from: data) }
-        catch { throw AIError.decoding("Envelope: \(error)") }
-        guard let text = envelope.choices.first?.message.content,
-              let jsonData = text.data(using: .utf8) else {
-            throw AIError.emptyResponse
-        }
-        do { return try JSONDecoder().decode(GeneratedCardBatch.self, from: jsonData).cards }
-        catch { throw AIError.decoding("Cards: \(error)") }
+        return data
     }
 }

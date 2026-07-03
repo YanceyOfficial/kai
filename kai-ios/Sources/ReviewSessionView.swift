@@ -66,6 +66,7 @@ struct ReviewSessionView: View {
     @State private var index = 0
     @State private var revealed = false
     @State private var showDone = false
+    @State private var showingStory = false
 
     /// Plays word pronunciations via Youdao's dictvoice audio.
     @State private var pronouncer = PronunciationPlayer()
@@ -91,6 +92,9 @@ struct ReviewSessionView: View {
             }
         }
         .kaiToast("Nice — deck complete", isPresented: $showDone)
+        .sheet(isPresented: $showingStory) {
+            StoryView(store: StoryStore(context: modelContext))
+        }
     }
 
     private var reviewContent: some View {
@@ -136,6 +140,13 @@ struct ReviewSessionView: View {
                     .foregroundStyle(KaiColor.inkSecondary)
             }
             Spacer()
+            Button { showingStory = true } label: {
+                Image(systemName: "book.pages")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(KaiColor.vermilion)
+            }
+            .buttonStyle(KaiPressStyle())
+            .padding(.trailing, KaiSpacing.s)
             Text("\(min(index + 1, cards.count)) / \(cards.count)")
                 .font(KaiFont.phonetic(16))
                 .foregroundStyle(KaiColor.inkSecondary)

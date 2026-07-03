@@ -90,6 +90,24 @@ struct SwiftDataTests {
         #expect(read.annotations.map(\.text) == ["second"])
     }
 
+    @Test("DailyStory upsert keeps one story per day and returns it")
+    func dailyStoryUpsert() throws {
+        let repo = VocabularyRepository(context: try cleanContext())
+        let day = Date()
+
+        try repo.upsertDailyStory(DailyStory(day: day, language: .english, text: "first", translation: "一", wordLemmas: ["a"]))
+        #expect(try repo.dailyStory(for: .english, on: day)?.text == "first")
+
+        // Regenerate: replaces the same-day story rather than adding a second.
+        try repo.upsertDailyStory(DailyStory(day: day, language: .english, text: "second", translation: "二", wordLemmas: ["b"]))
+        let fetched = try repo.dailyStory(for: .english, on: day)
+        #expect(fetched?.text == "second")
+        #expect(fetched?.wordLemmas == ["b"])
+
+        // A different language is independent.
+        #expect(try repo.dailyStory(for: .japanese, on: day) == nil)
+    }
+
     @Test("Review log persists and reads back")
     func reviewLogPersists() throws {
         let ctx = try cleanContext()

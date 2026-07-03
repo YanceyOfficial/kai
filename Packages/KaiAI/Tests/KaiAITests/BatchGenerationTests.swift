@@ -22,6 +22,10 @@ private struct MockProvider: LLMProvider {
         return lemmas.map { card(lemma: $0) }
     }
 
+    func generateStory(words: [String], language: LanguageDomain) async throws -> GeneratedStory {
+        GeneratedStory(story: words.joined(separator: " "), translation: "")
+    }
+
     private func card(lemma: String) -> GeneratedCard {
         let json = """
         {"lemma":"\(lemma)","kind":"word","phonetic":"","syllables":[],"explanation":"",

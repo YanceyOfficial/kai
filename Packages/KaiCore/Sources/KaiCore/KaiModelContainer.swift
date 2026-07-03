@@ -4,7 +4,8 @@ import SwiftData
 /// All persistent models that compose the Kai schema. Register new models here.
 public let kaiSchemaModels: [any PersistentModel.Type] = [
     VocabularyEntry.self,
-    ReviewLog.self
+    ReviewLog.self,
+    DailyStory.self
 ]
 
 /// SwiftData container factory.

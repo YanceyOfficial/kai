@@ -22,7 +22,31 @@ public struct ClaudeProvider: LLMProvider {
         guard !cleaned.isEmpty else { return [] }
         let prompt = PromptBuilder(language: language, literaryExamples: literaryExamples)
 
-        // Body is assembled as an Encodable so the schema serializes to standard JSON Schema.
+        let json = try await send(system: prompt.systemPrompt(),
+                                  user: prompt.cardUserPrompt(lemmas: cleaned),
+                                  schema: CardSchema.cardBatch)
+        do { return try JSONDecoder().decode(GeneratedCardBatch.self, from: json).cards }
+        catch { throw AIError.decoding("Cards: \(error)") }
+    }
+
+    public func generateStory(words: [String], language: LanguageDomain) async throws -> GeneratedStory {
+        guard !apiKey.isEmpty else { throw AIError.missingAPIKey }
+        let cleaned = words.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        guard !cleaned.isEmpty else { throw AIError.emptyResponse }
+        let prompt = PromptBuilder(language: language, literaryExamples: false)
+
+        let json = try await send(system: prompt.storySystemPrompt(),
+                                  user: prompt.storyUserPrompt(words: cleaned),
+                                  schema: StorySchema.story)
+        do { return try JSONDecoder().decode(GeneratedStory.self, from: json) }
+        catch { throw AIError.decoding("Story: \(error)") }
+    }
+
+    // MARK: Shared structured-output plumbing
+
+    /// Builds the Messages request, sends it, and returns the inner JSON string (which the
+    /// caller decodes against its schema type).
+    private func send(system: String, user: String, schema: JSONSchema) async throws -> Data {
         struct Body: Encodable {
             let model: String
             let max_tokens: Int
@@ -34,11 +58,9 @@ public struct ClaudeProvider: LLMProvider {
         struct Format: Encodable { let type = "json_schema"; let schema: JSONSchema }
 
         let body = Body(
-            model: model,
-            max_tokens: maxTokens,
-            system: prompt.systemPrompt(),
-            messages: [["role": "user", "content": prompt.cardUserPrompt(lemmas: cleaned)]],
-            output_config: OutputConfig(format: Format(schema: CardSchema.cardBatch))
+            model: model, max_tokens: maxTokens, system: system,
+            messages: [["role": "user", "content": user]],
+            output_config: OutputConfig(format: Format(schema: schema))
         )
 
         var request = URLRequest(url: endpoint)
@@ -48,6 +70,22 @@ public struct ClaudeProvider: LLMProvider {
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.httpBody = try JSONEncoder().encode(body)
 
+        let data = try await transportSend(request)
+
+        // Anthropic returns the JSON string inside content[0].text.
+        struct Envelope: Decodable { struct Block: Decodable { let type: String; let text: String? }; let content: [Block] }
+        let envelope: Envelope
+        do { envelope = try JSONDecoder().decode(Envelope.self, from: data) }
+        catch { throw AIError.decoding("Envelope: \(error)") }
+        guard let text = envelope.content.first(where: { $0.type == "text" })?.text,
+              let jsonData = text.data(using: .utf8) else {
+            throw AIError.emptyResponse
+        }
+        return jsonData
+    }
+
+    /// Sends the request through the transport, mapping errors and non-2xx responses.
+    private func transportSend(_ request: URLRequest) async throws -> Data {
         let data: Data
         let response: HTTPURLResponse
         do {
@@ -62,17 +100,6 @@ public struct ClaudeProvider: LLMProvider {
         guard (200...299).contains(response.statusCode) else {
             throw AIError.http(status: response.statusCode, body: String(decoding: data, as: UTF8.self))
         }
-
-        // Anthropic returns the JSON string inside content[0].text.
-        struct Envelope: Decodable { struct Block: Decodable { let type: String; let text: String? }; let content: [Block] }
-        let envelope: Envelope
-        do { envelope = try JSONDecoder().decode(Envelope.self, from: data) }
-        catch { throw AIError.decoding("Envelope: \(error)") }
-        guard let text = envelope.content.first(where: { $0.type == "text" })?.text,
-              let jsonData = text.data(using: .utf8) else {
-            throw AIError.emptyResponse
-        }
-        do { return try JSONDecoder().decode(GeneratedCardBatch.self, from: jsonData).cards }
-        catch { throw AIError.decoding("Cards: \(error)") }
+        return data
     }
 }

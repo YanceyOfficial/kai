@@ -90,31 +90,30 @@ dueAt mirror     → next session surfaces it when R decays to ~0.9
 
 ---
 
-## Known limitations & open questions (please review)
+## Learning steps & scheduling behavior
 
-Candid notes on where the current memory model is simplified or may be wrong — the places
-worth scrutinizing:
+Not-yet-graduated cards take short sub-day **learning steps** before FSRS day intervals:
 
-1. **Minimum interval is 1 day; no sub-day learning steps.** `nextInterval` clamps to ≥ 1
-   day, and `ReviewScheduler` models no Anki-style learning steps. So **"Again" does not
-   re-show a word within the same session** — it schedules it for tomorrow, not minutes
-   later. For the "re-drill a word you just failed" instinct, this is the biggest gap.
-2. **Early intervals collapse.** For new/young cards, Again/Hard/Good can all round to
-   "1d", so the rating-button interval captions only spread out meaningfully once a word
-   matures.
-3. **Review sessions are uncapped.** Only *new* words are limited (per-session budget);
-   **all** currently-due words are included, so a backlog can produce a very large session.
-4. **Chained review → quiz double-updates a word the same day.** A word reviewed and then
-   quizzed in the same session gets two FSRS updates in quick succession (the second via the
-   same-day short-term path), which may distort its stability.
-5. **`state` is largely cosmetic and `.learning` is never set.** A lapse becomes
-   `.relearning`; everything else becomes `.review`. So the Stats "Learning" bucket really
-   means "lapsed", and a brand-new word rated Again is immediately counted as a lapse.
-6. **Retention target is fixed at 0.9** and not user-tunable.
-7. **Weights are the stock FSRS-6 defaults — not personalized.** A per-user optimizer that
-   fits weights from review history is planned but not built, so scheduling isn't yet
-   adapted to the individual.
-8. **Forgetting-push notifications exist in `KaiServices` but aren't wired into the app yet.**
+- **Again → 1 min**, and the word is **re-queued into the current session** to drill again.
+- **Hard → 10 min** (while still learning); on a graduated card, Hard keeps its FSRS day
+  interval.
+- **Good / Easy → graduate** to the FSRS day interval.
+
+Elapsed time is floored to whole days, so same-day reviews (re-drills, the chained quiz,
+multiple reviews in a day) use FSRS's short-term stability path (ts-fsrs behavior). Day
+intervals get **fuzz** so cards scheduled together don't all fall due on the same day. A
+**lapse** is counted only when a *graduated* word is failed. The chained quiz is a
+**double-check**: a correct answer is a no-op, a wrong answer re-grades the word as Again.
+Review sessions cap due words at 100 (most-overdue first) so a backlog stays bounded.
+
+## Remaining limitations & open questions
+
+- **Retention target is fixed at 0.9** and not user-tunable.
+- **Weights are the stock FSRS-6 defaults — not personalized.** A per-user optimizer that
+  fits weights from review history is planned but not built.
+- **Forgetting-push notifications exist in `KaiServices` but aren't wired into the app yet.**
+- **No iCloud sync.** Data is on-device only (the models are CloudKit-compatible, but sync
+  is off), so deleting the app loses the deck.
 
 ---
 

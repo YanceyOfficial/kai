@@ -4,9 +4,9 @@ import KaiCore
 import KaiAI
 import KaiUI
 
-/// Authoring sheet with three modes: a full single-word form, a batch paste that
-/// creates one bare entry per line, and AI generation that fills in phonetics,
-/// meanings, and examples for pasted words.
+/// Authoring sheet. Both modes generate everything with AI — the user only supplies
+/// the word(s); the model fills in phonetics, meanings, examples, and notes.
+/// "Single" adds one word; "Batch" adds one per line.
 struct AddWordsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -14,41 +14,31 @@ struct AddWordsView: View {
     private enum Mode: String, CaseIterable, Identifiable {
         case single = "Single"
         case batch = "Batch"
-        case ai = "AI"
         var id: String { rawValue }
     }
 
     @State private var mode: Mode = .single
-
-    // Single-entry fields.
-    @State private var lemma = ""
-    @State private var phonetic = ""
-    @State private var explanation = ""
-    @State private var exampleSentence = ""
-    @State private var exampleTranslation = ""
-    @State private var kind: EntryKind = .word
-
-    // Batch field.
+    @State private var single = ""
     @State private var pasted = ""
-
-    // AI field + status.
-    @State private var aiText = ""
     @State private var generating = false
     @State private var errorMessage: String?
 
     private var repository: VocabularyRepository { VocabularyRepository(context: modelContext) }
 
-    private var batchLemmas: [String] { PastedWordsParser.lemmas(from: pasted) }
-    private var aiLemmas: [String] { PastedWordsParser.lemmas(from: aiText) }
-
-    private var canSave: Bool {
-        guard !generating else { return false }
+    /// The word(s) to generate, depending on the mode.
+    private var lemmas: [String] {
         switch mode {
-        case .single: return !lemma.trimmingCharacters(in: .whitespaces).isEmpty
-        case .batch: return !batchLemmas.isEmpty
-        case .ai: return !aiLemmas.isEmpty
+        case .single:
+            let word = single.trimmingCharacters(in: .whitespacesAndNewlines)
+            return word.isEmpty ? [] : [word]
+        case .batch:
+            return PastedWordsParser.lemmas(from: pasted)
         }
     }
+
+    private var hasKey: Bool { AIConfigStore.configuration() != nil }
+    private var canGenerate: Bool { !generating && hasKey && !lemmas.isEmpty }
+    private var providerName: String { AIConfigStore.currentKind() == .openai ? "OpenAI" : "Claude" }
 
     var body: some View {
         NavigationStack {
@@ -57,11 +47,11 @@ struct AddWordsView: View {
                     ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
                 }
                 .pickerStyle(.segmented)
+                .disabled(generating)
 
                 switch mode {
-                case .single: singleFields
-                case .batch: batchFields
-                case .ai: aiFields
+                case .single: singleField
+                case .batch: batchField
                 }
             }
             .navigationTitle("Add words")
@@ -74,7 +64,7 @@ struct AddWordsView: View {
                     if generating {
                         ProgressView()
                     } else {
-                        Button(mode == .ai ? "Generate" : "Save", action: save).disabled(!canSave)
+                        Button("Generate") { generate() }.disabled(!canGenerate)
                     }
                 }
             }
@@ -90,104 +80,67 @@ struct AddWordsView: View {
         .tint(KaiColor.vermilion)
     }
 
+    // MARK: Fields
+
     @ViewBuilder
-    private var singleFields: some View {
-        Section("Word") {
-            TextField("Lemma (e.g. eccentric)", text: $lemma)
+    private var singleField: some View {
+        Section {
+            TextField("Word (e.g. eccentric)", text: $single)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-            TextField("Phonetic (optional)", text: $phonetic)
-                .autocorrectionDisabled()
-            Picker("Kind", selection: $kind) {
-                Text("Word").tag(EntryKind.word)
-                Text("Phrase").tag(EntryKind.phrase)
-            }
-        }
-        Section("Meaning") {
-            TextField("Explanation", text: $explanation, axis: .vertical)
-        }
-        Section("Example (optional)") {
-            TextField("Sentence", text: $exampleSentence, axis: .vertical)
-            TextField("Translation", text: $exampleTranslation, axis: .vertical)
+                .disabled(generating)
+                .onSubmit { if canGenerate { generate() } }
+        } footer: {
+            statusFooter
         }
     }
 
     @ViewBuilder
-    private var batchFields: some View {
+    private var batchField: some View {
         Section {
             TextField("One word per line", text: $pasted, axis: .vertical)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .frame(minHeight: 160, alignment: .topLeading)
+                .disabled(generating)
         } header: {
             Text("Paste words")
         } footer: {
-            Text("\(batchLemmas.count) word\(batchLemmas.count == 1 ? "" : "s") · duplicates are skipped.")
+            statusFooter
         }
     }
 
     @ViewBuilder
-    private var aiFields: some View {
-        Section {
-            TextField("One word per line", text: $aiText, axis: .vertical)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .frame(minHeight: 140, alignment: .topLeading)
-                .disabled(generating)
-        } header: {
-            Text("Generate with AI")
-        } footer: {
-            if AIConfigStore.configuration() == nil {
-                Text("Add an API key in Settings to enable AI generation.")
-            } else {
-                Text("\(aiLemmas.count) word\(aiLemmas.count == 1 ? "" : "s") · \(AIConfigStore.currentKind() == .openai ? "OpenAI" : "Claude") will fill in phonetics, meanings, and examples.")
-            }
+    private var statusFooter: some View {
+        if !hasKey {
+            Text("Add an API key in Settings to generate words.")
+        } else if generating {
+            Text("Generating \(lemmas.count) word\(lemmas.count == 1 ? "" : "s") with \(providerName)…")
+        } else {
+            Text("\(providerName) fills in phonetics, meanings, and examples. \(lemmas.count) word\(lemmas.count == 1 ? "" : "s").")
         }
     }
 
-    private func save() {
-        switch mode {
-        case .single:
-            let examples = exampleSentence.trimmingCharacters(in: .whitespaces).isEmpty
-                ? []
-                : [Example(sentence: exampleSentence, translation: exampleTranslation)]
-            let entry = VocabularyEntry(
-                lemma: lemma.trimmingCharacters(in: .whitespaces),
-                kind: kind,
-                language: .english,
-                phonetic: phonetic.trimmingCharacters(in: .whitespaces),
-                explanation: explanation.trimmingCharacters(in: .whitespaces),
-                examples: examples,
-                source: .single
-            )
-            try? repository.insertIfAbsent(entry)
-            dismiss()
-        case .batch:
-            for lemma in batchLemmas {
-                let entry = VocabularyEntry(lemma: lemma, kind: .word, language: .english, source: .batch)
-                try? repository.insertIfAbsent(entry)
-            }
-            dismiss()
-        case .ai:
-            Task { await generateAndSave() }
-        }
+    // MARK: Generation
+
+    private func generate() {
+        Task { await run() }
     }
 
-    /// Calls the configured provider to enrich the pasted words, then inserts them.
     @MainActor
-    private func generateAndSave() async {
+    private func run() async {
         guard let config = AIConfigStore.configuration() else {
             errorMessage = "Add an API key in Settings first."
             return
         }
-        let lemmas = aiLemmas
-        guard !lemmas.isEmpty else { return }
+        let words = lemmas
+        guard !words.isEmpty else { return }
 
         generating = true
         defer { generating = false }
         do {
             let provider = ProviderFactory.make(config)
-            let cards = try await provider.generateCards(lemmas: lemmas, language: .english, literaryExamples: false)
+            let cards = try await provider.generateCards(lemmas: words, language: .english, literaryExamples: false)
             for card in cards {
                 try? repository.insertIfAbsent(AICardMapper.entry(from: card))
             }

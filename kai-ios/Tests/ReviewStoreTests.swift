@@ -35,6 +35,13 @@ struct ReviewStoreTests {
         #expect(store.cards.contains { $0.word == "eccentric" })
     }
 
+    @Test("load(newLimit:) caps how many new words enter the session")
+    func loadRespectsNewLimit() throws {
+        let (store, _) = try makeSeededStore()   // 3 new seeded words
+        store.load(newLimit: 2)
+        #expect(store.cards.count == 2)
+    }
+
     @Test("Rating every card writes a log per card and clears the due deck")
     func ratingPersistsAndClearsDue() throws {
         let (store, repo) = try makeSeededStore()

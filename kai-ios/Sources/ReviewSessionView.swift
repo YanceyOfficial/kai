@@ -62,6 +62,8 @@ struct ReviewSessionView: View {
     @AppStorage("autoPlayPronunciation") private var autoPlayPronunciation = true
     /// User setting: which accent to pronounce in.
     @AppStorage("pronunciationAccent") private var accentRaw = Accent.us.rawValue
+    /// User setting: how many new words to introduce per session.
+    @AppStorage("newWordsPerDay") private var newWordsPerDay = 10
 
     private var accent: Accent { Accent(rawValue: accentRaw) ?? .us }
 
@@ -163,7 +165,7 @@ struct ReviewSessionView: View {
     }
 
     private func restart() {
-        store.load()
+        store.load(newLimit: newWordsPerDay)
         withAnimation {
             index = 0
             revealed = false

@@ -24,13 +24,17 @@ final class ReviewStore {
         self.repository = VocabularyRepository(context: context)
     }
 
-    /// Loads the due English deck as a session snapshot. Seeding happens once at app
-    /// launch (see `StarterSeed`), so this only fetches.
-    func load(now: Date = .now) {
+    /// Loads the due English deck as a session snapshot: at most `newLimit` new words,
+    /// interleaved with all due review words. Seeding happens once at app launch (see
+    /// `StarterSeed`), so this only fetches.
+    func load(newLimit: Int = .max, now: Date = .now) {
         do {
             let due = try repository.dueEntries(for: .english, asOf: now)
-            entriesByID = Dictionary(due.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-            cards = due.map(ReviewCardData.init(entry:))
+            let new = due.filter { $0.scheduling.state == .new }
+            let old = due.filter { $0.scheduling.state != .new }
+            let session = SessionComposer.compose(new: new, old: old, newLimit: newLimit)
+            entriesByID = Dictionary(session.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            cards = session.map(ReviewCardData.init(entry:))
         } catch {
             logger.error("Failed to load review deck: \(error.localizedDescription)", category: "review")
             cards = []

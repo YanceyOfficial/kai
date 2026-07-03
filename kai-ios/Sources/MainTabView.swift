@@ -49,6 +49,7 @@ struct MainTabView: View {
 /// due deck each time the tab appears (so newly added words show up).
 private struct ReviewTab: View {
     @Environment(\.modelContext) private var modelContext
+    @AppStorage("newWordsPerDay") private var newWordsPerDay = 10
     @State private var store: ReviewStore?
 
     var body: some View {
@@ -62,7 +63,7 @@ private struct ReviewTab: View {
         }
         .task {
             let store = store ?? ReviewStore(context: modelContext)
-            store.load()
+            store.load(newLimit: newWordsPerDay)
             self.store = store
         }
     }

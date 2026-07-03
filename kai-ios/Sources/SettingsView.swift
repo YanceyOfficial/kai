@@ -7,10 +7,23 @@ import KaiUI
 struct SettingsView: View {
     @AppStorage("autoPlayPronunciation") private var autoPlay = true
     @AppStorage("pronunciationAccent") private var accentRaw = Accent.us.rawValue
+    @AppStorage("newWordsPerDay") private var newWordsPerDay = 10
+
+    private let newWordOptions = [5, 10, 15, 20, 30]
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Picker("New words per session", selection: $newWordsPerDay) {
+                        ForEach(newWordOptions, id: \.self) { Text("\($0)").tag($0) }
+                    }
+                } header: {
+                    Text("Review")
+                } footer: {
+                    Text("Each session introduces up to this many new words, mixed with words that are due for review.")
+                }
+
                 Section {
                     Toggle("Auto-play on each card", isOn: $autoPlay)
                     Picker("Accent", selection: $accentRaw) {

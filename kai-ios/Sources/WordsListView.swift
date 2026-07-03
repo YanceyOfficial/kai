@@ -19,9 +19,9 @@ struct WordsListView: View {
     private var filteredEntries: [VocabularyEntry] {
         let query = searchText.trimmingCharacters(in: .whitespaces).lowercased()
         guard !query.isEmpty else { return entries }
-        return entries.filter {
-            $0.lemma.lowercased().contains(query) || $0.explanation.lowercased().contains(query)
-        }
+        // Match the word itself only — not its meaning — so searching "th" finds "thick",
+        // not every entry whose definition happens to contain "th".
+        return entries.filter { $0.lemma.lowercased().contains(query) }
     }
 
     var body: some View {

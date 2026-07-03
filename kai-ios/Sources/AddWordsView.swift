@@ -15,6 +15,7 @@ struct AddWordsView: View {
     @State private var pasted = ""
     @State private var generating = false
     @State private var errorMessage: String?
+    @FocusState private var fieldFocused: Bool
 
     private var repository: VocabularyRepository { VocabularyRepository(context: modelContext) }
 
@@ -34,6 +35,7 @@ struct AddWordsView: View {
                         .autocorrectionDisabled()
                         .frame(minHeight: 160, alignment: .topLeading)
                         .disabled(generating)
+                        .focused($fieldFocused)
                 } header: {
                     Text("Words")
                 } footer: {
@@ -42,6 +44,11 @@ struct AddWordsView: View {
             }
             .navigationTitle("Add words")
             .navigationBarTitleDisplayMode(.inline)
+            .task {
+                // Focus the field (and raise the keyboard) as the sheet settles.
+                try? await Task.sleep(nanoseconds: 350_000_000)
+                fieldFocused = true
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }.disabled(generating)

@@ -72,6 +72,18 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    NavigationLink {
+                        LogsView()
+                    } label: {
+                        Label("Diagnostics", systemImage: "stethoscope")
+                    }
+                } header: {
+                    Text("Troubleshooting")
+                } footer: {
+                    Text("View, share, or clear collected logs to diagnose issues.")
+                }
+
+                Section {
                     LabeledContent("Version", value: Self.appVersion)
                 } header: {
                     Text("About")

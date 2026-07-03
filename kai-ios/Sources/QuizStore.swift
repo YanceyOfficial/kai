@@ -12,7 +12,7 @@ final class QuizStore {
     private let repository: VocabularyRepository
     private let scheduler = ReviewScheduler()
     private let generator = QuizGenerator()
-    private let logger = AppLogger(sink: OSLogSink())
+    private let logger = AppLog.shared
 
     private var entriesByID: [UUID: VocabularyEntry] = [:]
 

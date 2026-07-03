@@ -11,7 +11,7 @@ import KaiServices
 final class ReviewStore {
     private let repository: VocabularyRepository
     private let scheduler = ReviewScheduler()
-    private let logger = AppLogger(sink: OSLogSink())
+    private let logger = AppLog.shared
 
     /// Display cards for the current session — a snapshot of the entries that were
     /// due when `load()` ran.

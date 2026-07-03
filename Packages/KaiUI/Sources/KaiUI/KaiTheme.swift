@@ -20,6 +20,8 @@ public enum KaiColor {
     public static let inkSecondary = adaptive(light: 0x6C6C74, dark: 0x9A9AA2)
     /// The brand accent — a touch brighter in dark mode for contrast.
     public static let vermilion = adaptive(light: 0xC8402F, dark: 0xE45A44)
+    /// Error/destructive signal — distinct from the vermilion accent.
+    public static let danger = adaptive(light: 0xB3261E, dark: 0xE5584B)
     /// Soft elevation shadow.
     public static let shadow = adaptiveTranslucent(light: (0x000000, 0.10), dark: (0x000000, 0.55))
     /// Hairline separator.

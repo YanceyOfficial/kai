@@ -2,9 +2,19 @@ import Foundation
 import os
 
 /// Severity level for a log record.
-public enum LogLevel: Int, Comparable, Sendable {
+public enum LogLevel: Int, Comparable, Codable, Sendable {
     case debug, info, warning, error
     public static func < (lhs: LogLevel, rhs: LogLevel) -> Bool { lhs.rawValue < rhs.rawValue }
+
+    /// Short uppercase tag for display and text export.
+    public var label: String {
+        switch self {
+        case .debug: return "DEBUG"
+        case .info: return "INFO"
+        case .warning: return "WARN"
+        case .error: return "ERROR"
+        }
+    }
 }
 
 /// A destination for log records. Injectable so tests can capture output.
@@ -47,4 +57,11 @@ public struct AppLogger: Sendable {
     public func info(_ message: String, category: String) { log(.info, message, category) }
     public func warning(_ message: String, category: String) { log(.warning, message, category) }
     public func error(_ message: String, category: String) { log(.error, message, category) }
+}
+
+/// The app-wide logger: fans out to the unified log (`OSLogSink`) and the in-app
+/// `LogCollector` so every record is both visible in Console and captured for the
+/// in-app Diagnostics screen. Prefer this over constructing `AppLogger` per call site.
+public enum AppLog {
+    public static let shared = AppLogger(sink: FanoutLogSink([OSLogSink(), LogCollector.shared]))
 }

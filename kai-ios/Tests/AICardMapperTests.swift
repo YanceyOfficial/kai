@@ -68,4 +68,18 @@ struct AICardMapperTests {
         #expect(entry.collocations.isEmpty)
         #expect(entry.examples.isEmpty)
     }
+
+    @Test("Source defaults to single and can be overridden (e.g. OCR)")
+    func sourceTagging() throws {
+        let generated = try card(json: """
+        {
+          "lemma": "x", "kind": "word", "phonetic": "", "syllables": [],
+          "explanation": "", "explanationEn": "", "partsOfSpeech": [], "examples": [],
+          "mnemonic": "", "etymology": "", "roots": "", "synonyms": [],
+          "collocations": [], "confusables": [], "quizzes": []
+        }
+        """)
+        #expect(AICardMapper.entry(from: generated).source == .single)
+        #expect(AICardMapper.entry(from: generated, source: .ocr).source == .ocr)
+    }
 }

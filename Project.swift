@@ -24,6 +24,7 @@ let project = Project(
                         "UIImageName": "",
                     ],
                     "CFBundleDisplayName": "Kai",
+                    "NSCameraUsageDescription": "Take a photo of text to scan words into your deck.",
                 ]
             ),
             buildableFolders: [

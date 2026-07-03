@@ -5,7 +5,7 @@ import KaiAI
 /// Maps a model-generated card into a persistable `VocabularyEntry`. Pure and
 /// testable; empty optional-ish fields become `nil` rather than empty strings.
 enum AICardMapper {
-    static func entry(from card: GeneratedCard, language: LanguageDomain = .english, now: Date = .now) -> VocabularyEntry {
+    static func entry(from card: GeneratedCard, language: LanguageDomain = .english, source: EntrySource = .single, now: Date = .now) -> VocabularyEntry {
         VocabularyEntry(
             lemma: card.lemma,
             kind: EntryKind(rawValue: card.kind) ?? .word,
@@ -24,7 +24,7 @@ enum AICardMapper {
                 Collocation(phrase: $0.phrase, meaning: $0.meaning, example: $0.example, exampleTranslation: $0.exampleTranslation)
             },
             confusables: card.confusables,
-            source: .single,
+            source: source,
             now: now
         )
     }

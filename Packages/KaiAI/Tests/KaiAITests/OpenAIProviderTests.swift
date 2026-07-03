@@ -15,7 +15,7 @@ private final class CapturingTransport2: HTTPTransport, @unchecked Sendable {
 }
 
 private let openAIBody: Data = {
-    let inner = #"{"cards":[{"lemma":"obsession","kind":"word","phonetic":"/x/","syllables":["ob"],"explanation":"fixation","partsOfSpeech":["noun"],"examples":[{"sentence":"a","translation":"b"}],"mnemonic":"m","etymology":"e","synonyms":[],"confusables":[],"quizzes":[]}]}"#
+    let inner = #"{"cards":[{"lemma":"obsession","kind":"word","phonetic":"/x/","syllables":["ob"],"explanation":"fixation","explanationEn":"","partsOfSpeech":["noun"],"examples":[{"sentence":"a","translation":"b"}],"mnemonic":"m","etymology":"e","synonyms":[],"collocations":[],"confusables":[],"quizzes":[]}]}"#
     let envelope: [String: Any] = ["choices": [["message": ["role": "assistant", "content": inner]]]]
     return try! JSONSerialization.data(withJSONObject: envelope)
 }()

@@ -8,46 +8,59 @@ Feature branch: `feature/native-english-mvp`
 
 Extend the AI-generated word card with three user-requested enrichments:
 
-1. **Bilingual content** — English *and* Chinese for Meaning, Similar-words sense, and
-   Notes, so the learner gets both the English definition (English-English study) and a
-   quick Chinese gloss.
+1. **Chinese-primary meaning** — `explanation` becomes a concise Chinese gloss (like a
+   dictionary headword: `vt. 保证；使确信`). This is what the quiz and list row show, so
+   single-choice options are short and uniform. The full English definition is kept as a
+   secondary line on the word **detail page only** — preserving the English-English study
+   value without polluting the quiz.
 2. **Annotations** — a user-authored, comment-like module for modern/contextual senses
    the AI (which produces standard, textbook content) would not include.
 3. **Collocations** — the AI also produces fixed collocations / phrases for a word
-   (e.g. `use` → `used to`, `make use of`), each with a bilingual meaning and example.
+   (e.g. `use` → `used to`, `make use of`), each with a Chinese meaning and example.
 
-Native language is **fixed to Chinese** for this MVP (target language = English), matching
-the existing example-sentence translation pattern (`Example { sentence; translation }`).
+Guiding principle: **the English word and its English content** (synonyms, collocation
+phrases, example sentences) stay English; **all explanatory glosses** (meaning, sense,
+collocation meaning, example translations) are **Chinese** — the learner's native language.
+Native language is fixed to Chinese for this MVP.
+
+### Motivation (from testing)
+
+Quiz single-choice options are drawn from other words' `explanation`. When some words had
+Chinese explanations (seed) and others English (AI-generated), the option list mixed short
+Chinese with long English sentences — unreadable. Standardizing `explanation` to concise
+Chinese fixes this.
 
 ## Non-goals
 
 - Making the native language configurable (deferred).
-- Changing the Words list row or the quiz meaning source — both keep using `explanation`
-  (English) as the primary meaning. No search/quiz changes.
 - Bilingual treatment of `confusables` (a bare word list; no gloss needed).
+- Feeding collocations into the quiz (deferred).
 
 ## Design
 
-### 1. Bilingual content — parallel EN + ZH fields
+### 1. Chinese-primary meaning (+ English on detail)
 
-Chosen over a shared `Bilingual { en; zh }` value type: parallel optional fields match the
-existing `Example` idiom, avoid migrating the core `explanation` string (which list/search
-depend on) into a struct, and let the UI hide the ZH line when absent.
+Only **Meaning** is truly bilingual; every other field is already English-content with a
+Chinese gloss, so no parallel `*Zh` fields are needed.
 
-**`KaiCore.VocabularyEntry`** — add:
+**`KaiCore.VocabularyEntry`** — the only change here:
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `explanationZh` | `String?` | Chinese meaning; `explanation` stays the English definition. |
-| `mnemonicZh` | `String?` | Chinese version of the mnemonic. |
-| `etymologyZh` | `String?` | Chinese version of the etymology. |
-| `rootsZh` | `String?` | Chinese version of the morpheme breakdown. |
+| `explanation` | `String` (existing) | Now the **concise Chinese** gloss (POS + short meaning). Used by quiz, list row, and detail. |
+| `explanationEn` | `String?` (new) | The full **English** definition; shown only on the detail Meaning section, never in the quiz. |
 
-**`KaiCore.SynonymGroup`** — add `senseZh: String?` (Chinese gloss of the shared sense).
+**`KaiCore.SynonymGroup`** — no change: `sense` is the **Chinese** label; `words` are the
+English synonyms. (The seed already uses Chinese senses, e.g. `古怪的`.)
 
-**Display (`WordDetailView`):** Meaning, Similar words, and Notes each render the English
-text, then the Chinese text below in `KaiColor.inkSecondary` — the same two-line pattern
-already used for example sentences. ZH lines are omitted when nil/empty.
+**Notes (`roots` / `mnemonic` / `etymology`)** — no new fields; these are generated in
+**Chinese**. `roots` keeps the English morpheme forms inline with Chinese meanings
+(e.g. `ec-（出）+ centr（中心）+ -ic → 偏离中心`).
+
+**Display (`WordDetailView`):** the Meaning section renders the Chinese `explanation`, then
+`explanationEn` below in `KaiColor.inkSecondary` (same two-line pattern as example
+sentences); the English line is omitted when nil/empty. Similar words and Notes render their
+(Chinese) text directly.
 
 ### 2. Annotations — user-authored, never AI
 
@@ -80,60 +93,61 @@ persists.
 
 ```swift
 public struct Collocation: Codable, Hashable, Sendable {
-    public var phrase: String
-    public var meaning: String            // English gloss
-    public var meaningZh: String          // Chinese gloss ("" when N/A)
-    public var example: String            // example sentence ("" when N/A)
-    public var exampleTranslation: String // Chinese translation ("" when N/A)
+    public var phrase: String             // the collocation, e.g. "make use of"
+    public var meaning: String            // Chinese gloss
+    public var example: String            // English example sentence ("" when N/A)
+    public var exampleTranslation: String // Chinese translation of the example ("" when N/A)
 }
 ```
 
 Stored on `VocabularyEntry` as `collocations: [Collocation] = []`.
 
 **Display (`WordDetailView`):** a new **Collocations** section — each row shows the phrase
-(emphasis), the bilingual meaning, and the example sentence with its translation below.
+(emphasis), the Chinese meaning, and the example sentence with its translation below.
 
 ### AI layer (KaiAI)
 
-**`GeneratedCard`** — add:
-- `explanationZh: String`, `mnemonicZh: String`, `etymologyZh: String`, `rootsZh: String`
-  (all non-optional, `""` when N/A — consistent with the existing `mnemonic`/`etymology`
-  string fields; the mapper converts `""` → `nil`).
-- `GeneratedSynonymGroup` gains `senseZh: String`.
+**`GeneratedCard`** — changes:
+- `explanation` is now the **Chinese** gloss; add `explanationEn: String` (English
+  definition, `""` when the model has none). Mapper converts `""` → `nil`.
+- `mnemonic` / `etymology` / `roots` are generated in **Chinese** (no new fields).
+- `GeneratedSynonymGroup.sense` is **Chinese** (no new field).
 - `collocations: [GeneratedCollocation]` where
-  `GeneratedCollocation { phrase, meaning, meaningZh, example, exampleTranslation }`.
+  `GeneratedCollocation { phrase, meaning, example, exampleTranslation }` (meaning +
+  exampleTranslation are Chinese).
 
-**`CardSchema`** — add the matching JSON-Schema properties; all required (OpenAI strict
-mode). The model returns an empty string for any bilingual/collocation field that does not
-apply.
+**`CardSchema`** — add `explanationEn` and the `collocations` array; all properties required
+(OpenAI strict mode). The model returns an empty string for any field that does not apply.
 
-**`PromptBuilder`** — extend the system prompt to:
-- Provide a Chinese translation alongside each of: explanation, synonym `sense`, roots,
-  mnemonic, etymology.
-- Produce `collocations`: fixed collocations / phrases the word commonly forms, each with
-  `phrase`, a bilingual `meaning`, and one `example` + `exampleTranslation`. Empty array
-  when the word forms no notable collocations.
+**`PromptBuilder`** — update the system prompt so it:
+- Writes `explanation` as a **concise Chinese** gloss (part-of-speech + short meaning, like
+  a dictionary headword), and `explanationEn` as the fuller English definition.
+- Writes synonym `sense`, `mnemonic`, `etymology`, and the meanings inside `roots` in
+  **Chinese** (keeping English morpheme forms inline in `roots`).
+- Produces `collocations`: fixed collocations / phrases the word commonly forms, each with
+  `phrase` (English), a Chinese `meaning`, and one English `example` + Chinese
+  `exampleTranslation`. Empty array when the word forms no notable collocations.
 
-**`AICardMapper`** — map the new fields into `VocabularyEntry`, converting empty strings to
-`nil` for the optional `*Zh` fields.
+**`AICardMapper`** — map `explanationEn` (empty → nil) and `collocations` into
+`VocabularyEntry`.
 
 ### Migration & seed
 
 - SwiftData migration is lightweight: all new columns are optional or defaulted arrays
   (CloudKit-compatible modeling — no `@Attribute(.unique)`).
-- `StarterSeed`: set English `explanation` + Chinese `explanationZh`, add `senseZh` to the
-  synonym groups, and add one sample `Collocation` to at least one entry.
+- `StarterSeed`: entries already use Chinese `explanation`; add `explanationEn` and one
+  sample `Collocation` to at least one entry. Synonym `sense` values are already Chinese.
 
 ## Testing
 
-- **KaiAI** (`GeneratedCardTests`): extend the decode fixture with the new bilingual fields
-  and a `collocations` entry; assert they decode. Keep the existing "roots optional" test.
-- **App** (`AICardMapperTests`): assert the new fields map onto `VocabularyEntry`
-  (bilingual glosses, collocations).
+- **KaiAI** (`GeneratedCardTests`): extend the decode fixture with `explanationEn` and a
+  `collocations` entry; assert they decode. Keep the existing "roots optional" test.
+- **App** (`AICardMapperTests`): assert `explanationEn` and `collocations` map onto
+  `VocabularyEntry`.
 - **KaiCore** (simulator suite): a small test that appending and removing an `Annotation`
   on a persisted `VocabularyEntry` round-trips.
 - Full app suite + KaiCore (simulator) + KaiAI/KaiFSRS/KaiServices (`swift test`) stay green.
 
 ## Open questions
 
-None outstanding. (The bilingual-modeling approach was chosen as parallel EN+ZH fields.)
+None outstanding.

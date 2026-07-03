@@ -17,7 +17,7 @@ private final class CapturingTransport: HTTPTransport, @unchecked Sendable {
 
 private let anthropicBody: Data = {
     // Anthropic wraps the JSON string in content[0].text.
-    let inner = #"{"cards":[{"lemma":"eccentric","kind":"word","phonetic":"/x/","syllables":["ec"],"explanation":"odd","partsOfSpeech":["adjective"],"examples":[{"sentence":"a","translation":"b"}],"mnemonic":"m","etymology":"e","synonyms":[],"confusables":[],"quizzes":[]}]}"#
+    let inner = #"{"cards":[{"lemma":"eccentric","kind":"word","phonetic":"/x/","syllables":["ec"],"explanation":"odd","explanationEn":"","partsOfSpeech":["adjective"],"examples":[{"sentence":"a","translation":"b"}],"mnemonic":"m","etymology":"e","synonyms":[],"collocations":[],"confusables":[],"quizzes":[]}]}"#
     let envelope: [String: Any] = ["content": [["type": "text", "text": inner]], "stop_reason": "end_turn"]
     return try! JSONSerialization.data(withJSONObject: envelope)
 }()

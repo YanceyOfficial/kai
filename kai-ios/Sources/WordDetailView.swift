@@ -8,22 +8,20 @@ import KaiUI
 struct WordDetailView: View {
     let entry: VocabularyEntry
 
+    @Environment(\.modelContext) private var modelContext
+    @Environment(ToastCenter.self) private var toast
     @State private var pronouncer = PronunciationPlayer()
     @AppStorage("pronunciationAccent") private var accentRaw = Accent.us.rawValue
     private var accent: Accent { Accent(rawValue: accentRaw) ?? .us }
 
+    /// Presents the "add note" sheet and holds its draft text.
+    @State private var showingAddNote = false
+    @State private var newNoteText = ""
+
     var body: some View {
         List {
             headerSection
-
-            if !entry.explanation.isEmpty {
-                Section("Meaning") {
-                    Text(entry.explanation)
-                        .font(KaiFont.body(16))
-                        .foregroundStyle(KaiColor.sumi)
-                }
-                .listRowBackground(KaiColor.cardFace)
-            }
+            meaningSection
 
             if !entry.examples.isEmpty {
                 Section("Examples") {
@@ -44,16 +42,44 @@ struct WordDetailView: View {
                 .listRowBackground(KaiColor.cardFace)
             }
 
+            similarWordsSection
+            collocationsSection
             notesSection
+            annotationsSection
             schedulingSection
         }
         .scrollContentBackground(.hidden)
         .background(KaiColor.washi)
         .navigationTitle(entry.lemma)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showingAddNote) { addNoteSheet }
     }
 
     // MARK: Sections
+
+    @ViewBuilder
+    private var meaningSection: some View {
+        let en = entry.explanationEn ?? ""
+        if !entry.explanation.isEmpty || !en.isEmpty {
+            Section("Meaning") {
+                VStack(alignment: .leading, spacing: KaiSpacing.xs) {
+                    if !entry.explanation.isEmpty {
+                        Text(entry.explanation)
+                            .font(KaiFont.body(16))
+                            .foregroundStyle(KaiColor.sumi)
+                    }
+                    if !en.isEmpty {
+                        Text(en)
+                            .font(KaiFont.body(14))
+                            .foregroundStyle(KaiColor.inkSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+            .listRowBackground(KaiColor.cardFace)
+        }
+    }
 
     private var headerSection: some View {
         Section {
@@ -95,18 +121,125 @@ struct WordDetailView: View {
     }
 
     @ViewBuilder
+    private var similarWordsSection: some View {
+        if !entry.synonymGroups.isEmpty {
+            Section("Similar words") {
+                ForEach(Array(entry.synonymGroups.enumerated()), id: \.offset) { _, group in
+                    VStack(alignment: .leading, spacing: KaiSpacing.xs) {
+                        Text(group.sense)
+                            .font(KaiFont.body(13, weight: .semibold))
+                            .foregroundStyle(KaiColor.vermilion)
+                        Text(group.words.joined(separator: ", "))
+                            .font(KaiFont.body(15))
+                            .foregroundStyle(KaiColor.sumi)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+            .listRowBackground(KaiColor.cardFace)
+        }
+    }
+
+    @ViewBuilder
+    private var collocationsSection: some View {
+        if !entry.collocations.isEmpty {
+            Section("Collocations") {
+                ForEach(Array(entry.collocations.enumerated()), id: \.offset) { _, c in
+                    VStack(alignment: .leading, spacing: KaiSpacing.xs) {
+                        HStack(alignment: .firstTextBaseline, spacing: KaiSpacing.s) {
+                            Text(c.phrase)
+                                .font(KaiFont.body(15, weight: .semibold))
+                                .foregroundStyle(KaiColor.sumi)
+                            Text(c.meaning)
+                                .font(KaiFont.body(13))
+                                .foregroundStyle(KaiColor.inkSecondary)
+                        }
+                        if !c.example.isEmpty {
+                            Text(c.example)
+                                .font(KaiFont.body(14))
+                                .foregroundStyle(KaiColor.sumi)
+                            if !c.exampleTranslation.isEmpty {
+                                Text(c.exampleTranslation)
+                                    .font(KaiFont.body(13))
+                                    .foregroundStyle(KaiColor.inkSecondary)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+            .listRowBackground(KaiColor.cardFace)
+        }
+    }
+
+    @ViewBuilder
     private var notesSection: some View {
         let mnemonic = entry.mnemonic ?? ""
         let etymology = entry.etymology ?? ""
-        if !mnemonic.isEmpty || !etymology.isEmpty || !entry.synonyms.isEmpty || !entry.confusables.isEmpty {
+        let roots = entry.roots ?? ""
+        if !mnemonic.isEmpty || !etymology.isEmpty || !roots.isEmpty || !entry.confusables.isEmpty {
             Section("Notes") {
+                if !roots.isEmpty { labeled("Roots", roots) }
                 if !mnemonic.isEmpty { labeled("Mnemonic", mnemonic) }
                 if !etymology.isEmpty { labeled("Etymology", etymology) }
-                if !entry.synonyms.isEmpty { labeled("Synonyms", entry.synonyms.joined(separator: ", ")) }
                 if !entry.confusables.isEmpty { labeled("Confusables", entry.confusables.joined(separator: ", ")) }
             }
             .listRowBackground(KaiColor.cardFace)
         }
+    }
+
+    /// User-authored notes. Always shown (even when empty) so the "Add note" action is
+    /// discoverable. Notes are sorted newest-first and deletable.
+    private var annotationsSection: some View {
+        Section("Annotations") {
+            ForEach(sortedAnnotations) { note in
+                VStack(alignment: .leading, spacing: KaiSpacing.xs) {
+                    Text(note.createdAt.formatted(date: .abbreviated, time: .omitted))
+                        .font(KaiFont.body(11, weight: .semibold))
+                        .foregroundStyle(KaiColor.inkSecondary)
+                    Text(note.text)
+                        .font(KaiFont.body(15))
+                        .foregroundStyle(KaiColor.sumi)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.vertical, 2)
+            }
+            .onDelete(perform: deleteAnnotations)
+
+            Button {
+                newNoteText = ""
+                showingAddNote = true
+            } label: {
+                Label("Add note", systemImage: "plus.circle")
+                    .font(KaiFont.body(15, weight: .medium))
+                    .foregroundStyle(KaiColor.vermilion)
+            }
+        }
+        .listRowBackground(KaiColor.cardFace)
+    }
+
+    private var addNoteSheet: some View {
+        NavigationStack {
+            Form {
+                Section("New note") {
+                    TextField("e.g. in slang this means…", text: $newNoteText, axis: .vertical)
+                        .lineLimit(3...6)
+                }
+            }
+            .navigationTitle("Add note")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showingAddNote = false }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { addNote() }
+                        .disabled(newNoteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
 
     private var schedulingSection: some View {
@@ -117,6 +250,36 @@ struct WordDetailView: View {
             row("Due", entry.dueAt.formatted(date: .abbreviated, time: .shortened))
         }
         .listRowBackground(KaiColor.cardFace)
+    }
+
+    // MARK: Annotations
+
+    private var sortedAnnotations: [Annotation] {
+        entry.annotations.sorted { $0.createdAt > $1.createdAt }
+    }
+
+    private func addNote() {
+        let text = newNoteText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        entry.annotations.append(Annotation(text: text))
+        showingAddNote = false
+        if save() { toast.show("Note added") }
+    }
+
+    private func deleteAnnotations(at offsets: IndexSet) {
+        let ids = Set(offsets.map { sortedAnnotations[$0].id })
+        entry.annotations.removeAll { ids.contains($0.id) }
+        if save() { toast.show("Note deleted") }
+    }
+
+    /// Saves and reports failures; returns whether it succeeded.
+    @discardableResult
+    private func save() -> Bool {
+        do { try modelContext.save(); return true }
+        catch {
+            toast.error("Couldn't save — see Diagnostics", category: "words")
+            return false
+        }
     }
 
     // MARK: Row builders

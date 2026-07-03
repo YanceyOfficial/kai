@@ -19,13 +19,24 @@ public final class VocabularyEntry {
 
     public var phonetic: String = ""
     public var syllables: [String] = []
+    /// Concise Chinese gloss (part of speech + short meaning) — the primary meaning shown
+    /// in the quiz, list row, and detail page.
     public var explanation: String = ""
+    /// Fuller English definition, shown only on the detail page (never in the quiz).
+    public var explanationEn: String?
     public var partsOfSpeech: [String] = []
     public var examples: [Example] = []
     public var story: String?
     public var mnemonic: String?
     public var etymology: String?
-    public var synonyms: [String] = []
+    /// Morpheme breakdown (prefix/root/suffix with meanings); nil when not applicable.
+    public var roots: String?
+    /// Similar words grouped by shared sense (see `SynonymGroup`).
+    public var synonymGroups: [SynonymGroup] = []
+    /// Fixed collocations / phrases the word commonly forms (see `Collocation`).
+    public var collocations: [Collocation] = []
+    /// User-authored notes (see `Annotation`); never AI-generated.
+    public var annotations: [Annotation] = []
     public var confusables: [String] = []
     public var tags: [String] = []
     public var isMarked: Bool = false
@@ -67,12 +78,16 @@ public final class VocabularyEntry {
         phonetic: String = "",
         syllables: [String] = [],
         explanation: String = "",
+        explanationEn: String? = nil,
         partsOfSpeech: [String] = [],
         examples: [Example] = [],
         story: String? = nil,
         mnemonic: String? = nil,
         etymology: String? = nil,
-        synonyms: [String] = [],
+        roots: String? = nil,
+        synonymGroups: [SynonymGroup] = [],
+        collocations: [Collocation] = [],
+        annotations: [Annotation] = [],
         confusables: [String] = [],
         tags: [String] = [],
         source: EntrySource = .manual,
@@ -87,12 +102,16 @@ public final class VocabularyEntry {
         self.phonetic = phonetic
         self.syllables = syllables
         self.explanation = explanation
+        self.explanationEn = explanationEn
         self.partsOfSpeech = partsOfSpeech
         self.examples = examples
         self.story = story
         self.mnemonic = mnemonic
         self.etymology = etymology
-        self.synonyms = synonyms
+        self.roots = roots
+        self.synonymGroups = synonymGroups
+        self.collocations = collocations
+        self.annotations = annotations
         self.confusables = confusables
         self.tags = tags
         self.isMarked = isMarked

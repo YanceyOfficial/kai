@@ -13,7 +13,7 @@ private final class OKTransport: HTTPTransport, @unchecked Sendable {
 
 @Test("Factory builds a Claude provider that works end-to-end through a stub transport")
 func factoryClaude() async throws {
-    let inner = #"{"cards":[{"lemma":"x","kind":"word","phonetic":"","syllables":[],"explanation":"","partsOfSpeech":[],"examples":[],"mnemonic":"","etymology":"","synonyms":[],"confusables":[],"quizzes":[]}]}"#
+    let inner = #"{"cards":[{"lemma":"x","kind":"word","phonetic":"","syllables":[],"explanation":"","explanationEn":"","partsOfSpeech":[],"examples":[],"mnemonic":"","etymology":"","synonyms":[],"collocations":[],"confusables":[],"quizzes":[]}]}"#
     let env = try JSONSerialization.data(withJSONObject: ["content": [["type": "text", "text": inner]]])
     let config = AIConfiguration(kind: .claude, apiKey: "k", model: nil)
     let provider = ProviderFactory.make(config, transport: OKTransport(env))

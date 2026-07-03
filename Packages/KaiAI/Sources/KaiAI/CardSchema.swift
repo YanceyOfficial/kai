@@ -5,6 +5,15 @@ public enum CardSchema {
     private static var example: JSONSchema {
         .object(["sentence": .string, "translation": .string], required: ["sentence", "translation"])
     }
+    private static var synonymGroup: JSONSchema {
+        .object(["sense": .string, "words": .array(.string)], required: ["sense", "words"])
+    }
+    private static var collocation: JSONSchema {
+        .object([
+            "phrase": .string, "meaning": .string,
+            "example": .string, "exampleTranslation": .string,
+        ], required: ["phrase", "meaning", "example", "exampleTranslation"])
+    }
     private static var quiz: JSONSchema {
         .object([
             "type": .string, "question": .string, "choices": .array(.string),
@@ -18,16 +27,22 @@ public enum CardSchema {
             "phonetic": .string,
             "syllables": .array(.string),
             "explanation": .string,
+            "explanationEn": .string,
             "partsOfSpeech": .array(.string),
             "examples": .array(example),
             "mnemonic": .string,
             "etymology": .string,
-            "synonyms": .array(.string),
+            "roots": .string,
+            "synonyms": .array(synonymGroup),
+            "collocations": .array(collocation),
             "confusables": .array(.string),
             "quizzes": .array(quiz),
         ], required: [
-            "lemma", "kind", "phonetic", "syllables", "explanation", "partsOfSpeech",
-            "examples", "mnemonic", "etymology", "synonyms", "confusables", "quizzes",
+            // All properties are required (OpenAI strict mode); the model returns an empty
+            // string for optional-in-practice fields (`roots`, `explanationEn`).
+            "lemma", "kind", "phonetic", "syllables", "explanation", "explanationEn",
+            "partsOfSpeech", "examples", "mnemonic", "etymology", "roots", "synonyms",
+            "collocations", "confusables", "quizzes",
         ])
     }
 

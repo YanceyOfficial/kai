@@ -60,6 +60,36 @@ struct SwiftDataTests {
         #expect(fetched.first?.examples.count == 1)
     }
 
+    @Test("Annotations, collocations, and explanationEn persist and round-trip")
+    func enrichmentFieldsRoundTrip() throws {
+        let ctx = try cleanContext()
+
+        let entry = VocabularyEntry(
+            lemma: "use", kind: .word, language: .english,
+            explanation: "v. 使用",
+            explanationEn: "to employ something for a purpose",
+            collocations: [Collocation(phrase: "make use of", meaning: "利用",
+                                       example: "Make use of your time.", exampleTranslation: "善用你的时间。")]
+        )
+        ctx.insert(entry)
+        try ctx.save()
+
+        // Add two annotations, then remove the first.
+        entry.annotations.append(Annotation(text: "first"))
+        entry.annotations.append(Annotation(text: "second"))
+        try ctx.save()
+        entry.annotations.removeAll { $0.text == "first" }
+        try ctx.save()
+
+        let fetched = try ctx.fetch(FetchDescriptor<VocabularyEntry>())
+        #expect(fetched.count == 1)
+        let read = try #require(fetched.first)
+        #expect(read.explanationEn == "to employ something for a purpose")
+        #expect(read.collocations.first?.phrase == "make use of")
+        #expect(read.collocations.first?.exampleTranslation == "善用你的时间。")
+        #expect(read.annotations.map(\.text) == ["second"])
+    }
+
     @Test("Review log persists and reads back")
     func reviewLogPersists() throws {
         let ctx = try cleanContext()

@@ -7,6 +7,7 @@ import KaiUI
 /// Reads/writes through `VocabularyRepository` built from the shared context.
 struct WordsListView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(ToastCenter.self) private var toast
 
     @State private var entries: [VocabularyEntry] = []
     @State private var showingAdd = false
@@ -96,9 +97,13 @@ struct WordsListView: View {
 
     private func delete(at offsets: IndexSet) {
         let visible = filteredEntries
-        for index in offsets {
-            try? repository.delete(visible[index])
+        let removed = offsets.map { visible[$0] }
+        for entry in removed {
+            try? repository.delete(entry)
         }
         reload()
+        if let first = removed.first {
+            toast.show(removed.count == 1 ? "Deleted ‘\(first.lemma)’" : "Deleted \(removed.count) words")
+        }
     }
 }

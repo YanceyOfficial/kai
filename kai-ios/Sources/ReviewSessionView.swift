@@ -160,7 +160,8 @@ struct ReviewSessionView: View {
                 // On a replay pass, just advance — don't re-rate or re-feed FSRS.
                 if !isReplay {
                     store.rate(card, rating.core)
-                    reviewedIDs.append(card.id)
+                    // A re-drilled (lapsed) card can be rated more than once; count it once.
+                    if !reviewedIDs.contains(card.id) { reviewedIDs.append(card.id) }
                 }
                 advance()
             }

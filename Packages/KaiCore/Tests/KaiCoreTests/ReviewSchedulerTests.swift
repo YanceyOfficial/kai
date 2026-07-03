@@ -45,6 +45,34 @@ struct ReviewSchedulerTests {
         #expect(abs(intervalDays.rounded() - intervalDays) < 1e-6)
     }
 
+    @Test("Learning steps: Again, Hard, Good/Easy get distinct due dates on a new card")
+    func learningStepsDiffer() {
+        let again = scheduler.next(.new(now: now), rating: .again, now: now)
+        let hard = scheduler.next(.new(now: now), rating: .hard, now: now)
+        let good = scheduler.next(.new(now: now), rating: .good, now: now)
+
+        let againSecs = again.due.timeIntervalSince(now)
+        let hardSecs = hard.due.timeIntervalSince(now)
+        let goodSecs = good.due.timeIntervalSince(now)
+
+        #expect(againSecs == 60)                 // 1-minute step, re-drills this session
+        #expect(hardSecs == 600)                 // 10-minute step
+        #expect(goodSecs >= 86_400)              // Good graduates to a day+ interval
+        #expect(againSecs < hardSecs && hardSecs < goodSecs)  // no longer all "1d"
+    }
+
+    @Test("Hard on a mature review card keeps a day-scale interval (not a learning step)")
+    func hardOnMatureIsNotAStep() {
+        let prior = SchedulingState(
+            stability: 20, difficulty: 5,
+            due: now, lastReview: now.addingTimeInterval(-20 * 86_400),
+            reps: 5, lapses: 0, state: .review
+        )
+        let hard = scheduler.next(prior, rating: .hard, now: now)
+        #expect(hard.due.timeIntervalSince(now) >= 86_400)   // days, not 10 minutes
+        #expect(hard.state == .review)
+    }
+
     @Test("Easy grows stability more than Hard for the same card")
     func easyBeatsHard() {
         let prior = SchedulingState(

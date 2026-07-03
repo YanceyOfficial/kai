@@ -69,5 +69,11 @@ final class ReviewStore {
         } catch {
             logger.error("Failed to persist review for '\(entry.lemma)': \(error.localizedDescription)", category: "review")
         }
+
+        // A lapsed word (Again) is scheduled a minute out — re-queue it so it comes back
+        // for another pass within this same session.
+        if rating == .again {
+            cards.append(card)
+        }
     }
 }

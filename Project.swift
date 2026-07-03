@@ -20,8 +20,8 @@ let project = Project(
             infoPlist: .extendingDefault(
                 with: [
                     "UILaunchScreen": [
-                        "UIColorName": "",
-                        "UIImageName": "",
+                        "UIColorName": "LaunchBackground",
+                        "UIImageName": "LaunchLogo",
                     ],
                     "CFBundleDisplayName": "Kai",
                     "NSCameraUsageDescription": "Take a photo of text to scan words into your deck.",

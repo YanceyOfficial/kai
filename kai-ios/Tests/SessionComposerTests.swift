@@ -26,4 +26,11 @@ struct SessionComposerTests {
         #expect(SessionComposer.compose(new: [Int](), old: [], newLimit: 3).isEmpty)
         #expect(SessionComposer.compose(new: [1, 2], old: [], newLimit: 5) == [1, 2])
     }
+
+    @Test("oldLimit caps the due-review words, taking the most-overdue first")
+    func oldLimitCaps() {
+        // old is sorted most-overdue-first upstream; the cap keeps the first ones.
+        let result = SessionComposer.compose(new: [], old: [10, 20, 30, 40], newLimit: 5, oldLimit: 2)
+        #expect(result == [10, 20])
+    }
 }

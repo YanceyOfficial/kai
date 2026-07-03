@@ -20,6 +20,9 @@ final class ReviewStore {
     /// The underlying entries keyed by id, so a rating can be applied to the right one.
     private var entriesByID: [UUID: VocabularyEntry] = [:]
 
+    /// Cap on due review words interleaved into one session, so a backlog stays bounded.
+    private static let maxDueReviews = 100
+
     init(context: ModelContext) {
         self.repository = VocabularyRepository(context: context)
     }
@@ -32,7 +35,7 @@ final class ReviewStore {
             let due = try repository.dueEntries(for: .english, asOf: now)
             let new = due.filter { $0.scheduling.state == .new }
             let old = due.filter { $0.scheduling.state != .new }
-            let session = SessionComposer.compose(new: new, old: old, newLimit: newLimit)
+            let session = SessionComposer.compose(new: new, old: old, newLimit: newLimit, oldLimit: Self.maxDueReviews)
             entriesByID = Dictionary(session.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
             cards = session.map(ReviewCardData.init(entry:))
         } catch {

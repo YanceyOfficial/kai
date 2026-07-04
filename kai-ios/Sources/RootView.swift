@@ -30,8 +30,14 @@ struct RootView: View {
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: toast.current?.id)
         .task {
             guard !seeded else { return }
-            try? StarterSeed.seedIfEmpty(VocabularyRepository(context: modelContext))
+            let repository = VocabularyRepository(context: modelContext)
+            try? StarterSeed.seedIfEmpty(repository)
             seeded = true
+            // Keep the daily reminder in sync with settings + deck state on launch.
+            let enabled = UserDefaults.standard.bool(forKey: "reminderEnabled")
+            let minutes = UserDefaults.standard.object(forKey: "reminderMinutes") as? Int ?? 540
+            let hasWords = !(((try? repository.entries(for: .english)) ?? []).isEmpty)
+            await ReviewReminder.apply(enabled: enabled, minutes: minutes, hasWords: hasWords)
         }
     }
 }

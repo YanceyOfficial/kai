@@ -1,4 +1,6 @@
 import SwiftUI
+import SwiftData
+import KaiCore
 import KaiServices
 import KaiAI
 import KaiUI
@@ -12,12 +14,31 @@ struct SettingsView: View {
     @AppStorage("pronunciationAccent") private var accentRaw = Accent.us.rawValue
     @AppStorage("newWordsPerDay") private var newWordsPerDay = 10
     @AppStorage("aiProvider") private var aiProviderRaw = LLMProviderKind.claude.rawValue
+    @AppStorage("reminderEnabled") private var reminderEnabled = false
+    @AppStorage("reminderMinutes") private var reminderMinutes = 540   // 09:00
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(ToastCenter.self) private var toast
 
     @State private var apiKey = ""
     @State private var model = ""
 
     private let newWordOptions = [5, 10, 15, 20, 30]
     private var aiKind: LLMProviderKind { LLMProviderKind(rawValue: aiProviderRaw) ?? .claude }
+
+    /// Bridges the stored minutes-since-midnight to the DatePicker's Date.
+    private var reminderTime: Binding<Date> {
+        Binding(
+            get: {
+                var c = DateComponents(); c.hour = reminderMinutes / 60; c.minute = reminderMinutes % 60
+                return Calendar.current.date(from: c) ?? Date()
+            },
+            set: { date in
+                let c = Calendar.current.dateComponents([.hour, .minute], from: date)
+                reminderMinutes = (c.hour ?? 9) * 60 + (c.minute ?? 0)
+            }
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -45,6 +66,17 @@ struct SettingsView: View {
                     Text("Review")
                 } footer: {
                     Text("Each session introduces up to this many new words, mixed with words that are due for review.")
+                }
+
+                Section {
+                    Toggle("Daily review reminder", isOn: $reminderEnabled)
+                    if reminderEnabled {
+                        DatePicker("Time", selection: reminderTime, displayedComponents: .hourAndMinute)
+                    }
+                } header: {
+                    Text("Reminders")
+                } footer: {
+                    Text("A daily nudge at your chosen time, when you have words to review. Requires notification permission.")
                 }
 
                 Section {
@@ -111,8 +143,30 @@ struct SettingsView: View {
             .onChange(of: aiProviderRaw) { loadAIFields() }
             .onChange(of: apiKey) { AIConfigStore.setApiKey(apiKey, for: aiKind) }
             .onChange(of: model) { AIConfigStore.setModel(model, for: aiKind) }
+            .onChange(of: reminderEnabled) { _, enabled in Task { await reminderToggled(enabled) } }
+            .onChange(of: reminderMinutes) { Task { await applyReminder() } }
         }
         .tint(KaiColor.vermilion)
+    }
+
+    // MARK: Reminders
+
+    /// On enable, request permission first; if denied, revert the toggle.
+    private func reminderToggled(_ enabled: Bool) async {
+        if enabled {
+            let granted = await UNDailyReminderScheduler().requestAuthorization()
+            guard granted else {
+                reminderEnabled = false
+                toast.error("Allow notifications in iOS Settings to get reminders", category: "reminder")
+                return
+            }
+        }
+        await applyReminder()
+    }
+
+    private func applyReminder() async {
+        let hasWords = !(((try? VocabularyRepository(context: modelContext).entries(for: .english)) ?? []).isEmpty)
+        await ReviewReminder.apply(enabled: reminderEnabled, minutes: reminderMinutes, hasWords: hasWords)
     }
 
     /// Loads the stored key/model for the currently selected provider into the fields,

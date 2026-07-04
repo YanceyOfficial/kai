@@ -1,5 +1,6 @@
 import SwiftUI
 import KaiCore
+import KaiAI
 import KaiServices
 import KaiUI
 
@@ -17,6 +18,13 @@ struct WordDetailView: View {
     /// Presents the "add note" sheet and holds its draft text.
     @State private var showingAddNote = false
     @State private var newNoteText = ""
+
+    /// Tap-through: navigate to a related word, or offer to add one that's not in the deck.
+    @State private var linkedLemma: String?
+    @State private var addCandidate: String?
+    @State private var adding = false
+
+    private var repository: VocabularyRepository { VocabularyRepository(context: modelContext) }
 
     var body: some View {
         List {
@@ -53,6 +61,77 @@ struct WordDetailView: View {
         .navigationTitle(entry.lemma)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingAddNote) { addNoteSheet }
+        .overlay {
+            if adding {
+                ProgressView().tint(KaiColor.vermilion)
+                    .padding(KaiSpacing.l)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+            }
+        }
+        .navigationDestination(item: $linkedLemma) { lemma in
+            if let entry = lookup(lemma) {
+                WordDetailView(entry: entry)
+            } else {
+                ContentUnavailableView("Not found", systemImage: "questionmark")
+            }
+        }
+        .confirmationDialog(
+            addCandidate.map { "Add “\($0)” to your deck?" } ?? "",
+            isPresented: Binding(get: { addCandidate != nil }, set: { if !$0 { addCandidate = nil } }),
+            titleVisibility: .visible
+        ) {
+            if let word = addCandidate {
+                Button("Generate & add") { addWord(word) }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    /// A tappable related word: opens it if it's in the deck, else offers to add it.
+    private func wordChip(_ word: String) -> some View {
+        Button { tapWord(word) } label: {
+            Text(word)
+                .font(KaiFont.body(15, weight: .medium))
+                .foregroundStyle(KaiColor.vermilion)
+                .padding(.horizontal, KaiSpacing.s)
+                .padding(.vertical, 4)
+                .background(Capsule().fill(KaiColor.vermilion.opacity(0.12)))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func tapWord(_ raw: String) {
+        let word = raw.trimmingCharacters(in: .whitespaces)
+        guard !word.isEmpty else { return }
+        if lookup(word) != nil {
+            linkedLemma = word
+        } else {
+            addCandidate = word
+        }
+    }
+
+    private func lookup(_ lemma: String) -> VocabularyEntry? {
+        (try? repository.entry(lemma: lemma, language: .english)) ?? nil
+    }
+
+    private func addWord(_ word: String) {
+        guard let config = AIConfigStore.configuration() else {
+            toast.error("Add an API key in Settings first", category: "words")
+            return
+        }
+        Task { @MainActor in
+            adding = true
+            defer { adding = false }
+            let outcome = await ProviderFactory.make(config)
+                .generateCards(lemmas: [word], language: .english, literaryExamples: false, chunkSize: 1)
+            guard let card = outcome.cards.first else {
+                toast.error("Couldn't add “\(word)”", category: "words")
+                return
+            }
+            _ = try? repository.insertIfAbsent(AICardMapper.entry(from: card))
+            toast.show("Added “\(card.lemma)”")
+            linkedLemma = card.lemma
+        }
     }
 
     // MARK: Sections
@@ -128,11 +207,10 @@ struct WordDetailView: View {
                     VStack(alignment: .leading, spacing: KaiSpacing.xs) {
                         Text(group.sense)
                             .font(KaiFont.body(13, weight: .semibold))
-                            .foregroundStyle(KaiColor.vermilion)
-                        Text(group.words.joined(separator: ", "))
-                            .font(KaiFont.body(15))
-                            .foregroundStyle(KaiColor.sumi)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .foregroundStyle(KaiColor.inkSecondary)
+                        FlowLayout(spacing: 6) {
+                            ForEach(group.words, id: \.self) { wordChip($0) }
+                        }
                     }
                     .padding(.vertical, 2)
                 }
@@ -183,7 +261,19 @@ struct WordDetailView: View {
                 if !roots.isEmpty { labeled("Roots", roots) }
                 if !mnemonic.isEmpty { labeled("Mnemonic", mnemonic) }
                 if !etymology.isEmpty { labeled("Etymology", etymology) }
-                if !entry.confusables.isEmpty { labeled("Confusables", entry.confusables.joined(separator: ", ")) }
+                if !entry.confusables.isEmpty {
+                    VStack(alignment: .leading, spacing: KaiSpacing.xs) {
+                        Text("Confusables")
+                            .font(KaiFont.body(11, weight: .semibold))
+                            .foregroundStyle(KaiColor.vermilion)
+                            .textCase(.uppercase)
+                            .tracking(1.2)
+                        FlowLayout(spacing: 6) {
+                            ForEach(entry.confusables, id: \.self) { wordChip($0) }
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
             }
             .listRowBackground(KaiColor.cardFace)
         }

@@ -26,7 +26,10 @@ struct AICardMapperTests {
           "synonyms": [{"sense": "古怪的", "words": ["odd", "quirky"]}],
           "collocations": [{"phrase": "an eccentric habit", "meaning": "古怪的习惯",
             "example": "He has an eccentric habit.", "exampleTranslation": "他有个古怪的习惯。"}],
-          "confusables": ["erratic"], "quizzes": []
+          "confusables": ["erratic"],
+          "quizzes": [{"type": "fillInBlank", "question": "He is quite ____.",
+            "choices": [], "answers": ["eccentric"], "translation": "他很古怪。"},
+            {"type": "bogusType", "question": "x", "choices": [], "answers": ["y"], "translation": ""}]
         }
         """)
         let entry = AICardMapper.entry(from: generated)
@@ -45,6 +48,10 @@ struct AICardMapperTests {
         #expect(entry.collocations.first?.phrase == "an eccentric habit")
         #expect(entry.collocations.first?.meaning == "古怪的习惯")
         #expect(entry.collocations.first?.exampleTranslation == "他有个古怪的习惯。")
+        // Known quiz types map; unknown ("bogusType") is dropped.
+        #expect(entry.quizzes.count == 1)
+        #expect(entry.quizzes.first?.type == .fillInBlank)
+        #expect(entry.quizzes.first?.answers == ["eccentric"])
         #expect(entry.language == .english)
     }
 

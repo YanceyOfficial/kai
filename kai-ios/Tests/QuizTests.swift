@@ -17,24 +17,26 @@ private struct SeededRNG: RandomNumberGenerator {
     }
 }
 
-private func word(_ lemma: String, _ meaning: String) -> VocabularyEntry {
-    VocabularyEntry(lemma: lemma, kind: .word, language: .english, explanation: meaning)
+private func word(_ lemma: String, _ meaning: String, quizzes: [Quiz] = []) -> VocabularyEntry {
+    VocabularyEntry(lemma: lemma, kind: .word, language: .english, explanation: meaning, quizzes: quizzes)
 }
 
 @Suite("QuizGenerator")
 struct QuizGeneratorTests {
     private let gen = QuizGenerator()
 
-    @Test("The correct index points at the target's meaning")
-    func correctIndexIsRight() {
+    @Test("Fallback single-choice: choices include the target's meaning as the answer")
+    func fallbackMeaningQuestion() {
         let target = word("eccentric", "古怪的")
         let pool = [target, word("obsession", "痴迷"), word("meticulous", "细致的"), word("brisk", "轻快的")]
         var rng = SeededRNG(seed: 42)
-        let q = gen.makeQuestion(for: target, pool: pool, using: &rng)
-        let question = try! #require(q)
-        #expect(question.options.count == 4)
-        #expect(question.options[question.correctIndex] == "古怪的")
-        #expect(question.prompt == "eccentric")
+        let question = try! #require(gen.makeQuestion(for: target, pool: pool, using: &rng))
+        #expect(question.type == .singleChoice)
+        #expect(question.choices.count == 4)
+        #expect(question.answers == ["古怪的"])
+        #expect(question.word == "eccentric")
+        let correct = try! #require(question.choices.firstIndex { question.answers.contains($0) })
+        #expect(question.isCorrect(choiceIndex: correct))
     }
 
     @Test("Option count shrinks when there are few distractors")
@@ -43,28 +45,44 @@ struct QuizGeneratorTests {
         let pool = [target, word("obsession", "痴迷")]
         var rng = SeededRNG(seed: 7)
         let question = try! #require(gen.makeQuestion(for: target, pool: pool, using: &rng))
-        #expect(question.options.count == 2)   // 1 correct + 1 distractor
-        #expect(question.options.contains("古怪的"))
-        #expect(question.options.contains("痴迷"))
+        #expect(question.choices.count == 2)
+        #expect(question.choices.contains("古怪的"))
+        #expect(question.choices.contains("痴迷"))
     }
 
-    @Test("Returns nil without a meaning or without distractors")
+    @Test("Returns nil without a meaning or distractors (and no AI quiz)")
     func returnsNil() {
         var rng = SeededRNG(seed: 1)
-        // No meaning on the target.
         #expect(gen.makeQuestion(for: word("blank", ""), pool: [word("x", "y")], using: &rng) == nil)
-        // No other entries to draw distractors from.
         let lonely = word("alone", "孤单")
         #expect(gen.makeQuestion(for: lonely, pool: [lonely], using: &rng) == nil)
     }
 
-    @Test("Duplicate meanings are not repeated as options")
-    func dedupesDistractors() {
-        let target = word("eccentric", "古怪的")
-        let pool = [target, word("a", "same"), word("b", "same"), word("c", "different")]
-        var rng = SeededRNG(seed: 99)
-        let question = try! #require(gen.makeQuestion(for: target, pool: pool, using: &rng))
-        #expect(Set(question.options).count == question.options.count)
+    @Test("Prefers an AI text-entry quiz when the entry has one")
+    func prefersAIQuiz() {
+        let e = word("use", "v. 使用", quizzes: [
+            Quiz(type: .fillInBlank, question: "Make ____ of it.", choices: [], answers: ["use"]),
+        ])
+        var rng = SeededRNG(seed: 3)
+        let q = try! #require(gen.makeQuestion(for: e, pool: [e], using: &rng))
+        #expect(q.type == .fillInBlank)
+        #expect(q.isTextEntry)
+        #expect(q.hidesWord)
+        #expect(q.isCorrect(text: "  USE ") == true)    // case/whitespace-insensitive
+        #expect(q.isCorrect(text: "used") == false)
+    }
+
+    @Test("Skips unusable AI quizzes and falls back")
+    func skipsBadAIQuiz() {
+        // A choice quiz whose choices don't contain the answer is unusable → fallback.
+        let e = word("eccentric", "古怪的", quizzes: [
+            Quiz(type: .meaningMatch, question: "?", choices: ["a", "b"], answers: ["c"]),
+        ])
+        let pool = [e, word("obsession", "痴迷")]
+        var rng = SeededRNG(seed: 5)
+        let q = try! #require(gen.makeQuestion(for: e, pool: pool, using: &rng))
+        #expect(q.type == .singleChoice)                 // fell back
+        #expect(q.answers == ["古怪的"])
     }
 }
 
@@ -99,9 +117,9 @@ struct QuizStoreTests {
         let (store, repo) = try makeSeededStore()
         store.load()
         let question = try #require(store.questions.first)
+        let correct = try #require(question.choices.firstIndex { question.answers.contains($0) })
 
-        #expect(store.answer(question, selectedIndex: question.correctIndex) == true)
-        // No second reschedule/log: the quiz is a double-check, not a separate review.
+        #expect(store.submit(question, .choice(correct)) == true)
         #expect(try repo.reviewLogs(entryID: question.id).isEmpty)
     }
 
@@ -111,15 +129,14 @@ struct QuizStoreTests {
         store.load()
         let question = try #require(store.questions.first)
         let entry = try #require(repo.entries(for: .english).first { $0.id == question.id })
-        // Simulate the word having graduated to review before the quiz.
         entry.reschedule(SchedulingState(
             stability: 10, difficulty: 5, due: Date(), lastReview: Date(),
             reps: 3, lapses: 0, state: .review))
 
-        let wrongIndex = (question.correctIndex + 1) % question.options.count
-        #expect(store.answer(question, selectedIndex: wrongIndex) == false)
+        let wrong = try #require(question.choices.firstIndex { !question.answers.contains($0) })
+        #expect(store.submit(question, .choice(wrong)) == false)
 
-        #expect(entry.scheduling.lapses == 1)          // a graduated word failing is a lapse
+        #expect(entry.scheduling.lapses == 1)
         #expect(try repo.reviewLogs(entryID: question.id).first?.rating == .again)
     }
 }

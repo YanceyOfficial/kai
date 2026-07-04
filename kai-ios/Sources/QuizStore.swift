@@ -57,19 +57,23 @@ final class QuizStore {
         questions = generator.makeQuiz(due: targets, pool: pool, using: &rng)
     }
 
-    /// Grades an answer and returns whether it was correct. A correct answer is a no-op
+    /// Grades a response and returns whether it was correct. A correct answer is a no-op
     /// (the preceding review already scheduled the word); a wrong answer re-grades the
     /// word as "again" and logs it, so the miss feeds spaced repetition exactly once.
     @discardableResult
-    func answer(_ question: QuizQuestion, selectedIndex: Int, now: Date = .now) -> Bool {
-        let correct = selectedIndex == question.correctIndex
+    func submit(_ question: QuizQuestion, _ response: QuizResponse, now: Date = .now) -> Bool {
+        let correct: Bool
+        switch response {
+        case .choice(let index): correct = question.isCorrect(choiceIndex: index)
+        case .text(let text): correct = question.isCorrect(text: text)
+        }
         guard !correct, let entry = entriesByID[question.id] else { return correct }
 
         entry.reschedule(scheduler.next(entry.scheduling, rating: .again, now: now))
         let log = ReviewLog(
             entryID: entry.id,
             rating: .again,
-            quizType: .singleChoice,
+            quizType: question.type,
             elapsedMs: 0,
             isCorrect: false,
             timestamp: now

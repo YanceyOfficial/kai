@@ -23,6 +23,11 @@ enum AICardMapper {
             collocations: card.collocations.map {
                 Collocation(phrase: $0.phrase, meaning: $0.meaning, example: $0.example, exampleTranslation: $0.exampleTranslation)
             },
+            quizzes: card.quizzes.compactMap { quiz in
+                guard let type = QuizType(rawValue: quiz.type) else { return nil }   // drop unknown types
+                return Quiz(type: type, question: quiz.question, choices: quiz.choices,
+                            answers: quiz.answers, translation: quiz.translation)
+            },
             confusables: card.confusables,
             source: source,
             now: now

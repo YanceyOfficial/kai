@@ -2,8 +2,9 @@ import SwiftUI
 import KaiUI
 import KaiServices
 
-/// A single-choice quiz session: read the word, pick its meaning. Answers feed FSRS
-/// through `QuizStore` (correct → good, wrong → again).
+/// A quiz session over the just-reviewed words. Questions vary by type: tap a choice, or
+/// type the answer (fill-in-blank / listening). A wrong answer re-grades the word as
+/// "again" via `QuizStore` (the double-check); a correct answer is a no-op.
 struct QuizSessionView: View {
     let store: QuizStore
     /// When set (the quiz was chained after a review), completion offers "Back to
@@ -11,7 +12,10 @@ struct QuizSessionView: View {
     var onClose: (() -> Void)? = nil
 
     @State private var index = 0
-    @State private var selected: Int?
+    @State private var selected: Int?          // chosen option (choice mode)
+    @State private var textInput = ""          // typed answer (text mode)
+    @State private var responded = false       // this question has been answered
+    @State private var wasCorrect = false
     @State private var correctCount = 0
     @State private var showDone = false
 
@@ -32,10 +36,18 @@ struct QuizSessionView: View {
 
                 if index < questions.count {
                     let question = questions[index]
-                    promptCard(question)
-                    optionsList(question)
-                        .id(question.id)   // reset selection styling per question
-                    Spacer()
+                    ScrollView {
+                        VStack(spacing: KaiSpacing.l) {
+                            promptCard(question)
+                            if question.isTextEntry {
+                                textEntry(question)
+                            } else {
+                                optionsList(question)
+                            }
+                        }
+                        .id(question.id)   // reset per question
+                    }
+                    Spacer(minLength: 0)
                 } else {
                     completed
                 }
@@ -43,9 +55,14 @@ struct QuizSessionView: View {
             .padding(KaiSpacing.l)
         }
         .kaiToast("Quiz complete", isPresented: $showDone)
+        .task(id: index) {
+            // Auto-play the pronunciation for a listening question.
+            guard index < questions.count, questions[index].playsAudio else { return }
+            pronouncer.play(questions[index].word, accent: accent)
+        }
     }
 
-    // MARK: Pieces
+    // MARK: Header
 
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -64,32 +81,62 @@ struct QuizSessionView: View {
         }
     }
 
+    // MARK: Prompt
+
     private func promptCard(_ question: QuizQuestion) -> some View {
         VStack(spacing: KaiSpacing.s) {
-            Text(question.prompt)
-                .font(KaiFont.display(40, weight: .bold))
-                .foregroundStyle(KaiColor.sumi)
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
-            HStack(spacing: KaiSpacing.s) {
-                if !question.phonetic.isEmpty {
-                    Text(question.phonetic)
-                        .font(KaiFont.phonetic(15))
+            if question.hidesWord && !responded {
+                if question.playsAudio {
+                    Button { pronouncer.play(question.word, accent: accent) } label: {
+                        Image(systemName: "speaker.wave.3.fill")
+                            .font(.system(size: 40, weight: .semibold))
+                            .foregroundStyle(KaiColor.vermilion)
+                    }
+                    .buttonStyle(KaiPressStyle())
+                    Text("Spell what you hear")
+                        .font(KaiFont.body(14, weight: .medium))
                         .foregroundStyle(KaiColor.inkSecondary)
+                } else {
+                    Text("? ? ?")
+                        .font(KaiFont.display(34, weight: .bold))
+                        .foregroundStyle(KaiColor.inkSecondary.opacity(0.35))
                 }
-                Button {
-                    KaiHaptics.impact(.light)
-                    pronouncer.play(question.prompt, accent: accent)
-                } label: {
-                    Image(systemName: "speaker.wave.2.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(KaiColor.vermilion)
+            } else {
+                Text(question.word)
+                    .font(KaiFont.display(38, weight: .bold))
+                    .foregroundStyle(KaiColor.sumi)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+                HStack(spacing: KaiSpacing.s) {
+                    if !question.phonetic.isEmpty {
+                        Text(question.phonetic)
+                            .font(KaiFont.phonetic(14))
+                            .foregroundStyle(KaiColor.inkSecondary)
+                    }
+                    Button {
+                        KaiHaptics.impact(.light)
+                        pronouncer.play(question.word, accent: accent)
+                    } label: {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(KaiColor.vermilion)
+                    }
+                    .buttonStyle(KaiPressStyle())
                 }
-                .buttonStyle(KaiPressStyle())
+            }
+
+            if !question.question.isEmpty {
+                Text(question.question)
+                    .font(KaiFont.body(16))
+                    .foregroundStyle(KaiColor.sumi)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, KaiSpacing.xs)
             }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, KaiSpacing.xl)
+        .padding(.horizontal, KaiSpacing.m)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(KaiColor.cardFace)
@@ -97,27 +144,26 @@ struct QuizSessionView: View {
         )
     }
 
+    // MARK: Choice mode
+
     private func optionsList(_ question: QuizQuestion) -> some View {
         VStack(spacing: KaiSpacing.s) {
-            ForEach(Array(question.options.enumerated()), id: \.offset) { pair in
+            ForEach(Array(question.choices.enumerated()), id: \.offset) { pair in
                 optionButton(question, index: pair.offset, text: pair.element)
             }
         }
     }
 
     private func optionButton(_ question: QuizQuestion, index optionIndex: Int, text: String) -> some View {
-        let answered = selected != nil
-        let isCorrect = optionIndex == question.correctIndex
+        let isCorrect = question.isCorrect(choiceIndex: optionIndex)
         let isChosen = optionIndex == selected
 
-        // Reveal correctness once answered: the right option turns pine, a wrong pick
-        // turns vermilion, everything else dims.
-        let tint: Color = !answered ? KaiColor.hairline
+        let tint: Color = !responded ? KaiColor.hairline
             : isCorrect ? pine
             : isChosen ? KaiColor.vermilion
             : KaiColor.hairline
-        let fill: Color = answered && isCorrect ? pine.opacity(0.12)
-            : answered && isChosen ? KaiColor.vermilion.opacity(0.10)
+        let fill: Color = responded && isCorrect ? pine.opacity(0.12)
+            : responded && isChosen ? KaiColor.vermilion.opacity(0.10)
             : KaiColor.cardFace
 
         return Button {
@@ -129,26 +175,67 @@ struct QuizSessionView: View {
                     .foregroundStyle(KaiColor.sumi)
                     .multilineTextAlignment(.leading)
                 Spacer(minLength: KaiSpacing.s)
-                if answered && isCorrect {
+                if responded && isCorrect {
                     Image(systemName: "checkmark").foregroundStyle(pine)
-                } else if answered && isChosen {
+                } else if responded && isChosen {
                     Image(systemName: "xmark").foregroundStyle(KaiColor.vermilion)
                 }
             }
             .padding(.horizontal, KaiSpacing.m)
             .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous).fill(fill)
-            )
+            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(fill))
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .strokeBorder(tint, lineWidth: 1.5)
             )
-            .opacity(answered && !isCorrect && !isChosen ? 0.5 : 1)
+            .opacity(responded && !isCorrect && !isChosen ? 0.5 : 1)
         }
         .buttonStyle(KaiPressStyle())
-        .disabled(answered)
+        .disabled(responded)
     }
+
+    // MARK: Text mode
+
+    private func textEntry(_ question: QuizQuestion) -> some View {
+        VStack(spacing: KaiSpacing.m) {
+            TextField("Type the word", text: $textInput)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .font(KaiFont.body(18))
+                .multilineTextAlignment(.center)
+                .padding(.vertical, KaiSpacing.m)
+                .padding(.horizontal, KaiSpacing.m)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous).fill(KaiColor.cardFace)
+                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(textFieldTint, lineWidth: 1.5))
+                )
+                .disabled(responded)
+                .onSubmit { submitText(question) }
+
+            if responded {
+                HStack(spacing: KaiSpacing.s) {
+                    Image(systemName: wasCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundStyle(wasCorrect ? pine : KaiColor.vermilion)
+                    Text(wasCorrect ? "Correct" : "Answer: \(question.answers.first ?? question.word)")
+                        .font(KaiFont.body(15, weight: .medium))
+                        .foregroundStyle(KaiColor.sumi)
+                }
+            } else {
+                KaiPrimaryButton("Check") { submitText(question) }
+                    .frame(maxWidth: 200)
+                    .opacity(textInput.trimmingCharacters(in: .whitespaces).isEmpty ? 0.5 : 1)
+                    .disabled(textInput.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+        }
+    }
+
+    private var textFieldTint: Color {
+        guard responded else { return KaiColor.hairline }
+        return wasCorrect ? pine : KaiColor.vermilion
+    }
+
+    // MARK: Completion
 
     private var completed: some View {
         VStack(spacing: KaiSpacing.m) {
@@ -162,13 +249,10 @@ struct QuizSessionView: View {
                 .font(KaiFont.body(17, weight: .medium))
                 .foregroundStyle(KaiColor.sumi)
             if let onClose {
-                // Chained after a review: always offer an exit, even if empty.
                 KaiPrimaryButton("Back to review", action: onClose)
                     .padding(.top, KaiSpacing.m)
                     .frame(maxWidth: 220)
             } else if !questions.isEmpty {
-                // Standalone: only offer "Quiz again" when there was something to quiz —
-                // otherwise the reload would just land on this empty screen again.
                 KaiPrimaryButton("Quiz again") { restart() }
                     .padding(.top, KaiSpacing.m)
                     .frame(maxWidth: 220)
@@ -180,19 +264,29 @@ struct QuizSessionView: View {
     // MARK: Actions
 
     private func choose(_ question: QuizQuestion, _ optionIndex: Int) {
-        guard selected == nil else { return }
+        guard !responded else { return }
         withAnimation(.easeOut(duration: 0.2)) { selected = optionIndex }
+        grade(question, .choice(optionIndex))
+    }
 
-        let correct = store.answer(question, selectedIndex: optionIndex)
+    private func submitText(_ question: QuizQuestion) {
+        guard !responded, !textInput.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        grade(question, .text(textInput))
+    }
+
+    private func grade(_ question: QuizQuestion, _ response: QuizResponse) {
+        responded = true
+        let correct = store.submit(question, response)
+        wasCorrect = correct
         if correct {
             correctCount += 1
             KaiHaptics.impact(.light)
         } else {
             KaiHaptics.impact(.rigid)
         }
-
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(0.9))
+            // Linger a little longer on a miss so the answer registers.
+            try? await Task.sleep(for: .seconds(correct ? 0.9 : 1.6))
             advance()
         }
     }
@@ -200,6 +294,9 @@ struct QuizSessionView: View {
     private func advance() {
         withAnimation {
             selected = nil
+            textInput = ""
+            responded = false
+            wasCorrect = false
             index += 1
             if index >= questions.count {
                 showDone = true
@@ -213,6 +310,8 @@ struct QuizSessionView: View {
         withAnimation {
             index = 0
             selected = nil
+            textInput = ""
+            responded = false
             correctCount = 0
         }
     }

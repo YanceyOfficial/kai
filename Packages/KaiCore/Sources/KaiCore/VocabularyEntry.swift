@@ -35,6 +35,8 @@ public final class VocabularyEntry {
     public var synonymGroups: [SynonymGroup] = []
     /// Fixed collocations / phrases the word commonly forms (see `Collocation`).
     public var collocations: [Collocation] = []
+    /// AI-generated quiz items for varied retrieval practice (see `Quiz`).
+    public var quizzes: [Quiz] = []
     /// User-authored notes (see `Annotation`); never AI-generated.
     public var annotations: [Annotation] = []
     public var confusables: [String] = []
@@ -87,6 +89,7 @@ public final class VocabularyEntry {
         roots: String? = nil,
         synonymGroups: [SynonymGroup] = [],
         collocations: [Collocation] = [],
+        quizzes: [Quiz] = [],
         annotations: [Annotation] = [],
         confusables: [String] = [],
         tags: [String] = [],
@@ -111,6 +114,7 @@ public final class VocabularyEntry {
         self.roots = roots
         self.synonymGroups = synonymGroups
         self.collocations = collocations
+        self.quizzes = quizzes
         self.annotations = annotations
         self.confusables = confusables
         self.tags = tags

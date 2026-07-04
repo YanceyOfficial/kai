@@ -9,7 +9,6 @@ struct StatsView: View {
     @Environment(\.modelContext) private var modelContext
 
     @State private var totalWords = 0
-    @State private var learnedWords = 0
     @State private var dueWords = 0
     @State private var bars: [DayBar] = []
     @State private var accuracy: Double?
@@ -28,12 +27,10 @@ struct StatsView: View {
                         Text("Stats")
                             .font(KaiFont.display(34, weight: .bold))
                             .foregroundStyle(KaiColor.sumi)
-                        summaryRow
-                        secondRow
+                        overviewCard
                         forgettingCard
                         maturityCard
-                        reviewsCard
-                        accuracyCard
+                        activityCard
                     }
                     .padding(KaiSpacing.l)
                 }
@@ -45,19 +42,43 @@ struct StatsView: View {
 
     // MARK: Sections
 
-    private var summaryRow: some View {
-        HStack(spacing: KaiSpacing.m) {
-            statCard(value: "\(totalWords)", label: "Words")
-            statCard(value: "\(learnedWords)", label: "Learned")
-            statCard(value: "\(dueWords)", label: "Due")
+    /// One clean strip of the key numbers, divided rather than five separate boxes.
+    private var overviewCard: some View {
+        HStack(spacing: 0) {
+            overviewStat("\(streak)", "Streak")
+            overviewDivider
+            overviewStat("\(dueWords)", "Due")
+            overviewDivider
+            overviewStat("\(totalWords)", "Words")
+            overviewDivider
+            overviewStat(recallText, "Recall")
         }
+        .padding(.vertical, KaiSpacing.l)
+        .background(cardBackground)
     }
 
-    private var secondRow: some View {
-        HStack(spacing: KaiSpacing.m) {
-            statCard(value: "\(streak)", label: "Day streak")
-            statCard(value: "\(atRisk)", label: "At risk · 7d")
+    private func overviewStat(_ value: String, _ label: String) -> some View {
+        VStack(spacing: KaiSpacing.xs) {
+            Text(value)
+                .font(KaiFont.display(26, weight: .bold))
+                .foregroundStyle(KaiColor.sumi)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+            Text(label)
+                .font(KaiFont.body(12, weight: .medium))
+                .foregroundStyle(KaiColor.inkSecondary)
         }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var overviewDivider: some View {
+        Rectangle().fill(KaiColor.hairline).frame(width: 1, height: 30)
+    }
+
+    /// Predicted recall right now, from the forgetting curve.
+    private var recallText: String {
+        guard let r = curve.first?.recall else { return "—" }
+        return "\(Int((r * 100).rounded()))%"
     }
 
     /// The deck's aggregate forgetting curve: predicted recall over the next 30 days.
@@ -68,10 +89,10 @@ struct StatsView: View {
                     .font(KaiFont.body(15, weight: .semibold))
                     .foregroundStyle(KaiColor.sumi)
                 Spacer()
-                if let now = curve.first?.recall {
-                    Text("\(Int((now * 100).rounded()))% recall now")
+                if !curve.isEmpty {
+                    Text("\(atRisk) at risk · 7d")
                         .font(KaiFont.body(13, weight: .medium))
-                        .foregroundStyle(KaiColor.inkSecondary)
+                        .foregroundStyle(atRisk > 0 ? KaiColor.vermilion : KaiColor.inkSecondary)
                 }
             }
 
@@ -157,27 +178,20 @@ struct StatsView: View {
         }
     }
 
-    private func statCard(value: String, label: String) -> some View {
-        VStack(spacing: KaiSpacing.xs) {
-            Text(value)
-                .font(KaiFont.display(30, weight: .bold))
-                .foregroundStyle(KaiColor.sumi)
-            Text(label)
-                .font(KaiFont.body(13, weight: .medium))
-                .foregroundStyle(KaiColor.inkSecondary)
-                .textCase(.uppercase)
-                .tracking(1)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, KaiSpacing.m)
-        .background(cardBackground)
-    }
-
-    private var reviewsCard: some View {
+    /// Recent activity: the 7-day review bars, with overall accuracy in the header.
+    private var activityCard: some View {
         VStack(alignment: .leading, spacing: KaiSpacing.m) {
-            Text("Reviews · last 7 days")
-                .font(KaiFont.body(15, weight: .semibold))
-                .foregroundStyle(KaiColor.sumi)
+            HStack(alignment: .firstTextBaseline) {
+                Text("Reviews · last 7 days")
+                    .font(KaiFont.body(15, weight: .semibold))
+                    .foregroundStyle(KaiColor.sumi)
+                Spacer()
+                if let accuracy {
+                    Text("\(Int((accuracy * 100).rounded()))% correct")
+                        .font(KaiFont.body(13, weight: .medium))
+                        .foregroundStyle(KaiColor.inkSecondary)
+                }
+            }
 
             if totalReviews == 0 {
                 emptyHint("No reviews yet — rate a few cards to see your history.")
@@ -196,30 +210,7 @@ struct StatsView: View {
                     }
                 }
                 .chartYAxis { AxisMarks(position: .leading) }
-                .frame(height: 180)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(KaiSpacing.l)
-        .background(cardBackground)
-    }
-
-    private var accuracyCard: some View {
-        VStack(alignment: .leading, spacing: KaiSpacing.s) {
-            Text("Accuracy")
-                .font(KaiFont.body(15, weight: .semibold))
-                .foregroundStyle(KaiColor.sumi)
-            if let accuracy {
-                HStack(alignment: .firstTextBaseline, spacing: KaiSpacing.s) {
-                    Text("\(Int((accuracy * 100).rounded()))%")
-                        .font(KaiFont.display(40, weight: .bold))
-                        .foregroundStyle(KaiColor.vermilion)
-                    Text("over \(totalReviews) review\(totalReviews == 1 ? "" : "s")")
-                        .font(KaiFont.body(14, weight: .regular))
-                        .foregroundStyle(KaiColor.inkSecondary)
-                }
-            } else {
-                emptyHint("No reviews yet.")
+                .frame(height: 160)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -235,9 +226,13 @@ struct StatsView: View {
     }
 
     private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 18, style: .continuous)
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
             .fill(KaiColor.cardFace)
-            .shadow(color: KaiColor.shadow, radius: 10, x: 0, y: 6)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .strokeBorder(KaiColor.hairline, lineWidth: 1)
+            )
+            .shadow(color: KaiColor.shadow, radius: 8, x: 0, y: 4)
     }
 
     // MARK: Data
@@ -249,7 +244,6 @@ struct StatsView: View {
         let now = Date()
 
         totalWords = entries.count
-        learnedWords = entries.filter { $0.scheduling.state == .review }.count
         dueWords = entries.filter { $0.dueAt <= now }.count
         bars = StatsAggregator.reviewsByDay(logs.map(\.timestamp), lastDays: 7, now: now)
         accuracy = StatsAggregator.accuracy(logs.map(\.isCorrect))

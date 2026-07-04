@@ -18,7 +18,8 @@ public protocol VocabularyRepositoryProtocol {
 
 /// SwiftData-backed vocabulary repository implementation.
 public final class VocabularyRepository: VocabularyRepositoryProtocol {
-    private let context: ModelContext
+    /// Internal so backup export/import (in `BackupSnapshot.swift`) can reach the store.
+    let context: ModelContext
 
     public init(context: ModelContext) {
         self.context = context

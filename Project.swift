@@ -30,10 +30,39 @@ let project = Project(
                 "kai-ios/Sources",
                 "kai-ios/Resources",
             ],
+            entitlements: .dictionary([
+                "com.apple.security.application-groups": ["group.dev.tuist.kai-ios"],
+            ]),
             dependencies: [
                 .package(product: "KaiCore"),
                 .package(product: "KaiFSRS"),
                 .package(product: "KaiAI"),
+                .package(product: "KaiServices"),
+                .package(product: "KaiUI"),
+                .target(name: "KaiWidget"),
+            ]
+        ),
+        .target(
+            name: "KaiWidget",
+            destinations: .iOS,
+            product: .appExtension,
+            bundleId: "dev.tuist.kai-ios.widget",
+            deploymentTargets: .iOS("17.0"),
+            infoPlist: .extendingDefault(
+                with: [
+                    "CFBundleDisplayName": "Kai",
+                    "NSExtension": [
+                        "NSExtensionPointIdentifier": "com.apple.widgetkit-extension",
+                    ],
+                ]
+            ),
+            buildableFolders: [
+                "kai-widget/Sources",
+            ],
+            entitlements: .dictionary([
+                "com.apple.security.application-groups": ["group.dev.tuist.kai-ios"],
+            ]),
+            dependencies: [
                 .package(product: "KaiServices"),
                 .package(product: "KaiUI"),
             ]

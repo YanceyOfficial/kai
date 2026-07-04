@@ -7,6 +7,7 @@ import KaiUI
 /// (decks, entry authoring, stats) lives inside the tabs.
 struct RootView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @State private var seeded = false
     /// App-wide toast presenter, injected into the environment for every screen.
     @State private var toast = ToastCenter()
@@ -38,6 +39,13 @@ struct RootView: View {
             let minutes = UserDefaults.standard.object(forKey: "reminderMinutes") as? Int ?? 540
             let hasWords = !(((try? repository.entries(for: .english)) ?? []).isEmpty)
             await ReviewReminder.apply(enabled: enabled, minutes: minutes, hasWords: hasWords)
+            WidgetSync.update(repository: repository)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Refresh the widget's due count as the app leaves the foreground.
+            if phase != .active {
+                WidgetSync.update(repository: VocabularyRepository(context: modelContext))
+            }
         }
     }
 }

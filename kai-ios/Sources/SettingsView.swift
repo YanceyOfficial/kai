@@ -1,7 +1,4 @@
 import SwiftUI
-import SwiftData
-import UniformTypeIdentifiers
-import KaiCore
 import KaiServices
 import KaiAI
 import KaiUI
@@ -16,14 +13,8 @@ struct SettingsView: View {
     @AppStorage("newWordsPerDay") private var newWordsPerDay = 10
     @AppStorage("aiProvider") private var aiProviderRaw = LLMProviderKind.claude.rawValue
 
-    @Environment(\.modelContext) private var modelContext
-    @Environment(ToastCenter.self) private var toast
-
     @State private var apiKey = ""
     @State private var model = ""
-    @State private var exportDocument: BackupDocument?
-    @State private var showingExporter = false
-    @State private var showingImporter = false
 
     private let newWordOptions = [5, 10, 15, 20, 30]
     private var aiKind: LLMProviderKind { LLMProviderKind(rawValue: aiProviderRaw) ?? .claude }
@@ -88,19 +79,6 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Button { makeExport() } label: {
-                        Label("Export backup", systemImage: "square.and.arrow.up")
-                    }
-                    Button { showingImporter = true } label: {
-                        Label("Import backup", systemImage: "square.and.arrow.down")
-                    }
-                } header: {
-                    Text("Backup & Restore")
-                } footer: {
-                    Text("Export a JSON backup to Files or iCloud Drive, and import it after reinstalling or on a new device. Everything stays on your device.")
-                }
-
-                Section {
                     NavigationLink {
                         LogsView()
                     } label: {
@@ -133,48 +111,8 @@ struct SettingsView: View {
             .onChange(of: aiProviderRaw) { loadAIFields() }
             .onChange(of: apiKey) { AIConfigStore.setApiKey(apiKey, for: aiKind) }
             .onChange(of: model) { AIConfigStore.setModel(model, for: aiKind) }
-            .fileExporter(isPresented: $showingExporter, document: exportDocument,
-                          contentType: .json, defaultFilename: Self.backupFilename) { result in
-                if case .failure = result { toast.error("Export failed", category: "backup") }
-            }
-            .fileImporter(isPresented: $showingImporter, allowedContentTypes: [.json]) { result in
-                handleImport(result)
-            }
         }
         .tint(KaiColor.vermilion)
-    }
-
-    // MARK: Backup & restore
-
-    private func makeExport() {
-        do {
-            let snapshot = try VocabularyRepository(context: modelContext).exportSnapshot()
-            exportDocument = BackupDocument(data: try JSONEncoder().encode(snapshot))
-            showingExporter = true
-        } catch {
-            toast.error("Couldn't create backup", category: "backup")
-        }
-    }
-
-    private func handleImport(_ result: Result<URL, Error>) {
-        guard case .success(let url) = result else { return }
-        let accessing = url.startAccessingSecurityScopedResource()
-        defer { if accessing { url.stopAccessingSecurityScopedResource() } }
-        do {
-            let data = try Data(contentsOf: url)
-            let snapshot = try JSONDecoder().decode(BackupSnapshot.self, from: data)
-            let count = try VocabularyRepository(context: modelContext)
-                .importSnapshot(snapshot, strategy: .mergeBackupWins)
-            toast.show("Imported \(count) word\(count == 1 ? "" : "s")")
-        } catch {
-            toast.error("Couldn't read that backup", category: "backup")
-        }
-    }
-
-    private static var backupFilename: String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        return "kai-backup-\(f.string(from: Date()))"
     }
 
     /// Loads the stored key/model for the currently selected provider into the fields,

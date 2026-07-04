@@ -108,41 +108,6 @@ struct SwiftDataTests {
         #expect(try repo.dailyStory(for: .japanese, on: day) == nil)
     }
 
-    @Test("Backup export/import round-trips words with their scheduling progress")
-    func backupRoundTrips() throws {
-        let ctx = try cleanContext()
-        let repo = VocabularyRepository(context: ctx)
-        let entry = VocabularyEntry(lemma: "eccentric", kind: .word, language: .english,
-                                    explanation: "adj. 古怪的", explanationEn: "odd")
-        entry.reschedule(SchedulingState(stability: 12, difficulty: 6,
-                                         due: Date(timeIntervalSince1970: 2_000_000_000),
-                                         lastReview: Date(), reps: 4, lapses: 1, state: .review))
-        ctx.insert(entry)
-        try ctx.save()
-        try repo.logReview(ReviewLog(entryID: entry.id, rating: .good, quizType: .singleChoice,
-                                     elapsedMs: 0, isCorrect: true))
-
-        // Export → portable JSON → decode.
-        let snapshot = try repo.exportSnapshot()
-        let data = try JSONEncoder().encode(snapshot)
-        let decoded = try JSONDecoder().decode(BackupSnapshot.self, from: data)
-
-        // Wipe, then import into a fresh store.
-        let repo2 = VocabularyRepository(context: try cleanContext())
-        #expect(try repo2.entries(for: .english).isEmpty)
-        let imported = try repo2.importSnapshot(decoded, strategy: .mergeBackupWins)
-        #expect(imported == 1)
-
-        let restored = try #require(try repo2.entry(lemma: "eccentric", language: .english))
-        #expect(restored.id == entry.id)                  // id preserved → logs stay linked
-        #expect(restored.explanationEn == "odd")
-        #expect(restored.scheduling.reps == 4)
-        #expect(restored.scheduling.lapses == 1)
-        #expect(restored.scheduling.state == .review)
-        #expect(restored.dueAt == Date(timeIntervalSince1970: 2_000_000_000))
-        #expect(try repo2.reviewLogs(entryID: entry.id).count == 1)
-    }
-
     @Test("Review log persists and reads back")
     func reviewLogPersists() throws {
         let ctx = try cleanContext()

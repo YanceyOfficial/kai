@@ -10,8 +10,10 @@ struct ReviewCardData: Identifiable {
     let word: String
     let phonetic: String
     let explanation: String
-    let example: String
-    let translation: String
+    let explanationEn: String?
+    let examples: [Example]
+    let synonymGroups: [SynonymGroup]
+    let collocations: [Collocation]
     var isLearned: Bool
 
     init(
@@ -19,29 +21,34 @@ struct ReviewCardData: Identifiable {
         word: String,
         phonetic: String,
         explanation: String,
-        example: String,
-        translation: String,
+        explanationEn: String? = nil,
+        examples: [Example] = [],
+        synonymGroups: [SynonymGroup] = [],
+        collocations: [Collocation] = [],
         isLearned: Bool = false
     ) {
         self.id = id
         self.word = word
         self.phonetic = phonetic
         self.explanation = explanation
-        self.example = example
-        self.translation = translation
+        self.explanationEn = explanationEn
+        self.examples = examples
+        self.synonymGroups = synonymGroups
+        self.collocations = collocations
         self.isLearned = isLearned
     }
 
-    /// Projects a persisted entry into display data, using its first example sentence.
+    /// Projects a persisted entry into rich display data for the revealed card.
     init(entry: VocabularyEntry) {
-        let example = entry.examples.first
         self.init(
             id: entry.id,
             word: entry.lemma,
             phonetic: entry.phonetic,
             explanation: entry.explanation,
-            example: example?.sentence ?? "",
-            translation: example?.translation ?? "",
+            explanationEn: entry.explanationEn,
+            examples: entry.examples,
+            synonymGroups: entry.synonymGroups,
+            collocations: entry.collocations,
             isLearned: entry.scheduling.state == .review
         )
     }
@@ -67,6 +74,8 @@ struct ReviewSessionView: View {
     @State private var revealed = false
     @State private var showDone = false
     @State private var showingStory = false
+    /// The entry shown in the full-details sheet (opened from the revealed card).
+    @State private var detailEntry: VocabularyEntry?
 
     /// Plays word pronunciations via Youdao's dictvoice audio.
     @State private var pronouncer = PronunciationPlayer()
@@ -95,6 +104,109 @@ struct ReviewSessionView: View {
         .sheet(isPresented: $showingStory) {
             StoryView(store: StoryStore(context: modelContext))
         }
+        .sheet(isPresented: Binding(get: { detailEntry != nil }, set: { if !$0 { detailEntry = nil } })) {
+            if let detailEntry {
+                NavigationStack { WordDetailView(entry: detailEntry) }
+            }
+        }
+    }
+
+    /// The revealed side of the card: meaning (bilingual), every example, similar words,
+    /// and collocations — scrollable — plus a link to the full detail page.
+    @ViewBuilder
+    private func cardBack(_ card: ReviewCardData) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: KaiSpacing.m) {
+                HStack(alignment: .firstTextBaseline, spacing: KaiSpacing.s) {
+                    Text(card.word)
+                        .font(KaiFont.display(22, weight: .semibold))
+                        .foregroundStyle(KaiColor.sumi)
+                    Text(card.phonetic)
+                        .font(KaiFont.phonetic(13))
+                        .foregroundStyle(KaiColor.inkSecondary)
+                }
+
+                Text(card.explanation)
+                    .font(KaiFont.display(20, weight: .regular))
+                    .foregroundStyle(KaiColor.sumi)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let en = card.explanationEn, !en.isEmpty {
+                    Text(en)
+                        .font(KaiFont.body(14))
+                        .foregroundStyle(KaiColor.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if !card.examples.isEmpty {
+                    backDivider
+                    backLabel("Examples")
+                    ForEach(Array(card.examples.enumerated()), id: \.offset) { _, ex in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(ex.sentence)
+                                .font(KaiFont.body(15))
+                                .foregroundStyle(KaiColor.sumi)
+                                .fixedSize(horizontal: false, vertical: true)
+                            if !ex.translation.isEmpty {
+                                Text(ex.translation)
+                                    .font(KaiFont.body(14))
+                                    .foregroundStyle(KaiColor.inkSecondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+                }
+
+                if !card.synonymGroups.isEmpty {
+                    backDivider
+                    backLabel("Similar words")
+                    ForEach(Array(card.synonymGroups.enumerated()), id: \.offset) { _, group in
+                        Text("\(group.sense) · \(group.words.joined(separator: ", "))")
+                            .font(KaiFont.body(14))
+                            .foregroundStyle(KaiColor.sumi)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                if !card.collocations.isEmpty {
+                    backDivider
+                    backLabel("Collocations")
+                    ForEach(Array(card.collocations.enumerated()), id: \.offset) { _, c in
+                        HStack(alignment: .firstTextBaseline, spacing: KaiSpacing.s) {
+                            Text(c.phrase)
+                                .font(KaiFont.body(14, weight: .semibold))
+                                .foregroundStyle(KaiColor.sumi)
+                            Text(c.meaning)
+                                .font(KaiFont.body(12))
+                                .foregroundStyle(KaiColor.inkSecondary)
+                        }
+                    }
+                }
+
+                Button { detailEntry = store.entry(for: card) } label: {
+                    HStack(spacing: 4) {
+                        Text("Full details")
+                        Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold))
+                    }
+                    .font(KaiFont.body(14, weight: .semibold))
+                    .foregroundStyle(KaiColor.vermilion)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, KaiSpacing.xs)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func backLabel(_ text: String) -> some View {
+        Text(text)
+            .font(KaiFont.body(11, weight: .semibold))
+            .foregroundStyle(KaiColor.vermilion)
+            .textCase(.uppercase)
+            .tracking(1.5)
+    }
+
+    private var backDivider: some View {
+        Rectangle().fill(KaiColor.hairline).frame(height: 1).padding(.vertical, 2)
     }
 
     private var reviewContent: some View {
@@ -107,14 +219,13 @@ struct ReviewSessionView: View {
                 FlipCard(
                     word: card.word,
                     phonetic: card.phonetic,
-                    explanation: card.explanation,
-                    example: card.example,
-                    translation: card.translation,
                     isLearned: card.isLearned,
                     autoPlays: autoPlayPronunciation,
                     isRevealed: $revealed,
                     onSpeak: { pronouncer.play(card.word, accent: accent) }
-                )
+                ) {
+                    cardBack(card)
+                }
                 .id(card.id)   // reset flip animation per card
 
                 Spacer()

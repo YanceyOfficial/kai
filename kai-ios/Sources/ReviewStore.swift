@@ -45,6 +45,11 @@ final class ReviewStore {
         }
     }
 
+    /// The persisted entry backing a card, for opening its full detail page.
+    func entry(for card: ReviewCardData) -> VocabularyEntry? {
+        entriesByID[card.id]
+    }
+
     /// The interval a given rating would schedule for a card right now (e.g. "1d"),
     /// so the rating buttons can preview what each choice does. Empty for unknown cards.
     func previewInterval(for card: ReviewCardData, rating: ReviewRating, now: Date = .now) -> String {

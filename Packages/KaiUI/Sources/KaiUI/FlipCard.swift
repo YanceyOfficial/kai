@@ -6,12 +6,9 @@ import SwiftUI
 ///
 /// The reveal state is externally controlled via `isRevealed` so a review session
 /// can coordinate the card with its rating controls.
-public struct FlipCard: View {
+public struct FlipCard<Back: View>: View {
     private let word: String
     private let phonetic: String
-    private let explanation: String
-    private let example: String
-    private let translation: String
     private let isLearned: Bool
     /// Whether to fire `onSpeak` automatically when the card appears. The speaker
     /// button always plays regardless of this flag.
@@ -20,29 +17,28 @@ public struct FlipCard: View {
     /// appears (if `autoPlays`), and again whenever the speaker button is tapped.
     /// Injected by the app so KaiUI stays free of any audio framework.
     private let onSpeak: () -> Void
+    /// The revealed side, supplied by the app so it can embed rich, domain-specific
+    /// content (examples, similar words, collocations, a link to full details).
+    private let back: Back
 
     @Binding private var isRevealed: Bool
 
     public init(
         word: String,
         phonetic: String,
-        explanation: String,
-        example: String,
-        translation: String,
         isLearned: Bool = false,
         autoPlays: Bool = true,
         isRevealed: Binding<Bool>,
-        onSpeak: @escaping () -> Void = {}
+        onSpeak: @escaping () -> Void = {},
+        @ViewBuilder back: () -> Back
     ) {
         self.word = word
         self.phonetic = phonetic
-        self.explanation = explanation
-        self.example = example
-        self.translation = translation
         self.isLearned = isLearned
         self.autoPlays = autoPlays
         self._isRevealed = isRevealed
         self.onSpeak = onSpeak
+        self.back = back()
     }
 
     public var body: some View {
@@ -67,13 +63,16 @@ public struct FlipCard: View {
         .animation(.spring(response: 0.5, dampingFraction: 0.68), value: isRevealed)
         .contentShape(Rectangle())
         .onTapGesture {
+            // Tap reveals; the revealed side scrolls freely (no flip-back to steal the
+            // scroll gesture). The rating controls carry the session forward from there.
+            guard !isRevealed else { return }
             KaiHaptics.impact(.light)
-            isRevealed.toggle()
+            isRevealed = true
         }
         .onAppear { if autoPlays { onSpeak() } }   // auto-play once per card
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(isRevealed ? explanation : word)
-        .accessibilityHint("Double-tap to flip the card")
+        .accessibilityLabel(word)
+        .accessibilityHint("Double-tap to reveal the meaning")
     }
 
     // MARK: Faces
@@ -100,46 +99,6 @@ public struct FlipCard: View {
                 .textCase(.uppercase)
                 .tracking(1.5)
         }
-    }
-
-    private var back: some View {
-        VStack(alignment: .leading, spacing: KaiSpacing.m) {
-            HStack(alignment: .firstTextBaseline, spacing: KaiSpacing.s) {
-                Text(word)
-                    .font(KaiFont.display(23, weight: .semibold))
-                    .foregroundStyle(KaiColor.sumi)
-                Text(phonetic)
-                    .font(KaiFont.phonetic(13))
-                    .foregroundStyle(KaiColor.inkSecondary)
-            }
-            Text(explanation)
-                .font(KaiFont.display(22, weight: .regular))
-                .foregroundStyle(KaiColor.sumi)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Rectangle()
-                .fill(KaiColor.hairline)
-                .frame(height: 1)
-                .padding(.vertical, KaiSpacing.xs)
-
-            VStack(alignment: .leading, spacing: KaiSpacing.s) {
-                Text("Example")
-                    .font(KaiFont.body(11, weight: .semibold))
-                    .foregroundStyle(KaiColor.vermilion)
-                    .textCase(.uppercase)
-                    .tracking(1.5)
-                Text(example)
-                    .font(KaiFont.body(16, weight: .regular))
-                    .foregroundStyle(KaiColor.sumi)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(translation)
-                    .font(KaiFont.body(15, weight: .regular))
-                    .foregroundStyle(KaiColor.inkSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: Surface
@@ -195,12 +154,15 @@ struct LearnedMark: View {
         FlipCard(
             word: "eccentric",
             phonetic: "/ɪkˈsɛntrɪk/",
-            explanation: "adj. 古怪的，异乎寻常的",
-            example: "My uncle is something of an eccentric.",
-            translation: "我叔叔有点古怪。",
             isLearned: true,
             isRevealed: $revealed
-        )
+        ) {
+            VStack(alignment: .leading) {
+                Text("adj. 古怪的，异乎寻常的").font(KaiFont.display(22))
+                Text("My uncle is something of an eccentric.").font(KaiFont.body(16))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
         .padding(KaiSpacing.l)
     }
 }

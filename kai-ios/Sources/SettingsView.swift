@@ -36,7 +36,7 @@ struct SettingsView: View {
                 .foregroundStyle(KaiColor.sumi)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, KaiSpacing.l)
-                .padding(.top, KaiSpacing.s)
+                .padding(.top, KaiSpacing.l)
               Form {
                 Section {
                     Picker("Appearance", selection: $appearanceRaw) {

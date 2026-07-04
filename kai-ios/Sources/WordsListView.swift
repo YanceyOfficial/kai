@@ -49,7 +49,7 @@ struct WordsListView: View {
                     content
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .padding(.top, KaiSpacing.s)
+                .padding(.top, KaiSpacing.l)
             }
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingAdd, onDismiss: reload) {

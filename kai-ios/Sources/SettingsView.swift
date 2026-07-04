@@ -30,7 +30,14 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            VStack(alignment: .leading, spacing: 0) {
+              Text("Settings")
+                .font(KaiFont.display(34, weight: .bold))
+                .foregroundStyle(KaiColor.sumi)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, KaiSpacing.l)
+                .padding(.top, KaiSpacing.s)
+              Form {
                 Section {
                     Picker("Appearance", selection: $appearanceRaw) {
                         ForEach(AppAppearance.allCases) { Text($0.label).tag($0.rawValue) }
@@ -118,9 +125,10 @@ struct SettingsView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
-            .scrollContentBackground(.hidden)
+              .scrollContentBackground(.hidden)
+            }
             .background(KaiColor.washi)
-            .navigationTitle("Settings")
+            .toolbar(.hidden, for: .navigationBar)
             .onAppear(perform: loadAIFields)
             .onChange(of: aiProviderRaw) { loadAIFields() }
             .onChange(of: apiKey) { AIConfigStore.setApiKey(apiKey, for: aiKind) }

@@ -24,7 +24,10 @@ struct StatsView: View {
             ZStack {
                 KaiColor.washi.ignoresSafeArea()
                 ScrollView {
-                    VStack(spacing: KaiSpacing.l) {
+                    VStack(alignment: .leading, spacing: KaiSpacing.l) {
+                        Text("Stats")
+                            .font(KaiFont.display(34, weight: .bold))
+                            .foregroundStyle(KaiColor.sumi)
                         summaryRow
                         secondRow
                         forgettingCard
@@ -35,7 +38,7 @@ struct StatsView: View {
                     .padding(KaiSpacing.l)
                 }
             }
-            .navigationTitle("Stats")
+            .toolbar(.hidden, for: .navigationBar)
         }
         .onAppear(perform: reload)
     }

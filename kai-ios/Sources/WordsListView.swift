@@ -28,23 +28,55 @@ struct WordsListView: View {
         NavigationStack {
             ZStack {
                 KaiColor.washi.ignoresSafeArea()
-                content
-            }
-            .navigationTitle("Words")
-            .searchable(text: $searchText, prompt: "Search words")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button { showingAdd = true } label: {
-                        Image(systemName: "plus")
+                VStack(alignment: .leading, spacing: KaiSpacing.s) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Words")
+                            .font(KaiFont.display(34, weight: .bold))
+                            .foregroundStyle(KaiColor.sumi)
+                        Spacer()
+                        Button { showingAdd = true } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(KaiColor.vermilion)
+                        }
+                        .buttonStyle(KaiPressStyle())
                     }
-                    .tint(KaiColor.vermilion)
+                    .padding(.horizontal, KaiSpacing.l)
+
+                    searchField
+                        .padding(.horizontal, KaiSpacing.l)
+
+                    content
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+                .padding(.top, KaiSpacing.s)
             }
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingAdd, onDismiss: reload) {
                 AddWordsView()
             }
         }
         .task { reload() }
+    }
+
+    private var searchField: some View {
+        HStack(spacing: KaiSpacing.s) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 15))
+                .foregroundStyle(KaiColor.inkSecondary)
+            TextField("Search words", text: $searchText)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+            if !searchText.isEmpty {
+                Button { searchText = "" } label: {
+                    Image(systemName: "xmark.circle.fill").foregroundStyle(KaiColor.inkSecondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, KaiSpacing.m)
+        .padding(.vertical, KaiSpacing.s)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(KaiColor.cardFace))
     }
 
     @ViewBuilder

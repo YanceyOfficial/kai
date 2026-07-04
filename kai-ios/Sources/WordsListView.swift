@@ -12,16 +12,21 @@ struct WordsListView: View {
     @State private var entries: [VocabularyEntry] = []
     @State private var showingAdd = false
     @State private var searchText = ""
+    @State private var selectedTag: String?
 
     private var repository: VocabularyRepository { VocabularyRepository(context: modelContext) }
 
-    /// Entries filtered by the search field (matches lemma or meaning, case-insensitive).
+    /// All distinct tags across the deck, for the filter bar.
+    private var allTags: [String] { Array(Set(entries.flatMap(\.tags))).sorted() }
+
+    /// Entries filtered by the active tag (if any) and the search field (word name only,
+    /// so "th" finds "thick", not every entry whose meaning contains "th").
     private var filteredEntries: [VocabularyEntry] {
+        var result = entries
+        if let selectedTag { result = result.filter { $0.tags.contains(selectedTag) } }
         let query = searchText.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !query.isEmpty else { return entries }
-        // Match the word itself only — not its meaning — so searching "th" finds "thick",
-        // not every entry whose definition happens to contain "th".
-        return entries.filter { $0.lemma.lowercased().contains(query) }
+        if !query.isEmpty { result = result.filter { $0.lemma.lowercased().contains(query) } }
+        return result
     }
 
     var body: some View {
@@ -46,6 +51,15 @@ struct WordsListView: View {
                     searchField
                         .padding(.horizontal, KaiSpacing.l)
 
+                    if !allTags.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: KaiSpacing.s) {
+                                ForEach(allTags, id: \.self) { tagChip($0) }
+                            }
+                            .padding(.horizontal, KaiSpacing.l)
+                        }
+                    }
+
                     content
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
@@ -57,6 +71,21 @@ struct WordsListView: View {
             }
         }
         .task { reload() }
+    }
+
+    private func tagChip(_ tag: String) -> some View {
+        let selected = selectedTag == tag
+        return Button {
+            selectedTag = selected ? nil : tag
+        } label: {
+            Text(tag)
+                .font(KaiFont.body(14, weight: .medium))
+                .foregroundStyle(selected ? KaiColor.cardFace : KaiColor.sumi)
+                .padding(.horizontal, KaiSpacing.m)
+                .padding(.vertical, KaiSpacing.xs)
+                .background(Capsule().fill(selected ? KaiColor.vermilion : KaiColor.cardFace))
+        }
+        .buttonStyle(.plain)
     }
 
     private var searchField: some View {
@@ -125,6 +154,9 @@ struct WordsListView: View {
 
     private func reload() {
         entries = (try? repository.entries(for: .english)) ?? []
+        if let tag = selectedTag, !entries.contains(where: { $0.tags.contains(tag) }) {
+            selectedTag = nil   // the tag no longer exists — drop the filter
+        }
     }
 
     private func delete(at offsets: IndexSet) {

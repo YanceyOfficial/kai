@@ -19,6 +19,10 @@ struct WordDetailView: View {
     @State private var showingAddNote = false
     @State private var newNoteText = ""
 
+    /// Add-tag alert state.
+    @State private var showingAddTag = false
+    @State private var newTag = ""
+
     /// Tap-through: navigate to a related word, or offer to add one that's not in the deck.
     @State private var linkedLemma: String?
     @State private var addCandidate: String?
@@ -53,6 +57,7 @@ struct WordDetailView: View {
             similarWordsSection
             collocationsSection
             notesSection
+            tagsSection
             annotationsSection
             schedulingSection
         }
@@ -61,6 +66,12 @@ struct WordDetailView: View {
         .navigationTitle(entry.lemma)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingAddNote) { addNoteSheet }
+        .alert("Add tag", isPresented: $showingAddTag) {
+            TextField("e.g. GRE", text: $newTag)
+                .textInputAutocapitalization(.never)
+            Button("Add") { addTag() }
+            Button("Cancel", role: .cancel) { newTag = "" }
+        }
         .overlay {
             if adding {
                 ProgressView().tint(KaiColor.vermilion)
@@ -85,6 +96,52 @@ struct WordDetailView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+    }
+
+    /// Editable tags for grouping words into simple decks.
+    private var tagsSection: some View {
+        Section("Tags") {
+            if !entry.tags.isEmpty {
+                FlowLayout(spacing: 6) {
+                    ForEach(entry.tags, id: \.self) { tag in
+                        HStack(spacing: 4) {
+                            Text(tag)
+                                .font(KaiFont.body(14, weight: .medium))
+                                .foregroundStyle(KaiColor.sumi)
+                            Button { removeTag(tag) } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(KaiColor.inkSecondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal, KaiSpacing.s)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(KaiColor.washi))
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+            Button { newTag = ""; showingAddTag = true } label: {
+                Label("Add tag", systemImage: "tag")
+                    .font(KaiFont.body(15, weight: .medium))
+                    .foregroundStyle(KaiColor.vermilion)
+            }
+        }
+        .listRowBackground(KaiColor.cardFace)
+    }
+
+    private func addTag() {
+        let tag = newTag.trimmingCharacters(in: .whitespacesAndNewlines)
+        newTag = ""
+        guard !tag.isEmpty, !entry.tags.contains(where: { $0.caseInsensitiveCompare(tag) == .orderedSame }) else { return }
+        entry.tags.append(tag)
+        save()
+    }
+
+    private func removeTag(_ tag: String) {
+        entry.tags.removeAll { $0 == tag }
+        save()
     }
 
     /// A tappable related word: opens it if it's in the deck, else offers to add it.

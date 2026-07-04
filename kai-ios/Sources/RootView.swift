@@ -8,6 +8,7 @@ import KaiUI
 struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("hasOnboarded") private var hasOnboarded = false
     @State private var seeded = false
     /// App-wide toast presenter, injected into the environment for every screen.
     @State private var toast = ToastCenter()
@@ -29,6 +30,9 @@ struct RootView: View {
         }
         .environment(toast)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: toast.current?.id)
+        .fullScreenCover(isPresented: Binding(get: { seeded && !hasOnboarded }, set: { _ in })) {
+            OnboardingView(hasOnboarded: $hasOnboarded)
+        }
         .task {
             guard !seeded else { return }
             let repository = VocabularyRepository(context: modelContext)

@@ -9,6 +9,16 @@ word (bilingual meaning, examples, mnemonics, etymology, roots, synonym groups,
 collocations, a daily story), and an FSRS-based scheduler decides **what to review and
 when** so you spend effort exactly where memory is about to fail.
 
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/review.png" width="31%" alt="Review — flip card" />
+  <img src="screenshots/words.png" width="31%" alt="Words list" />
+  <img src="screenshots/stats.png" width="31%" alt="Stats — forgetting curve" />
+</p>
+
+<p align="center"><em>Review (FSRS flip card) · Words · Stats (forgetting curve, memory maturity)</em></p>
+
 ---
 
 ## The memory algorithm (FSRS-6)

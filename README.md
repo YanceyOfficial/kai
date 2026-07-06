@@ -11,13 +11,23 @@ when** so you spend effort exactly where memory is about to fail.
 
 ## Screenshots
 
-<p align="center">
-  <img src="screenshots/review.png" width="31%" alt="Review — flip card" />
-  <img src="screenshots/words.png" width="31%" alt="Words list" />
-  <img src="screenshots/stats.png" width="31%" alt="Stats — forgetting curve" />
-</p>
-
-<p align="center"><em>Review (FSRS flip card) · Words · Stats (forgetting curve, memory maturity)</em></p>
+<table>
+  <tr>
+    <td align="center"><img src="screenshots/onboarding.png" width="230" alt="Onboarding" /><br><sub>Onboarding</sub></td>
+    <td align="center"><img src="screenshots/review.png" width="230" alt="Review — flip card" /><br><sub>Review — flip card</sub></td>
+    <td align="center"><img src="screenshots/revealed.png" width="230" alt="Revealed card" /><br><sub>Revealed — meaning, examples, FSRS intervals</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/words.png" width="230" alt="Words list" /><br><sub>Words — search & tags</sub></td>
+    <td align="center"><img src="screenshots/detail.png" width="230" alt="Word detail" /><br><sub>Word detail</sub></td>
+    <td align="center"><img src="screenshots/stats.png" width="230" alt="Stats — forgetting curve" /><br><sub>Stats — forgetting curve & maturity</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/settings.png" width="230" alt="Settings" /><br><sub>Settings</sub></td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
 
 ---
 

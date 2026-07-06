@@ -11,7 +11,7 @@ import KaiServices
 @Observable
 final class QuizStore {
     private let repository: VocabularyRepository
-    private let scheduler = ReviewScheduler()
+    private let scheduler: ReviewScheduler
     private let generator = QuizGenerator()
     private let logger = AppLog.shared
 
@@ -22,6 +22,7 @@ final class QuizStore {
 
     init(context: ModelContext) {
         self.repository = VocabularyRepository(context: context)
+        self.scheduler = ReviewScheduler(requestRetention: AppSettings.requestRetention)
     }
 
     /// Builds a quiz from the due deck, using the whole deck as the distractor pool.

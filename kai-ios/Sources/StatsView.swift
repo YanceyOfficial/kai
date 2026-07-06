@@ -7,6 +7,7 @@ import KaiUI
 /// and overall accuracy. All aggregation is done by the pure `StatsAggregator`.
 struct StatsView: View {
     @Environment(\.modelContext) private var modelContext
+    @AppStorage("requestRetention") private var requestRetention = 0.9
 
     @State private var totalWords = 0
     @State private var dueWords = 0
@@ -109,11 +110,11 @@ struct StatsView: View {
                         .interpolationMethod(.monotone)
                         .lineStyle(StrokeStyle(lineWidth: 2))
                     }
-                    RuleMark(y: .value("Target", 0.9))
+                    RuleMark(y: .value("Target", requestRetention))
                         .foregroundStyle(KaiColor.inkSecondary.opacity(0.5))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
                         .annotation(position: .top, alignment: .trailing) {
-                            Text("90% target")
+                            Text("\(Int(requestRetention * 100))% target")
                                 .font(KaiFont.body(10))
                                 .foregroundStyle(KaiColor.inkSecondary)
                         }
@@ -257,7 +258,7 @@ struct StatsView: View {
             return (s.stability, max(0, now.timeIntervalSince(last) / 86_400))
         }
         curve = StatsAggregator.forgettingCurve(memories, overDays: 30)
-        atRisk = StatsAggregator.atRisk(memories, threshold: 0.9, within: 7)
+        atRisk = StatsAggregator.atRisk(memories, threshold: requestRetention, within: 7)
         maturityCounts = StatsAggregator.maturity(entries.map { ($0.scheduling.state, $0.scheduling.stability) })
     }
 }

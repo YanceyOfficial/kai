@@ -97,6 +97,17 @@ struct ReviewSchedulerTests {
         #expect(hard.state == .review)
     }
 
+    @Test("Higher target retention schedules shorter intervals")
+    func retentionShortensIntervals() {
+        let prior = SchedulingState(
+            stability: 30, difficulty: 5,
+            due: now, lastReview: now.addingTimeInterval(-30 * 86_400),
+            reps: 5, lapses: 0, state: .review)
+        let high = ReviewScheduler(requestRetention: 0.95, fuzz: false).next(prior, rating: .good, now: now)
+        let low = ReviewScheduler(requestRetention: 0.80, fuzz: false).next(prior, rating: .good, now: now)
+        #expect(high.due < low.due)   // want to remember more → review sooner
+    }
+
     @Test("Easy grows stability more than Hard for the same card")
     func easyBeatsHard() {
         let prior = SchedulingState(

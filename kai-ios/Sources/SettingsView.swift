@@ -13,6 +13,7 @@ struct SettingsView: View {
     @AppStorage("autoPlayPronunciation") private var autoPlay = true
     @AppStorage("pronunciationAccent") private var accentRaw = Accent.us.rawValue
     @AppStorage("newWordsPerDay") private var newWordsPerDay = 10
+    @AppStorage("requestRetention") private var requestRetention = 0.9
     @AppStorage("aiProvider") private var aiProviderRaw = LLMProviderKind.claude.rawValue
     @AppStorage("reminderEnabled") private var reminderEnabled = false
     @AppStorage("reminderMinutes") private var reminderMinutes = 540   // 09:00
@@ -62,10 +63,15 @@ struct SettingsView: View {
                     Picker("New words per session", selection: $newWordsPerDay) {
                         ForEach(newWordOptions, id: \.self) { Text("\($0)").tag($0) }
                     }
+                    Picker("Target retention", selection: $requestRetention) {
+                        ForEach([0.8, 0.85, 0.9, 0.95], id: \.self) { r in
+                            Text("\(Int(r * 100))%").tag(r)
+                        }
+                    }
                 } header: {
                     Text("Review")
                 } footer: {
-                    Text("Each session introduces up to this many new words, mixed with words that are due for review.")
+                    Text("New words per session mixes with due reviews. Target retention is how well you want to remember — higher means shorter intervals and more frequent reviews.")
                 }
 
                 Section {

@@ -18,6 +18,12 @@ public struct ReviewScheduler: Sendable {
         self.fuzz = fuzz
     }
 
+    /// Convenience: build with a target `requestRetention` (the recall probability at which
+    /// a word becomes due). Higher → shorter intervals / more reviews.
+    public init(requestRetention: Double, fuzz: Bool = true) {
+        self.init(fsrs: FSRSScheduler(requestRetention: requestRetention), fuzz: fuzz)
+    }
+
     /// Seconds per day, used to turn an FSRS interval (whole days) into a due date.
     private static let secondsPerDay: Double = 86_400
 

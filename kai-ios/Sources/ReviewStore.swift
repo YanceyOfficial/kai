@@ -10,7 +10,7 @@ import KaiServices
 @Observable
 final class ReviewStore {
     private let repository: VocabularyRepository
-    private let scheduler = ReviewScheduler()
+    private let scheduler: ReviewScheduler
     private let logger = AppLog.shared
 
     /// Display cards for the current session — a snapshot of the entries that were
@@ -25,6 +25,7 @@ final class ReviewStore {
 
     init(context: ModelContext) {
         self.repository = VocabularyRepository(context: context)
+        self.scheduler = ReviewScheduler(requestRetention: AppSettings.requestRetention)
     }
 
     /// Loads the due English deck as a session snapshot: at most `newLimit` new words,

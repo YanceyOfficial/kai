@@ -93,7 +93,7 @@ struct QuizStoreTests {
         let context = ModelContext(try KaiModelContainer.inMemory())
         let repository = VocabularyRepository(context: context)
         try StarterSeed.seedIfEmpty(repository)
-        return (QuizStore(context: context), repository)
+        return (QuizStore(context: context, language: .english), repository)
     }
 
     @Test("Builds a question per seeded word")
@@ -139,4 +139,12 @@ struct QuizStoreTests {
         #expect(entry.scheduling.lapses == 1)
         #expect(try repo.reviewLogs(entryID: question.id).first?.rating == .again)
     }
+}
+
+@Test("A typed reading matches in hiragana or katakana, and ruby answers read as plain")
+func japaneseAnswerNormalization() {
+    #expect(QuizQuestion.normalize("ナツカシイ") == QuizQuestion.normalize("なつかしい"))
+    #expect(QuizQuestion.normalize(" なつかしい ") == "なつかしい")
+    #expect(QuizQuestion.normalize("{懐|なつ}かしい") == "懐かしい")
+    #expect(QuizQuestion.normalize("USE") == "use")
 }

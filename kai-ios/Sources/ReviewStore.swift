@@ -3,7 +3,7 @@ import SwiftData
 import KaiCore
 import KaiServices
 
-/// Owns the data for a review session: it loads the due English deck, applies
+/// Owns the data for a review session: it loads the due deck of one language, applies
 /// ratings through FSRS, and persists the results. The view observes it and stays
 /// free of any persistence or scheduling logic.
 @MainActor
@@ -11,6 +11,7 @@ import KaiServices
 final class ReviewStore {
     private let repository: VocabularyRepository
     private let scheduler: ReviewScheduler
+    private let language: LanguageDomain
     private let logger = AppLog.shared
 
     /// Display cards for the current session — a snapshot of the entries that were
@@ -23,17 +24,18 @@ final class ReviewStore {
     /// Cap on due review words interleaved into one session, so a backlog stays bounded.
     private static let maxDueReviews = 100
 
-    init(context: ModelContext) {
+    init(context: ModelContext, language: LanguageDomain = AppSettings.studyLanguage) {
         self.repository = VocabularyRepository(context: context)
+        self.language = language
         self.scheduler = ReviewScheduler(requestRetention: AppSettings.requestRetention)
     }
 
-    /// Loads the due English deck as a session snapshot: at most `newLimit` new words,
+    /// Loads the due deck as a session snapshot: at most `newLimit` new words,
     /// interleaved with all due review words. Seeding happens once at app launch (see
     /// `StarterSeed`), so this only fetches.
     func load(newLimit: Int = .max, now: Date = .now) {
         do {
-            let due = try repository.dueEntries(for: .english, asOf: now)
+            let due = try repository.dueEntries(for: language, asOf: now)
             let new = due.filter { $0.scheduling.state == .new }
             let old = due.filter { $0.scheduling.state != .new }
             let session = SessionComposer.compose(new: new, old: old, newLimit: newLimit, oldLimit: Self.maxDueReviews)

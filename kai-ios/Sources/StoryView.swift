@@ -51,7 +51,7 @@ struct StoryView: View {
                 }
             }
         }
-        .tint(KaiColor.vermilion)
+        .tint(KaiColor.accent)
         .task { store.load(newLimit: newWordsPerDay) }
     }
 
@@ -59,7 +59,7 @@ struct StoryView: View {
     private var content: some View {
         switch store.state {
         case .loading:
-            ProgressView("Writing your story…").tint(KaiColor.vermilion)
+            ProgressView("Writing your story…").tint(KaiColor.accent)
         case .ready:
             storyScroll
         case .idle:
@@ -78,8 +78,15 @@ struct StoryView: View {
     private var storyScroll: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: KaiSpacing.l) {
-                Text(attributedStory)
-                    .lineSpacing(6)
+                if store.language == .japanese {
+                    // Furigana and highlighting do not mix (a conjugated word is not the
+                    // lemma's text), so the passage reads as it is and the words sit below it.
+                    RubyText(store.text, size: 17)
+                    storyWords
+                } else {
+                    Text(attributedStory)
+                        .lineSpacing(6)
+                }
                 if showTranslation {
                     Divider()
                     Text(store.translation)
@@ -87,7 +94,7 @@ struct StoryView: View {
                         .foregroundStyle(KaiColor.inkSecondary)
                         .lineSpacing(5)
                 }
-                Text("Tap a highlighted word to open its card.")
+                Text(store.language == .japanese ? "Tap a word to open its card." : "Tap a highlighted word to open its card.")
                     .font(KaiFont.body(12))
                     .foregroundStyle(KaiColor.inkSecondary)
                     .padding(.top, KaiSpacing.s)
@@ -97,13 +104,30 @@ struct StoryView: View {
         }
     }
 
+    /// Today's words, each opening its card.
+    private var storyWords: some View {
+        FlowLayout(spacing: 6) {
+            ForEach(store.words, id: \.self) { word in
+                Button { selectedLemma = word } label: {
+                    Text(word)
+                        .font(KaiFont.body(15, weight: .medium))
+                        .foregroundStyle(KaiColor.accent)
+                        .padding(.horizontal, KaiSpacing.s)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(KaiColor.accent.opacity(0.12)))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
     /// Builds the passage with each target word styled and linked to `kai://word/<lemma>`.
     private var attributedStory: AttributedString {
         var result = AttributedString()
         for segment in StoryHighlighter.segments(text: store.text, words: store.words) {
             var piece = AttributedString(segment.text)
             if let lemma = segment.lemma {
-                piece.foregroundColor = KaiColor.vermilion
+                piece.foregroundColor = KaiColor.accent
                 piece.font = KaiFont.body(17, weight: .semibold)
                 piece.link = URL(string: "kai://word/\(lemma)")
             } else {

@@ -88,8 +88,11 @@ struct ReviewSessionView: View {
     @AppStorage("pronunciationAccent") private var accentRaw = Accent.us.rawValue
     /// User setting: how many new words to introduce per session.
     @AppStorage("newWordsPerDay") private var newWordsPerDay = 10
+    /// The language being studied; the header's menu switches it (which rebuilds the tabs).
+    @AppStorage(AppSettings.studyLanguageKey) private var studyLanguageRaw = LanguageDomain.english.rawValue
 
     private var accent: Accent { Accent(rawValue: accentRaw) ?? .us }
+    private var language: LanguageDomain { LanguageDomain(rawValue: studyLanguageRaw) ?? .english }
 
     private var cards: [ReviewCardData] { store.cards }
 
@@ -137,10 +140,7 @@ struct ReviewSessionView: View {
                     .foregroundStyle(KaiColor.sumi)
                     .fixedSize(horizontal: false, vertical: true)
                 if let en = card.explanationEn, !en.isEmpty {
-                    Text(en)
-                        .font(KaiFont.body(14))
-                        .foregroundStyle(KaiColor.inkSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    RubyText(en, size: 14, color: KaiColor.inkSecondary)
                 }
 
                 if !card.examples.isEmpty {
@@ -148,10 +148,7 @@ struct ReviewSessionView: View {
                     backLabel("Examples")
                     ForEach(Array(card.examples.enumerated()), id: \.offset) { _, ex in
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(ex.sentence)
-                                .font(KaiFont.body(15))
-                                .foregroundStyle(KaiColor.sumi)
-                                .fixedSize(horizontal: false, vertical: true)
+                            RubyText(ex.sentence, size: 15)
                             if !ex.translation.isEmpty {
                                 Text(ex.translation)
                                     .font(KaiFont.body(14))
@@ -177,10 +174,10 @@ struct ReviewSessionView: View {
                     backDivider
                     backLabel("Collocations")
                     ForEach(Array(card.collocations.enumerated()), id: \.offset) { _, c in
-                        HStack(alignment: .firstTextBaseline, spacing: KaiSpacing.s) {
-                            Text(c.phrase)
-                                .font(KaiFont.body(14, weight: .semibold))
-                                .foregroundStyle(KaiColor.sumi)
+                        // Bottom-aligned: a phrase with furigana is taller than its gloss.
+                        HStack(alignment: .bottom, spacing: KaiSpacing.s) {
+                            RubyText(c.phrase, size: 14, weight: .semibold)
+                                .fixedSize()
                             Text(c.meaning)
                                 .font(KaiFont.body(12))
                                 .foregroundStyle(KaiColor.inkSecondary)
@@ -241,7 +238,7 @@ struct ReviewSessionView: View {
                         isLearned: card.isLearned,
                         autoPlays: autoPlayPronunciation,
                         isRevealed: $revealed,
-                        onSpeak: { pronouncer.play(card.word, accent: accent) },
+                        onSpeak: { pronouncer.say(card.word, phonetic: card.phonetic, language: language, accent: accent) },
                         // Right is Good, left is Again; Hard and Easy stay on the buttons.
                         onSwipe: { direction in rate(card, direction == .right ? .good : .again, swiped: true) },
                         onSwipeProgress: { swipeProgress = $0 }
@@ -270,9 +267,7 @@ struct ReviewSessionView: View {
                     .font(KaiFont.display(34, weight: .bold))
                     .tracking(-0.6)
                     .foregroundStyle(KaiColor.sumi)
-                Text("甲斐 · review")
-                    .font(KaiFont.body(14, weight: .medium))
-                    .foregroundStyle(KaiColor.inkSecondary)
+                languageMenu
             }
             Spacer()
             Button { showingStory = true } label: {
@@ -286,6 +281,28 @@ struct ReviewSessionView: View {
                 .font(KaiFont.phonetic(16))
                 .foregroundStyle(KaiColor.inkSecondary)
         }
+    }
+
+    /// Which deck is being studied, and the switch between them.
+    private var languageMenu: some View {
+        Menu {
+            Picker("Studying", selection: $studyLanguageRaw) {
+                ForEach(LanguageDomain.allCases, id: \.self) { language in
+                    Text(language.displayName).tag(language.rawValue)
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Text("甲斐 · \(language.displayName)")
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .semibold))
+            }
+            .font(KaiFont.body(14, weight: .medium))
+            .foregroundStyle(KaiColor.inkSecondary)
+            .contentShape(Rectangle())
+        }
+        .accessibilityLabel("Studying \(language.displayName)")
+        .accessibilityHint("Switches to another language's deck")
     }
 
     @ViewBuilder

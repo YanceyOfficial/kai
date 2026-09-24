@@ -7,7 +7,7 @@ import KaiServices
 /// refresh. Call whenever the due count may have changed (launch, backgrounding).
 enum WidgetSync {
     static func update(repository: VocabularyRepository, now: Date = .now) {
-        let entries = (try? repository.entries(for: .english)) ?? []
+        let entries = (try? repository.entries(for: AppSettings.studyLanguage)) ?? []
         let due = entries.filter { $0.dueAt <= now }.count
         WidgetSnapshotStore().write(
             ReviewWidgetSnapshot(dueCount: due, totalWords: entries.count, updatedAt: now))

@@ -24,16 +24,19 @@ final class StoryStore {
     private(set) var words: [String] = []
 
     private let repository: VocabularyRepository
+    /// The deck the story is written for, and the language it is written in.
+    let language: LanguageDomain
     private let logger = AppLog.shared
 
-    init(context: ModelContext) {
+    init(context: ModelContext, language: LanguageDomain = AppSettings.studyLanguage) {
         self.repository = VocabularyRepository(context: context)
+        self.language = language
     }
 
     /// Resolves state from cache/due words without hitting the network. Shows a cached
     /// story if one exists for today; otherwise offers to generate (or reports empty).
     func load(newLimit: Int, now: Date = .now) {
-        if let cached = try? repository.dailyStory(for: .english, on: now) {
+        if let cached = try? repository.dailyStory(for: language, on: now) {
             populate(cached)
             state = .ready
             return
@@ -50,8 +53,8 @@ final class StoryStore {
         state = .loading
         do {
             let provider = ProviderFactory.make(config)
-            let story = try await provider.generateStory(words: lemmas, language: .english)
-            let model = DailyStory(day: now, language: .english,
+            let story = try await provider.generateStory(words: lemmas, language: language)
+            let model = DailyStory(day: now, language: language,
                                    text: story.story, translation: story.translation, wordLemmas: lemmas)
             try repository.upsertDailyStory(model)
             populate(model)
@@ -64,14 +67,14 @@ final class StoryStore {
 
     /// Resolves a tapped word to its entry, if it exists in the deck.
     func entry(forLemma lemma: String) -> VocabularyEntry? {
-        try? repository.entry(lemma: lemma, language: .english)
+        try? repository.entry(lemma: lemma, language: language)
     }
 
     // MARK: Internals
 
     /// The lemmas of today's review session (up to `newLimit` new words + due words).
     private func todayWords(newLimit: Int, now: Date) -> [String] {
-        let due = (try? repository.dueEntries(for: .english, asOf: now)) ?? []
+        let due = (try? repository.dueEntries(for: language, asOf: now)) ?? []
         let new = due.filter { $0.scheduling.state == .new }
         let old = due.filter { $0.scheduling.state != .new }
         return SessionComposer.compose(new: new, old: old, newLimit: newLimit).map(\.lemma)

@@ -1,7 +1,7 @@
 # CLAUDE.md — Kai (甲斐)
 
-Native Apple rewrite of the "Kai" flashcard app for memorizing difficult vocabulary
-(English now, Japanese later). SwiftUI + SwiftData + Swift Charts, on-device AI
+Native Apple rewrite of the "Kai" flashcard app for memorizing difficult vocabulary,
+in English and Japanese (one deck per language, switched in the app). SwiftUI + SwiftData + Swift Charts, on-device AI
 (Claude/OpenAI), FSRS spaced repetition. iPhone first; Watch/Mac/TV later.
 
 ## Layout
@@ -12,7 +12,8 @@ Native Apple rewrite of the "Kai" flashcard app for memorizing difficult vocabul
   - `KaiCore` — SwiftData models, enums, value types, `VocabularyRepository`, and `ReviewScheduler` (bridges the persisted `SchedulingState` to KaiFSRS). **CloudKit-compatible** modeling (defaults/optionals, no `@Attribute(.unique)`, code-layer dedupe). Sync is off for now. Depends on KaiFSRS.
   - `KaiFSRS` — pure FSRS-6 spaced-repetition algorithm. Zero dependencies. Validated against ts-fsrs.
   - `KaiAI` — `LLMProvider` protocol + Claude/OpenAI structured-output over `URLSession` (`HTTPTransport` is injectable). Produces Codable DTOs, not SwiftData. Depends on KaiCore (enums only).
-  - `KaiServices` — logging (`os.Logger`), Keychain (`SecretStore`), FSRS-driven forgetting-push scheduling + quiet hours, Vision OCR, word pronunciation (Youdao dictvoice URL + `AVPlayer`). Depends on KaiFSRS. Pattern: **protocol + pure (tested) logic + thin platform adapter (compiled, not unit-tested)**.
+  - `KaiServices` — logging (`os.Logger`), Keychain (`SecretStore`), FSRS-driven forgetting-push scheduling + quiet hours, Vision OCR, word pronunciation (`PronunciationVoice`: Youdao dictvoice via `AVPlayer` — English by `type`, Japanese by `le=jap`, said by its kana reading (`JapaneseSpeech`); whatever Youdao has no audio for, e.g. a Japanese sentence or no network, falls back to `AVSpeechSynthesizer`). Depends on KaiFSRS. Pattern: **protocol + pure (tested) logic + thin platform adapter (compiled, not unit-tested)**.
+  - `KaiUI` — the design system (`KaiColor`/`KaiFont`/`KaiSpacing`, `KaiMotion` springs + gesture math, `FlipCard`, `KaiMark`, toasts) and ruby: `Ruby` parses the inline furigana markup `{漢字|かんじ}` the AI writes into Japanese sentences (`plain` / `reading` / line-breaking units with kinsoku), `RubyText` renders it (readings over bases, allowed to overhang neighbours; plain `Text` when there is no markup or `showsFurigana` is off). Tested with `swift test --package-path Packages/KaiUI`.
 - `docs/superpowers/` — design spec (`specs/`) and per-package TDD implementation plans (`plans/`).
 - App icon: `kai-ios/Resources/AppIcon.icon`, an Icon Composer document (SVG layers + `icon.json`;
   Xcode 26 compiles Liquid Glass for iOS 26+ and flat PNGs for older iOS), plus the launch screen's
@@ -69,7 +70,15 @@ Kernel green: KaiCore (20 tests), KaiFSRS (23), KaiAI (18), KaiServices (18). Ap
 26 tests in `kai-iosTests` (run on the simulator).
 
 The app is a `MainTabView` shell — Review / Quiz / Words / Stats / Settings — over one
-SwiftData store (starter deck seeded once at launch by `StarterSeed`). Neutral palette
+SwiftData store (a starter deck per language seeded at launch by `StarterSeed`).
+**Languages:** `AppSettings.studyLanguage` (`@AppStorage("studyLanguage")`) picks the deck —
+Settings → Language, or the menu under "Kai" on the Review tab. `MainTabView` is keyed by it
+(`.id`), so switching rebuilds every tab and each loads its own language's words; stores take
+the language in `init` (tests pass it explicitly). Japanese cards reuse the English schema with
+per-field meaning set by `PromptBuilder` (phonetic = kana reading + pitch accent `なつかしい ④`,
+syllables = morae, roots = kanji breakdown) and ruby markup in every Japanese sentence;
+`AICardMapper` strips markup from anything matched or compared (lemma, related words, quiz
+answers). Quiz answers are kana-insensitive for Japanese. Neutral palette
 with light/dark support (`KaiColor` adaptive) and a Tokiwa green accent (常磐色,
 `KaiColor.accent`, #1B813E / #23A750 dark; `vermilion` is a legacy alias of it that app
 views drop as they are redesigned). The "Again" rating is red (`KaiColor.danger`).

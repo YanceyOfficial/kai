@@ -1,7 +1,7 @@
 # Kai (甲斐)
 
-A native Apple flashcard app for memorizing difficult vocabulary — English now, Japanese
-later — built around **on-device AI card generation** and a **scientific spaced-repetition
+A native Apple flashcard app for memorizing difficult vocabulary — in English and
+Japanese, one deck each, with furigana over every Japanese sentence — built around **on-device AI card generation** and a **scientific spaced-repetition
 memory model (FSRS-6)**. SwiftUI + SwiftData + Swift Charts, iPhone first.
 
 The core idea: turn *hard memorization* into *efficient understanding*. AI enriches every

@@ -24,8 +24,11 @@ struct QuizSessionView: View {
     @State private var pronouncer = PronunciationPlayer()
     @AppStorage("pronunciationAccent") private var accentRaw = Accent.us.rawValue
     private var accent: Accent { Accent(rawValue: accentRaw) ?? .us }
+    private let language = AppSettings.studyLanguage
 
-    private let pine = Color(hex: 0x3E7C63)
+    /// Right answers read in the accent, wrong ones in the danger red.
+    private let pine = KaiColor.accent
+    private let miss = KaiColor.danger
     private var questions: [QuizQuestion] { store.questions }
 
     var body: some View {
@@ -63,7 +66,7 @@ struct QuizSessionView: View {
         .task(id: index) {
             // Auto-play the pronunciation for a listening question.
             guard index < questions.count, questions[index].playsAudio else { return }
-            pronouncer.play(questions[index].word, accent: accent)
+            pronouncer.say(questions[index].word, phonetic: questions[index].phonetic, language: language, accent: accent)
         }
     }
 
@@ -92,13 +95,13 @@ struct QuizSessionView: View {
         VStack(spacing: KaiSpacing.s) {
             if question.hidesWord && !responded {
                 if question.playsAudio {
-                    Button { pronouncer.play(question.word, accent: accent) } label: {
+                    Button { pronouncer.say(question.word, phonetic: question.phonetic, language: language, accent: accent) } label: {
                         Image(systemName: "speaker.wave.3.fill")
                             .font(.system(size: 40, weight: .semibold))
                             .foregroundStyle(KaiColor.accent)
                     }
                     .buttonStyle(KaiPressStyle())
-                    Text("Spell what you hear")
+                    Text(language == .japanese ? "Type the reading you hear" : "Spell what you hear")
                         .font(KaiFont.body(14, weight: .medium))
                         .foregroundStyle(KaiColor.inkSecondary)
                 } else {
@@ -120,7 +123,7 @@ struct QuizSessionView: View {
                     }
                     Button {
                         KaiHaptics.impact(.light)
-                        pronouncer.play(question.word, accent: accent)
+                        pronouncer.say(question.word, phonetic: question.phonetic, language: language, accent: accent)
                     } label: {
                         Image(systemName: "speaker.wave.2.fill")
                             .font(.system(size: 14, weight: .semibold))
@@ -131,11 +134,7 @@ struct QuizSessionView: View {
             }
 
             if !question.question.isEmpty {
-                Text(question.question)
-                    .font(KaiFont.body(16))
-                    .foregroundStyle(KaiColor.sumi)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
+                RubyText(question.question, size: 16, alignment: .center)
                     .padding(.top, KaiSpacing.xs)
             }
         }
@@ -165,10 +164,10 @@ struct QuizSessionView: View {
 
         let tint: Color = !responded ? KaiColor.hairline
             : isCorrect ? pine
-            : isChosen ? KaiColor.accent
+            : isChosen ? miss
             : KaiColor.hairline
         let fill: Color = responded && isCorrect ? pine.opacity(0.12)
-            : responded && isChosen ? KaiColor.accent.opacity(0.10)
+            : responded && isChosen ? miss.opacity(0.10)
             : KaiColor.cardFace
 
         return Button {
@@ -183,7 +182,7 @@ struct QuizSessionView: View {
                 if responded && isCorrect {
                     Image(systemName: "checkmark").foregroundStyle(pine)
                 } else if responded && isChosen {
-                    Image(systemName: "xmark").foregroundStyle(KaiColor.accent)
+                    Image(systemName: "xmark").foregroundStyle(miss)
                 }
             }
             .padding(.horizontal, KaiSpacing.m)
@@ -203,7 +202,7 @@ struct QuizSessionView: View {
 
     private func textEntry(_ question: QuizQuestion) -> some View {
         VStack(spacing: KaiSpacing.m) {
-            TextField("Type the word", text: $textInput)
+            TextField(language == .japanese ? "Type it in kana" : "Type the word", text: $textInput)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(KaiFont.body(18))
@@ -221,7 +220,7 @@ struct QuizSessionView: View {
             if responded {
                 HStack(spacing: KaiSpacing.s) {
                     Image(systemName: wasCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
-                        .foregroundStyle(wasCorrect ? pine : KaiColor.accent)
+                        .foregroundStyle(wasCorrect ? pine : miss)
                     Text(wasCorrect ? "Correct" : "Answer: \(question.answers.first ?? question.word)")
                         .font(KaiFont.body(15, weight: .medium))
                         .foregroundStyle(KaiColor.sumi)
@@ -237,7 +236,7 @@ struct QuizSessionView: View {
 
     private var textFieldTint: Color {
         guard responded else { return KaiColor.hairline }
-        return wasCorrect ? pine : KaiColor.accent
+        return wasCorrect ? pine : miss
     }
 
     // MARK: Completion

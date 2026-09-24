@@ -5,7 +5,8 @@ import KaiAI
 import KaiUI
 import KaiServices
 
-/// Authoring sheet: type or paste words (one per line) and AI generates full cards.
+/// Authoring sheet: type or paste words (one per line) and AI generates full cards,
+/// into the deck of the language being studied.
 /// A single word is just a one-line entry — no mode switch needed.
 struct AddWordsView: View {
     @Environment(\.modelContext) private var modelContext
@@ -30,7 +31,7 @@ struct AddWordsView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("One word per line", text: $pasted, axis: .vertical)
+                    TextField(AppSettings.studyLanguage == .japanese ? "One word per line — 懐かしい" : "One word per line", text: $pasted, axis: .vertical)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .frame(minHeight: 160, alignment: .topLeading)
@@ -80,7 +81,7 @@ struct AddWordsView: View {
         } else if generating {
             Text("Generating \(lemmas.count) word\(lemmas.count == 1 ? "" : "s") with \(providerName)…")
         } else {
-            Text("\(providerName) fills in phonetics, meanings, and examples. \(lemmas.count) word\(lemmas.count == 1 ? "" : "s").")
+            Text("\(providerName) fills in \(AppSettings.studyLanguage == .japanese ? "readings" : "phonetics"), meanings, and examples. \(lemmas.count) word\(lemmas.count == 1 ? "" : "s").")
         }
     }
 
@@ -97,6 +98,7 @@ struct AddWordsView: View {
             return
         }
         let words = lemmas
+        let language = AppSettings.studyLanguage
         guard !words.isEmpty else { return }
 
         generating = true
@@ -106,11 +108,11 @@ struct AddWordsView: View {
         // failed chunk doesn't lose the words that did generate.
         let provider = ProviderFactory.make(config)
         let outcome = await provider.generateCards(
-            lemmas: words, language: .english, literaryExamples: false, chunkSize: Self.aiChunkSize)
+            lemmas: words, language: language, literaryExamples: false, chunkSize: Self.aiChunkSize)
 
         var added = 0
         for card in outcome.cards {
-            if (try? repository.insertIfAbsent(AICardMapper.entry(from: card))) == true { added += 1 }
+            if (try? repository.insertIfAbsent(AICardMapper.entry(from: card, language: language))) == true { added += 1 }
         }
 
         if outcome.cards.isEmpty {

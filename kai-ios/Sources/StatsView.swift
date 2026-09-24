@@ -273,7 +273,7 @@ struct StatsView: View {
 
     private func reload() {
         let repository = VocabularyRepository(context: modelContext)
-        let entries = (try? repository.entries(for: .english)) ?? []
+        let entries = (try? repository.entries(for: AppSettings.studyLanguage)) ?? []
         let logs = (try? repository.allReviewLogs()) ?? []
         let now = Date()
 

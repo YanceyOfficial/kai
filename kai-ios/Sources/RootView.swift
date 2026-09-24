@@ -39,12 +39,14 @@ struct RootView: View {
         .task {
             guard !seeded else { return }
             let repository = VocabularyRepository(context: modelContext)
-            try? StarterSeed.seedIfEmpty(repository)
+            for language in LanguageDomain.allCases {
+                try? StarterSeed.seedIfEmpty(repository, language: language)
+            }
             seeded = true
             // Keep the daily reminder in sync with settings + deck state on launch.
             let enabled = UserDefaults.standard.bool(forKey: "reminderEnabled")
             let minutes = UserDefaults.standard.object(forKey: "reminderMinutes") as? Int ?? 540
-            let hasWords = !(((try? repository.entries(for: .english)) ?? []).isEmpty)
+            let hasWords = !(((try? repository.entries(for: AppSettings.studyLanguage)) ?? []).isEmpty)
             await ReviewReminder.apply(enabled: enabled, minutes: minutes, hasWords: hasWords)
             WidgetSync.update(repository: repository)
         }

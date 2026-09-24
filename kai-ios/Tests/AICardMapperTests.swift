@@ -89,4 +89,30 @@ struct AICardMapperTests {
         #expect(AICardMapper.entry(from: generated).source == .single)
         #expect(AICardMapper.entry(from: generated, source: .ocr).source == .ocr)
     }
+
+    @Test("Japanese cards keep ruby in sentences but plain text where words are matched")
+    func japaneseRuby() throws {
+        let generated = try card(json: """
+        {
+          "lemma": "{懐|なつ}かしい", "kind": "word", "phonetic": "なつかしい ④",
+          "syllables": ["な","つ","か","し","い"], "explanation": "[形] 令人怀念的",
+          "explanationEn": "", "partsOfSpeech": ["い形容詞"],
+          "examples": [{"sentence": "{故郷|ふるさと}の{味|あじ}が{懐|なつ}かしい。", "translation": "怀念故乡的味道。"}],
+          "mnemonic": "", "etymology": "", "roots": "",
+          "synonyms": [{"sense": "怀念的", "words": ["{恋|こい}しい"]}],
+          "collocations": [], "confusables": ["{恋|こい}しい"],
+          "quizzes": [{"type": "singleChoice", "question": "{故郷|ふるさと}が＿＿。",
+            "choices": ["{懐|なつ}かしい", "{悲|かな}しい"], "answers": ["{懐|なつ}かしい"], "translation": ""}]
+        }
+        """)
+        let entry = AICardMapper.entry(from: generated, language: .japanese)
+        #expect(entry.language == .japanese)
+        #expect(entry.lemma == "懐かしい")
+        #expect(entry.examples.first?.sentence == "{故郷|ふるさと}の{味|あじ}が{懐|なつ}かしい。")
+        #expect(entry.synonymGroups.first?.words == ["恋しい"])
+        #expect(entry.confusables == ["恋しい"])
+        #expect(entry.quizzes.first?.question == "{故郷|ふるさと}が＿＿。")
+        #expect(entry.quizzes.first?.choices == ["懐かしい", "悲しい"])
+        #expect(entry.quizzes.first?.answers == ["懐かしい"])
+    }
 }

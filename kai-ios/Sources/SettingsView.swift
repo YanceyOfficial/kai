@@ -17,6 +17,10 @@ struct SettingsView: View {
     @AppStorage("aiProvider") private var aiProviderRaw = LLMProviderKind.claude.rawValue
     @AppStorage("reminderEnabled") private var reminderEnabled = false
     @AppStorage("reminderMinutes") private var reminderMinutes = 540   // 09:00
+    @AppStorage(AppSettings.studyLanguageKey) private var studyLanguageRaw = LanguageDomain.english.rawValue
+    @AppStorage("showFurigana") private var showFurigana = true
+
+    private var language: LanguageDomain { LanguageDomain(rawValue: studyLanguageRaw) ?? .english }
 
     @Environment(\.modelContext) private var modelContext
     @Environment(ToastCenter.self) private var toast
@@ -60,6 +64,23 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Picker("Studying", selection: $studyLanguageRaw) {
+                        ForEach(LanguageDomain.allCases, id: \.self) { language in
+                            Text(language.displayName).tag(language.rawValue)
+                        }
+                    }
+                    if language == .japanese {
+                        Toggle("Show furigana", isOn: $showFurigana)
+                    }
+                } header: {
+                    Text("Language")
+                } footer: {
+                    Text(language == .japanese
+                         ? "Each language keeps its own deck, reviews and stories. Furigana are the kana readings printed over kanji."
+                         : "Each language keeps its own deck, reviews and stories.")
+                }
+
+                Section {
                     Picker("New words per session", selection: $newWordsPerDay) {
                         ForEach(newWordOptions, id: \.self) { Text("\($0)").tag($0) }
                     }
@@ -87,14 +108,18 @@ struct SettingsView: View {
 
                 Section {
                     Toggle("Auto-play on each card", isOn: $autoPlay)
-                    Picker("Accent", selection: $accentRaw) {
-                        Text("American").tag(Accent.us.rawValue)
-                        Text("British").tag(Accent.uk.rawValue)
+                    if language == .english {
+                        Picker("Accent", selection: $accentRaw) {
+                            Text("American").tag(Accent.us.rawValue)
+                            Text("British").tag(Accent.uk.rawValue)
+                        }
                     }
                 } header: {
                     Text("Pronunciation")
                 } footer: {
-                    Text("Audio is from Youdao dictvoice and plays even when the ringer is silenced.")
+                    Text(language == .japanese
+                         ? "Words are read by their kana reading, from Youdao dictvoice; anything it has no audio for is spoken by the system's Japanese voice. Plays even when the ringer is silenced."
+                         : "Audio is from Youdao dictvoice and plays even when the ringer is silenced.")
                 }
 
                 Section {
@@ -133,7 +158,7 @@ struct SettingsView: View {
                 } header: {
                     Text("About")
                 } footer: {
-                    Text("Kai · 甲斐 — local English review with FSRS spaced repetition.")
+                    Text("Kai · 甲斐 — local English and Japanese review with FSRS spaced repetition.")
                 }
 
                 Section {} footer: {
@@ -171,7 +196,7 @@ struct SettingsView: View {
     }
 
     private func applyReminder() async {
-        let hasWords = !(((try? VocabularyRepository(context: modelContext).entries(for: .english)) ?? []).isEmpty)
+        let hasWords = !(((try? VocabularyRepository(context: modelContext).entries(for: AppSettings.studyLanguage)) ?? []).isEmpty)
         await ReviewReminder.apply(enabled: reminderEnabled, minutes: reminderMinutes, hasWords: hasWords)
     }
 

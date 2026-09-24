@@ -12,6 +12,7 @@ import KaiServices
 final class QuizStore {
     private let repository: VocabularyRepository
     private let scheduler: ReviewScheduler
+    private let language: LanguageDomain
     private let generator = QuizGenerator()
     private let logger = AppLog.shared
 
@@ -20,16 +21,17 @@ final class QuizStore {
     /// The questions for the current session — a snapshot of the due deck at `load()`.
     private(set) var questions: [QuizQuestion] = []
 
-    init(context: ModelContext) {
+    init(context: ModelContext, language: LanguageDomain = AppSettings.studyLanguage) {
         self.repository = VocabularyRepository(context: context)
+        self.language = language
         self.scheduler = ReviewScheduler(requestRetention: AppSettings.requestRetention)
     }
 
     /// Builds a quiz from the due deck, using the whole deck as the distractor pool.
     func load(now: Date = .now) {
         do {
-            let all = try repository.entries(for: .english)
-            let due = try repository.dueEntries(for: .english, asOf: now)
+            let all = try repository.entries(for: language)
+            let due = try repository.dueEntries(for: language, asOf: now)
             build(targets: due, pool: all)
         } catch {
             logger.error("Failed to build quiz: \(error.localizedDescription)", category: "quiz")
@@ -42,7 +44,7 @@ final class QuizStore {
     /// still using the whole deck as the distractor pool.
     func load(entryIDs: [UUID], now: Date = .now) {
         do {
-            let all = try repository.entries(for: .english)
+            let all = try repository.entries(for: language)
             let byID = Dictionary(all.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
             build(targets: entryIDs.compactMap { byID[$0] }, pool: all)
         } catch {

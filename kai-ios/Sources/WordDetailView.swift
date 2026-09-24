@@ -39,9 +39,7 @@ struct WordDetailView: View {
                 Section("Examples") {
                     ForEach(Array(entry.examples.enumerated()), id: \.offset) { _, example in
                         VStack(alignment: .leading, spacing: KaiSpacing.xs) {
-                            Text(example.sentence)
-                                .font(KaiFont.body(15))
-                                .foregroundStyle(KaiColor.sumi)
+                            RubyText(example.sentence, size: 15)
                             if !example.translation.isEmpty {
                                 Text(example.translation)
                                     .font(KaiFont.body(14))
@@ -168,7 +166,7 @@ struct WordDetailView: View {
     }
 
     private func lookup(_ lemma: String) -> VocabularyEntry? {
-        (try? repository.entry(lemma: lemma, language: .english)) ?? nil
+        (try? repository.entry(lemma: lemma, language: entry.language)) ?? nil
     }
 
     private func addWord(_ word: String) {
@@ -180,12 +178,12 @@ struct WordDetailView: View {
             adding = true
             defer { adding = false }
             let outcome = await ProviderFactory.make(config)
-                .generateCards(lemmas: [word], language: .english, literaryExamples: false, chunkSize: 1)
+                .generateCards(lemmas: [word], language: entry.language, literaryExamples: false, chunkSize: 1)
             guard let card = outcome.cards.first else {
                 toast.error("Couldn't add “\(word)”", category: "words")
                 return
             }
-            _ = try? repository.insertIfAbsent(AICardMapper.entry(from: card))
+            _ = try? repository.insertIfAbsent(AICardMapper.entry(from: card, language: entry.language))
             toast.show("Added “\(card.lemma)”")
             linkedLemma = card.lemma
         }
@@ -205,10 +203,7 @@ struct WordDetailView: View {
                             .foregroundStyle(KaiColor.sumi)
                     }
                     if !en.isEmpty {
-                        Text(en)
-                            .font(KaiFont.body(14))
-                            .foregroundStyle(KaiColor.inkSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                        RubyText(en, size: 14, color: KaiColor.inkSecondary)
                     }
                 }
                 .padding(.vertical, 2)
@@ -227,7 +222,7 @@ struct WordDetailView: View {
                     Spacer(minLength: 0)
                     Button {
                         KaiHaptics.impact(.light)
-                        pronouncer.play(entry.lemma, accent: accent)
+                        pronouncer.say(entry.lemma, phonetic: entry.phonetic, language: entry.language, accent: accent)
                     } label: {
                         Image(systemName: "speaker.wave.2.fill")
                             .font(.system(size: 16, weight: .semibold))
@@ -283,18 +278,16 @@ struct WordDetailView: View {
             Section("Collocations") {
                 ForEach(Array(entry.collocations.enumerated()), id: \.offset) { _, c in
                     VStack(alignment: .leading, spacing: KaiSpacing.xs) {
-                        HStack(alignment: .firstTextBaseline, spacing: KaiSpacing.s) {
-                            Text(c.phrase)
-                                .font(KaiFont.body(15, weight: .semibold))
-                                .foregroundStyle(KaiColor.sumi)
+                        // Bottom-aligned: a phrase with furigana is taller than its gloss.
+                        HStack(alignment: .bottom, spacing: KaiSpacing.s) {
+                            RubyText(c.phrase, size: 15, weight: .semibold)
+                                .fixedSize()
                             Text(c.meaning)
                                 .font(KaiFont.body(13))
                                 .foregroundStyle(KaiColor.inkSecondary)
                         }
                         if !c.example.isEmpty {
-                            Text(c.example)
-                                .font(KaiFont.body(14))
-                                .foregroundStyle(KaiColor.sumi)
+                            RubyText(c.example, size: 14)
                             if !c.exampleTranslation.isEmpty {
                                 Text(c.exampleTranslation)
                                     .font(KaiFont.body(13))

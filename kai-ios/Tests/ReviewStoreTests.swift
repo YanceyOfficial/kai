@@ -15,7 +15,7 @@ struct ReviewStoreTests {
         let context = ModelContext(container)
         let repository = VocabularyRepository(context: context)
         try StarterSeed.seedIfEmpty(repository)
-        return (ReviewStore(context: context), repository)
+        return (ReviewStore(context: context, language: .english), repository)
     }
 
     @Test("StarterSeed fills an empty deck and is idempotent")
@@ -25,6 +25,23 @@ struct ReviewStoreTests {
         try StarterSeed.seedIfEmpty(repository)
         try StarterSeed.seedIfEmpty(repository)
         #expect(try repository.entries(for: .english).count == 3)
+    }
+
+    @Test("Each language has its own starter deck, and a session sees only its own")
+    func decksAreIsolatedByLanguage() throws {
+        let container = try KaiModelContainer.inMemory()
+        let context = ModelContext(container)
+        let repository = VocabularyRepository(context: context)
+        for language in LanguageDomain.allCases {
+            try StarterSeed.seedIfEmpty(repository, language: language)
+        }
+        #expect(try repository.entries(for: .english).count == 3)
+        #expect(try repository.entries(for: .japanese).map(\.lemma) == ["懐かしい", "木漏れ日", "気が置けない"])
+
+        let japanese = ReviewStore(context: context, language: .japanese)
+        japanese.load()
+        #expect(Set(japanese.cards.map(\.word)) == ["懐かしい", "木漏れ日", "気が置けない"])
+        #expect(japanese.cards.first { $0.word == "懐かしい" }?.phonetic == "なつかしい ④")
     }
 
     @Test("load() snapshots the due deck")

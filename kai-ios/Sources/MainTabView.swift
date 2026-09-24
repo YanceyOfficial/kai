@@ -8,6 +8,10 @@ struct MainTabView: View {
     /// The selected tab. Seeded from a `-startTab` launch argument so a specific tab
     /// can be opened directly (used for UI screenshots); defaults to Review.
     @State private var selection = Self.initialSelection()
+    /// The deck being studied. Every tab loads its words for it, so switching languages
+    /// rebuilds them all (the `.id` below), keeping the selected tab.
+    @AppStorage(AppSettings.studyLanguageKey) private var studyLanguageRaw = "english"
+    @AppStorage("showFurigana") private var showFurigana = true
 
     var body: some View {
         TabView(selection: $selection) {
@@ -27,6 +31,8 @@ struct MainTabView: View {
                 .tag(3)
                 .tabItem { Label("Settings", systemImage: "gearshape") }
         }
+        .id(studyLanguageRaw)
+        .environment(\.showsFurigana, showFurigana)
         .tint(KaiColor.accent)
         .minimizingTabBarOnScroll()
     }

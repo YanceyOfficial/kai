@@ -1,5 +1,6 @@
 import Foundation
 import KaiCore
+import KaiUI
 
 /// A learner's response to a quiz question.
 enum QuizResponse {
@@ -37,8 +38,11 @@ struct QuizQuestion: Identifiable {
         return answers.contains { Self.normalize($0) == norm }
     }
 
-    private static func normalize(_ s: String) -> String {
-        s.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    /// Case-insensitive, and for Japanese kana-insensitive: a reading typed in katakana
+    /// matches one given in hiragana. Ruby markup in an answer is read as its plain text.
+    static func normalize(_ s: String) -> String {
+        let plain = Ruby.plain(s).trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return plain.applyingTransform(.hiraganaToKatakana, reverse: true) ?? plain
     }
 }
 

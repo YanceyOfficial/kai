@@ -3,7 +3,7 @@ import SwiftData
 import KaiCore
 import KaiUI
 
-/// Lists every English entry and is the entry point for authoring new words.
+/// Lists every entry of the language being studied and is the entry point for authoring new words.
 /// Reads/writes through `VocabularyRepository` built from the shared context.
 struct WordsListView: View {
     @Environment(\.modelContext) private var modelContext
@@ -20,12 +20,18 @@ struct WordsListView: View {
     private var allTags: [String] { Array(Set(entries.flatMap(\.tags))).sorted() }
 
     /// Entries filtered by the active tag (if any) and the search field (word name only,
-    /// so "th" finds "thick", not every entry whose meaning contains "th").
+    /// so "th" finds "thick", not every entry whose meaning contains "th"; a Japanese
+    /// word's kana reading counts as its name).
     private var filteredEntries: [VocabularyEntry] {
         var result = entries
         if let selectedTag { result = result.filter { $0.tags.contains(selectedTag) } }
         let query = searchText.trimmingCharacters(in: .whitespaces).lowercased()
-        if !query.isEmpty { result = result.filter { $0.lemma.lowercased().contains(query) } }
+        // A Japanese word is found by its reading too (なつ → 懐かしい).
+        if !query.isEmpty {
+            result = result.filter {
+                $0.lemma.lowercased().contains(query) || ($0.language == .japanese && $0.phonetic.contains(query))
+            }
+        }
         return result
     }
 
@@ -152,7 +158,7 @@ struct WordsListView: View {
     }
 
     private func reload() {
-        entries = (try? repository.entries(for: .english)) ?? []
+        entries = (try? repository.entries(for: AppSettings.studyLanguage)) ?? []
         if let tag = selectedTag, !entries.contains(where: { $0.tags.contains(tag) }) {
             selectedTag = nil   // the tag no longer exists — drop the filter
         }

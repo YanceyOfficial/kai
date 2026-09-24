@@ -18,6 +18,8 @@ struct QuizSessionView: View {
     @State private var wasCorrect = false
     @State private var correctCount = 0
     @State private var showDone = false
+    /// Bumped on each wrong answer: the answer area shakes as the error haptic fires.
+    @State private var misses = 0
 
     @State private var pronouncer = PronunciationPlayer()
     @AppStorage("pronunciationAccent") private var accentRaw = Accent.us.rawValue
@@ -39,11 +41,14 @@ struct QuizSessionView: View {
                     ScrollView {
                         VStack(spacing: KaiSpacing.l) {
                             promptCard(question)
-                            if question.isTextEntry {
-                                textEntry(question)
-                            } else {
-                                optionsList(question)
+                            Group {
+                                if question.isTextEntry {
+                                    textEntry(question)
+                                } else {
+                                    optionsList(question)
+                                }
                             }
+                            .kaiShake(trigger: misses)
                         }
                         .id(question.id)   // reset per question
                     }
@@ -90,7 +95,7 @@ struct QuizSessionView: View {
                     Button { pronouncer.play(question.word, accent: accent) } label: {
                         Image(systemName: "speaker.wave.3.fill")
                             .font(.system(size: 40, weight: .semibold))
-                            .foregroundStyle(KaiColor.vermilion)
+                            .foregroundStyle(KaiColor.accent)
                     }
                     .buttonStyle(KaiPressStyle())
                     Text("Spell what you hear")
@@ -119,7 +124,7 @@ struct QuizSessionView: View {
                     } label: {
                         Image(systemName: "speaker.wave.2.fill")
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(KaiColor.vermilion)
+                            .foregroundStyle(KaiColor.accent)
                     }
                     .buttonStyle(KaiPressStyle())
                 }
@@ -160,10 +165,10 @@ struct QuizSessionView: View {
 
         let tint: Color = !responded ? KaiColor.hairline
             : isCorrect ? pine
-            : isChosen ? KaiColor.vermilion
+            : isChosen ? KaiColor.accent
             : KaiColor.hairline
         let fill: Color = responded && isCorrect ? pine.opacity(0.12)
-            : responded && isChosen ? KaiColor.vermilion.opacity(0.10)
+            : responded && isChosen ? KaiColor.accent.opacity(0.10)
             : KaiColor.cardFace
 
         return Button {
@@ -178,7 +183,7 @@ struct QuizSessionView: View {
                 if responded && isCorrect {
                     Image(systemName: "checkmark").foregroundStyle(pine)
                 } else if responded && isChosen {
-                    Image(systemName: "xmark").foregroundStyle(KaiColor.vermilion)
+                    Image(systemName: "xmark").foregroundStyle(KaiColor.accent)
                 }
             }
             .padding(.horizontal, KaiSpacing.m)
@@ -216,7 +221,7 @@ struct QuizSessionView: View {
             if responded {
                 HStack(spacing: KaiSpacing.s) {
                     Image(systemName: wasCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
-                        .foregroundStyle(wasCorrect ? pine : KaiColor.vermilion)
+                        .foregroundStyle(wasCorrect ? pine : KaiColor.accent)
                     Text(wasCorrect ? "Correct" : "Answer: \(question.answers.first ?? question.word)")
                         .font(KaiFont.body(15, weight: .medium))
                         .foregroundStyle(KaiColor.sumi)
@@ -232,7 +237,7 @@ struct QuizSessionView: View {
 
     private var textFieldTint: Color {
         guard responded else { return KaiColor.hairline }
-        return wasCorrect ? pine : KaiColor.vermilion
+        return wasCorrect ? pine : KaiColor.accent
     }
 
     // MARK: Completion
@@ -242,7 +247,7 @@ struct QuizSessionView: View {
             Spacer()
             Text("Done")
                 .font(KaiFont.display(48, weight: .bold))
-                .foregroundStyle(KaiColor.vermilion)
+                .foregroundStyle(KaiColor.accent)
             Text(questions.isEmpty
                  ? "Nothing to quiz right now."
                  : "\(correctCount) of \(questions.count) correct.")
@@ -265,7 +270,7 @@ struct QuizSessionView: View {
 
     private func choose(_ question: QuizQuestion, _ optionIndex: Int) {
         guard !responded else { return }
-        withAnimation(.easeOut(duration: 0.2)) { selected = optionIndex }
+        withAnimation(KaiMotion.snappy) { selected = optionIndex }
         grade(question, .choice(optionIndex))
     }
 
@@ -283,6 +288,7 @@ struct QuizSessionView: View {
             KaiHaptics.impact(.light)
         } else {
             KaiHaptics.impact(.rigid)
+            misses += 1
         }
         Task { @MainActor in
             // Linger a little longer on a miss so the answer registers.
@@ -292,7 +298,7 @@ struct QuizSessionView: View {
     }
 
     private func advance() {
-        withAnimation {
+        withAnimation(KaiMotion.standard) {
             selected = nil
             textInput = ""
             responded = false
@@ -307,7 +313,7 @@ struct QuizSessionView: View {
 
     private func restart() {
         store.load()
-        withAnimation {
+        withAnimation(KaiMotion.standard) {
             index = 0
             selected = nil
             textInput = ""

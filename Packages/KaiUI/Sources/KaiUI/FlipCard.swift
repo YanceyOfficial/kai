@@ -1,11 +1,22 @@
 import SwiftUI
 
-/// The signature study card in the "Ink & Paper" aesthetic: a washi-paper card
-/// showing a word with an accent brush underline; flipping springs it over in
-/// 3D to reveal the meaning. A small accent checkmark marks it once learned.
+/// The signature study card: a word (with its pronunciation) on the face, the meaning
+/// on the back, and one continuous physical object between the two.
 ///
-/// The reveal state is externally controlled via `isRevealed` so a review session
-/// can coordinate the card with its rating controls.
+/// - **Turn it over** by tapping, or by dragging it sideways: the card follows the
+///   finger 1:1, and on release the finger's velocity is handed to the spring — it
+///   completes the turn if the projected motion passes halfway, and falls back
+///   otherwise.
+/// - **Rate it** once revealed by swiping: right for Good, left for Again. The card
+///   tracks the finger, a hint for the rating grows in the direction of travel, and a
+///   release commits only if the throw is projected past a third of the width in the
+///   direction it was dragged (`KaiMotion.swipeOutcome`); otherwise it springs home.
+///   Drags lock to one axis first, so the back still scrolls vertically.
+/// - With Reduce Motion the card cross-fades instead of turning, and swipes are off
+///   (the rating buttons remain).
+///
+/// The reveal state is external (`isRevealed`) so a session can coordinate the card
+/// with its controls; set it inside `withAnimation(KaiMotion.flip)`.
 public struct FlipCard<Back: View>: View {
     private let word: String
     private let phonetic: String
@@ -13,15 +24,30 @@ public struct FlipCard<Back: View>: View {
     /// Whether to fire `onSpeak` automatically when the card appears. The speaker
     /// button always plays regardless of this flag.
     private let autoPlays: Bool
-    /// Fired to play the word's pronunciation: once automatically when the card
-    /// appears (if `autoPlays`), and again whenever the speaker button is tapped.
-    /// Injected by the app so KaiUI stays free of any audio framework.
+    /// Plays the word's pronunciation: once on appear (if `autoPlays`), and on every tap
+    /// of the speaker. Injected so KaiUI stays free of any audio framework.
     private let onSpeak: () -> Void
-    /// The revealed side, supplied by the app so it can embed rich, domain-specific
-    /// content (examples, similar words, collocations, a link to full details).
+    /// Called once a swipe on the revealed card commits, after it has left the screen.
+    private let onSwipe: ((KaiMotion.SwipeDirection) -> Void)?
+    /// How far a swipe has gone towards committing (0…1), for the card waiting behind.
+    private let onSwipeProgress: (Double) -> Void
+    /// The revealed side: rich, domain-specific content supplied by the app.
     private let back: Back
 
     @Binding private var isRevealed: Bool
+
+    /// Extra turn (degrees) while the face is being dragged; 0 at rest.
+    @State private var dragAngle: Double = 0
+    /// Which way the card turned over (+1 / −1), so the back rests where it landed.
+    @State private var turnSide: Double = 1
+    /// Horizontal offset while a revealed card is being swiped.
+    @State private var swipe: Double = 0
+    /// The axis the current drag locked to, once it has moved far enough to tell.
+    @State private var dragAxis: Axis?
+    /// Whether the current swipe has crossed the commit distance (for one haptic tick).
+    @State private var pastThreshold = false
+    @State private var width: Double = 350
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(
         word: String,
@@ -30,6 +56,8 @@ public struct FlipCard<Back: View>: View {
         autoPlays: Bool = true,
         isRevealed: Binding<Bool>,
         onSpeak: @escaping () -> Void = {},
+        onSwipe: ((KaiMotion.SwipeDirection) -> Void)? = nil,
+        onSwipeProgress: @escaping (Double) -> Void = { _ in },
         @ViewBuilder back: () -> Back
     ) {
         self.word = word
@@ -38,49 +66,58 @@ public struct FlipCard<Back: View>: View {
         self.autoPlays = autoPlays
         self._isRevealed = isRevealed
         self.onSpeak = onSpeak
+        self.onSwipe = onSwipe
+        self.onSwipeProgress = onSwipeProgress
         self.back = back()
     }
 
+    /// The card's turn: where the reveal state puts it, plus the finger's drag.
+    private var angle: Double { (isRevealed ? 180 * turnSide : 0) + dragAngle }
+
     public var body: some View {
-        ZStack {
-            if isRevealed {
-                back.rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
-            } else {
-                front
+        faces
+            .offset(x: swipe)
+            .rotationEffect(.degrees(swipe / width * 8), anchor: .bottom)
+            .overlay(alignment: swipe > 0 ? .topLeading : .topTrailing) { swipeHint }
+            .onGeometryChange(for: Double.self) { $0.size.width } action: { width = max($0, 1) }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                // Tap reveals; the revealed side scrolls freely, and the rating controls
+                // (or a swipe) carry the session forward from there.
+                guard !isRevealed else { return }
+                KaiHaptics.impact(.light)
+                turnSide = 1
+                withAnimation(reduceMotion ? .easeOut(duration: 0.2) : KaiMotion.flip) { isRevealed = true }
             }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 380)
-        .padding(KaiSpacing.l)
-        .background(cardSurface)
-        .overlay(alignment: .topTrailing) {
-            // Only on the front: the mark must not be mirrored by the card's flip.
-            if isLearned && !isRevealed {
-                LearnedMark().padding(KaiSpacing.m)
-            }
-        }
-        .rotation3DEffect(.degrees(isRevealed ? 180 : 0), axis: (x: 0, y: 1, z: 0))
-        .animation(.spring(response: 0.5, dampingFraction: 0.68), value: isRevealed)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            // Tap reveals; the revealed side scrolls freely (no flip-back to steal the
-            // scroll gesture). The rating controls carry the session forward from there.
-            guard !isRevealed else { return }
-            KaiHaptics.impact(.light)
-            isRevealed = true
-        }
-        .onAppear { if autoPlays { onSpeak() } }   // auto-play once per card
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(word)
-        .accessibilityHint("Double-tap to reveal the meaning")
+            .simultaneousGesture(drag, including: reduceMotion ? .subviews : .all)
+            .onAppear { if autoPlays { onSpeak() } }   // auto-play once per card
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(word)
+            .accessibilityHint(isRevealed ? "" : "Double-tap to reveal the meaning")
     }
 
     // MARK: Faces
+
+    @ViewBuilder
+    private var faces: some View {
+        if reduceMotion {
+            ZStack {
+                if isRevealed {
+                    card(back).transition(.opacity)
+                } else {
+                    card(front).transition(.opacity)
+                }
+            }
+        } else {
+            FlipFaces(angle: angle, front: card(front), back: card(back))
+        }
+    }
 
     private var front: some View {
         VStack(spacing: KaiSpacing.m) {
             Text(word)
                 .font(KaiFont.display(46, weight: .bold))
+                .tracking(-0.8)
                 .foregroundStyle(KaiColor.sumi)
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
@@ -93,15 +130,23 @@ public struct FlipCard<Back: View>: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)   // truly center the word block
         .overlay(alignment: .bottom) {
-            Text("tap to reveal")
+            Text("Tap or drag to reveal")
                 .font(KaiFont.body(13, weight: .medium))
-                .foregroundStyle(KaiColor.inkSecondary.opacity(0.6))
-                .textCase(.uppercase)
-                .tracking(1.5)
+                .foregroundStyle(KaiColor.inkSecondary.opacity(0.7))
+        }
+        .overlay(alignment: .topTrailing) {
+            if isLearned { LearnedMark() }
         }
     }
 
-    // MARK: Surface
+    /// A face on the card's surface: the same size, padding and material both sides.
+    private func card(_ content: some View) -> some View {
+        content
+            .frame(maxWidth: .infinity)
+            .frame(height: 380)
+            .padding(KaiSpacing.l)
+            .background(cardSurface)
+    }
 
     private var cardSurface: some View {
         RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -111,6 +156,181 @@ public struct FlipCard<Back: View>: View {
                     .strokeBorder(KaiColor.hairline, lineWidth: 1)
             )
             .shadow(color: KaiColor.shadow, radius: 18, x: 0, y: 12)
+    }
+
+    /// The rating a swipe is heading for, growing with the swipe — the motion hints at
+    /// its outcome before the finger lifts.
+    @ViewBuilder
+    private var swipeHint: some View {
+        if swipe != 0 {
+            let rating: ReviewRating = swipe > 0 ? .good : .again
+            let progress = min(1, abs(swipe) / (width * 0.35))
+            Text(rating.label)
+                .font(KaiFont.body(17, weight: .semibold))
+                .foregroundStyle(rating.tint)
+                .padding(.horizontal, KaiSpacing.m)
+                .padding(.vertical, KaiSpacing.s)
+                .background(Capsule().fill(rating.tint.opacity(0.14)))
+                .overlay(Capsule().strokeBorder(rating.tint.opacity(0.3), lineWidth: 1))
+                .padding(KaiSpacing.l)
+                .opacity(progress)
+                .scaleEffect(0.85 + 0.15 * progress)
+                .accessibilityHidden(true)
+        }
+    }
+
+    // MARK: Gestures
+
+    private var drag: some Gesture {
+        DragGesture(minimumDistance: 10)
+            .onChanged { value in
+                if dragAxis == nil {
+                    dragAxis = abs(value.translation.width) > abs(value.translation.height) ? .horizontal : .vertical
+                }
+                guard dragAxis == .horizontal else { return }
+                if isRevealed {
+                    trackSwipe(value.translation.width)
+                } else {
+                    // Left turns the card one way, right the other; past a half-turn
+                    // either way it resists.
+                    let raw = -value.translation.width / width * 180
+                    let excess = abs(raw) - 180
+                    dragAngle = excess > 0
+                        ? (raw > 0 ? 1 : -1) * (180 + KaiMotion.rubberband(overshoot: excess, dimension: 180))
+                        : raw
+                }
+            }
+            .onEnded { value in
+                defer { dragAxis = nil }
+                guard dragAxis == .horizontal else { return }
+                if isRevealed {
+                    endSwipe(velocity: value.velocity.width)
+                } else {
+                    endTurn(translation: value.translation.width, velocity: value.velocity.width)
+                }
+            }
+    }
+
+    private func endTurn(translation: Double, velocity: Double) {
+        // In degrees per second, the way the angle moves.
+        let angularVelocity = -velocity / width * 180
+        if KaiMotion.flips(translation: translation, velocity: velocity, width: width) {
+            let side: Double = translation < 0 ? 1 : -1
+            let remaining = 180 * side - dragAngle
+            turnSide = side
+            KaiHaptics.impact(.light)
+            withAnimation(KaiMotion.handoff(velocity: angularVelocity, remaining: remaining)) {
+                isRevealed = true
+                dragAngle = 0
+            }
+        } else {
+            withAnimation(KaiMotion.handoff(velocity: angularVelocity, remaining: -dragAngle)) {
+                dragAngle = 0
+            }
+        }
+    }
+
+    private func trackSwipe(_ translation: Double) {
+        guard onSwipe != nil else { return }
+        swipe = translation
+        let progress = min(1, abs(translation) / (width * 0.35))
+        onSwipeProgress(progress)
+        // One tick as the swipe crosses the commit distance, either way.
+        if (progress >= 1) != pastThreshold {
+            pastThreshold = progress >= 1
+            KaiHaptics.selection()
+        }
+    }
+
+    private func endSwipe(velocity: Double) {
+        guard let onSwipe else { return }
+        pastThreshold = false
+        switch KaiMotion.swipeOutcome(translation: swipe, velocity: velocity, width: width) {
+        case .commit(let direction):
+            let target = (direction == .right ? 1.0 : -1.0) * width * 1.4
+            if direction == .left { KaiHaptics.impact(.rigid) } else { KaiHaptics.impact(.medium) }
+            onSwipeProgress(1)
+            withAnimation(KaiMotion.handoff(velocity: velocity, remaining: target - swipe)) { swipe = target }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(220))
+                onSwipe(direction)
+            }
+        case .cancel:
+            onSwipeProgress(0)
+            withAnimation(KaiMotion.handoff(velocity: velocity, remaining: -swipe, bounce: 0.15)) { swipe = 0 }
+        }
+    }
+}
+
+public extension KaiMotion {
+    /// Turning a card over when the app does it (a tap, "Show answer"): no bounce.
+    static let flip = Animation.spring(duration: 0.5, bounce: 0)
+}
+
+/// Both faces of a card and the turn between them. The face shown follows the
+/// *animated* angle — the back appears only once the card is past edge-on — so a
+/// turn released at 60° never shows the back early.
+// `@preconcurrency`: View is main-actor isolated and Animatable is not; SwiftUI only
+// reads and writes `animatableData` on the main actor.
+private struct FlipFaces<Front: View, Back: View>: View, @preconcurrency Animatable {
+    var angle: Double
+    let front: Front
+    let back: Back
+
+    var animatableData: Double {
+        get { angle }
+        set { angle = newValue }
+    }
+
+    var body: some View {
+        let turned = abs(angle.truncatingRemainder(dividingBy: 360))
+        let showsBack = turned > 90 && turned < 270
+        ZStack {
+            if showsBack {
+                back.rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
+            } else {
+                front
+            }
+        }
+        .rotation3DEffect(.degrees(angle), axis: (x: 0, y: 1, z: 0), perspective: 0.4)
+    }
+}
+
+/// The face of a card, still — for the next card waiting under the one in hand. It
+/// matches `FlipCard`'s face so the hand-off is seamless.
+public struct FlipCardFace: View {
+    private let word: String
+    private let phonetic: String
+
+    public init(word: String, phonetic: String) {
+        self.word = word
+        self.phonetic = phonetic
+    }
+
+    public var body: some View {
+        VStack(spacing: KaiSpacing.m) {
+            Text(word)
+                .font(KaiFont.display(46, weight: .bold))
+                .tracking(-0.8)
+                .foregroundStyle(KaiColor.sumi)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+            Text(phonetic)
+                .font(KaiFont.phonetic(17))
+                .foregroundStyle(KaiColor.inkSecondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(height: 380)
+        .padding(KaiSpacing.l)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(KaiColor.cardFace)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .strokeBorder(KaiColor.hairline, lineWidth: 1)
+                )
+        )
+        .accessibilityHidden(true)
     }
 }
 
@@ -155,7 +375,8 @@ struct LearnedMark: View {
             word: "eccentric",
             phonetic: "/ɪkˈsɛntrɪk/",
             isLearned: true,
-            isRevealed: $revealed
+            isRevealed: $revealed,
+            onSwipe: { _ in revealed = false }
         ) {
             VStack(alignment: .leading) {
                 Text("adj. 古怪的，异乎寻常的").font(KaiFont.display(22))

@@ -72,6 +72,9 @@ struct ReviewSessionView: View {
 
     @State private var index = 0
     @State private var revealed = false
+    /// How far the card in hand has been swiped towards a rating (0…1); the next card
+    /// rises to meet it.
+    @State private var swipeProgress: Double = 0
     @State private var showDone = false
     @State private var showingStory = false
     /// The entry shown in the full-details sheet (opened from the revealed card).
@@ -191,7 +194,7 @@ struct ReviewSessionView: View {
                         Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold))
                     }
                     .font(KaiFont.body(14, weight: .semibold))
-                    .foregroundStyle(KaiColor.vermilion)
+                    .foregroundStyle(KaiColor.accent)
                 }
                 .buttonStyle(.plain)
                 .padding(.top, KaiSpacing.xs)
@@ -203,7 +206,7 @@ struct ReviewSessionView: View {
     private func backLabel(_ text: String) -> some View {
         Text(text)
             .font(KaiFont.body(11, weight: .semibold))
-            .foregroundStyle(KaiColor.vermilion)
+            .foregroundStyle(KaiColor.accent)
             .textCase(.uppercase)
             .tracking(1.5)
     }
@@ -219,17 +222,31 @@ struct ReviewSessionView: View {
 
             if index < cards.count {
                 let card = cards[index]
-                FlipCard(
-                    word: card.word,
-                    phonetic: card.phonetic,
-                    isLearned: card.isLearned,
-                    autoPlays: autoPlayPronunciation,
-                    isRevealed: $revealed,
-                    onSpeak: { pronouncer.play(card.word, accent: accent) }
-                ) {
-                    cardBack(card)
+                ZStack {
+                    // The next card waits underneath, and rises as this one is swiped
+                    // away, so the deck reads as one stack.
+                    if index + 1 < cards.count {
+                        let next = cards[index + 1]
+                        FlipCardFace(word: next.word, phonetic: next.phonetic)
+                            .scaleEffect(0.94 + 0.06 * swipeProgress)
+                            .offset(y: 16 * (1 - swipeProgress))
+                            .opacity(0.5 + 0.5 * swipeProgress)
+                    }
+                    FlipCard(
+                        word: card.word,
+                        phonetic: card.phonetic,
+                        isLearned: card.isLearned,
+                        autoPlays: autoPlayPronunciation,
+                        isRevealed: $revealed,
+                        onSpeak: { pronouncer.play(card.word, accent: accent) },
+                        // Right is Good, left is Again; Hard and Easy stay on the buttons.
+                        onSwipe: { direction in rate(card, direction == .right ? .good : .again) },
+                        onSwipeProgress: { swipeProgress = $0 }
+                    ) {
+                        cardBack(card)
+                    }
+                    .id(card.id)   // a fresh card (and turn state) per word
                 }
-                .id(card.id)   // reset flip animation per card
 
                 Spacer()
                 controls(for: card)
@@ -248,6 +265,7 @@ struct ReviewSessionView: View {
             VStack(alignment: .leading, spacing: KaiSpacing.xs) {
                 Text("Kai")
                     .font(KaiFont.display(34, weight: .bold))
+                    .tracking(-0.6)
                     .foregroundStyle(KaiColor.sumi)
                 Text("甲斐 · review")
                     .font(KaiFont.body(14, weight: .medium))
@@ -257,7 +275,7 @@ struct ReviewSessionView: View {
             Button { showingStory = true } label: {
                 Image(systemName: "book.pages")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(KaiColor.vermilion)
+                    .foregroundStyle(KaiColor.accent)
             }
             .buttonStyle(KaiPressStyle())
             .padding(.trailing, KaiSpacing.s)
@@ -271,19 +289,24 @@ struct ReviewSessionView: View {
     private func controls(for card: ReviewCardData) -> some View {
         if revealed {
             RatingBar(interval: { store.previewInterval(for: card, rating: $0.core) }) { rating in
-                // On a replay pass, just advance — don't re-rate or re-feed FSRS.
-                if !isReplay {
-                    store.rate(card, rating.core)
-                    // A re-drilled (lapsed) card can be rated more than once; count it once.
-                    if !reviewedIDs.contains(card.id) { reviewedIDs.append(card.id) }
-                }
-                advance()
+                rate(card, rating)
             }
         } else {
             KaiPrimaryButton("Show answer") {
-                withAnimation { revealed = true }
+                withAnimation(KaiMotion.flip) { revealed = true }
             }
         }
+    }
+
+    /// Records a rating (from a button or a swipe) and moves to the next card.
+    private func rate(_ card: ReviewCardData, _ rating: KaiUI.ReviewRating) {
+        // On a replay pass, just advance — don't re-rate or re-feed FSRS.
+        if !isReplay {
+            store.rate(card, rating.core)
+            // A re-drilled (lapsed) card can be rated more than once; count it once.
+            if !reviewedIDs.contains(card.id) { reviewedIDs.append(card.id) }
+        }
+        advance()
     }
 
     private var completed: some View {
@@ -291,7 +314,7 @@ struct ReviewSessionView: View {
             Spacer()
             Text("Done")
                 .font(KaiFont.display(48, weight: .bold))
-                .foregroundStyle(KaiColor.vermilion)
+                .foregroundStyle(KaiColor.accent)
             if reviewedIDs.isEmpty {
                 // Nothing was due, so there is nothing to replay — no button here.
                 Text("All caught up for now.")
@@ -316,8 +339,9 @@ struct ReviewSessionView: View {
     }
 
     private func advance() {
-        withAnimation {
+        withAnimation(KaiMotion.standard) {
             revealed = false
+            swipeProgress = 0
             index += 1
             if index >= cards.count {
                 showDone = true
@@ -331,7 +355,7 @@ struct ReviewSessionView: View {
     /// pass advance without re-rating.
     private func replay() {
         isReplay = true
-        withAnimation {
+        withAnimation(KaiMotion.standard) {
             index = 0
             revealed = false
         }
@@ -343,7 +367,7 @@ struct ReviewSessionView: View {
         store.load(newLimit: newWordsPerDay)
         reviewedIDs = []
         isReplay = false
-        withAnimation {
+        withAnimation(KaiMotion.standard) {
             index = 0
             revealed = false
         }
@@ -356,12 +380,12 @@ struct ReviewSessionView: View {
         quiz.load(entryIDs: reviewedIDs)
         guard !quiz.questions.isEmpty else { replay(); return }
         quizStore = quiz
-        withAnimation { phase = .quiz }
+        withAnimation(KaiMotion.standard) { phase = .quiz }
     }
 
     private func endQuiz() {
         quizStore = nil
-        withAnimation { phase = .review }
+        withAnimation(KaiMotion.standard) { phase = .review }
         loadFreshSession()
     }
 }

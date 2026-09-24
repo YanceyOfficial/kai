@@ -91,7 +91,7 @@ public struct SessionProgressBar: View {
             }
         }
         .frame(height: 8)
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: progress)
+        .animation(KaiMotion.standard, value: progress)
     }
 }
 

@@ -21,7 +21,7 @@ struct RootView: View {
             if seeded {
                 MainTabView()
             } else {
-                ProgressView().tint(KaiColor.vermilion)
+                ProgressView().tint(KaiColor.accent)
             }
             if let item = toast.current {
                 KaiToast(item.message, style: item.style)

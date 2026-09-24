@@ -27,7 +27,8 @@ struct MainTabView: View {
                 .tag(3)
                 .tabItem { Label("Settings", systemImage: "gearshape") }
         }
-        .tint(KaiColor.vermilion)
+        .tint(KaiColor.accent)
+        .minimizingTabBarOnScroll()
     }
 
     private static func initialSelection() -> Int {
@@ -53,13 +54,26 @@ private struct ReviewTab: View {
             if let store {
                 ReviewSessionView(store: store)
             } else {
-                ProgressView().tint(KaiColor.vermilion)
+                ProgressView().tint(KaiColor.accent)
             }
         }
         .task {
             let store = store ?? ReviewStore(context: modelContext)
             store.load(newLimit: newWordsPerDay)
             self.store = store
+        }
+    }
+}
+
+private extension View {
+    /// On iOS 26+, the Liquid Glass tab bar shrinks while a list scrolls down and comes
+    /// back on the way up, giving the content the room. Earlier systems keep it fixed.
+    @ViewBuilder
+    func minimizingTabBarOnScroll() -> some View {
+        if #available(iOS 26, *) {
+            tabBarMinimizeBehavior(.onScrollDown)
+        } else {
+            self
         }
     }
 }

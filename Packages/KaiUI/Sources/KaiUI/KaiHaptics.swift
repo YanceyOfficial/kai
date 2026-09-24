@@ -42,15 +42,16 @@ public enum KaiHaptics {
     }
 }
 
-/// A button style that gives a subtle, springy "press down" so taps feel physical.
-/// Shared by the primary button and the rating row for a consistent touch feel.
+/// The press feedback every Kai control shares: it answers the moment a finger lands
+/// (not on release), sinks slightly, and comes back without bounce — a press carries
+/// no momentum. The action and its haptic still commit on release.
 public struct KaiPressStyle: ButtonStyle {
     public init() {}
 
     public func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.96 : 1)
-            .opacity(configuration.isPressed ? 0.9 : 1)
-            .animation(.spring(response: 0.28, dampingFraction: 0.6), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .opacity(configuration.isPressed ? 0.88 : 1)
+            .animation(configuration.isPressed ? .easeOut(duration: 0.1) : KaiMotion.snappy, value: configuration.isPressed)
     }
 }

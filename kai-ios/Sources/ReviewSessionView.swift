@@ -122,15 +122,14 @@ struct ReviewSessionView: View {
     }
 
     /// The revealed side of the card: meaning (bilingual), every example, similar words,
-    /// and collocations — scrollable — plus a link to the full detail page.
+    /// and collocations — scrollable — plus a link to the full detail page. Its text is
+    /// `RubyText`, so a long press selects it for Copy, Look Up, Translate.
     @ViewBuilder
     private func cardBack(_ card: ReviewCardData) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: KaiSpacing.m) {
                 VStack(alignment: .leading, spacing: KaiSpacing.xs) {
-                    Text(card.word)
-                        .font(KaiFont.display(22, weight: .semibold))
-                        .foregroundStyle(KaiColor.sumi)
+                    RubyText(card.word, size: 22, weight: .semibold, design: .serif)
                     if !card.phonetic.isEmpty {
                         Text(card.phonetic)
                             .font(KaiFont.phonetic(13))
@@ -139,10 +138,7 @@ struct ReviewSessionView: View {
                     }
                 }
 
-                Text(card.explanation)
-                    .font(KaiFont.display(20, weight: .regular))
-                    .foregroundStyle(KaiColor.sumi)
-                    .fixedSize(horizontal: false, vertical: true)
+                RubyText(card.explanation, size: 20, design: .serif)
                 if let en = card.explanationEn, !en.isEmpty {
                     RubyText(en, size: 14, color: KaiColor.inkSecondary)
                 }
@@ -154,10 +150,7 @@ struct ReviewSessionView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             RubyText(ex.sentence, size: 15)
                             if !ex.translation.isEmpty {
-                                Text(ex.translation)
-                                    .font(KaiFont.body(14))
-                                    .foregroundStyle(KaiColor.inkSecondary)
-                                    .fixedSize(horizontal: false, vertical: true)
+                                RubyText(ex.translation, size: 14, color: KaiColor.inkSecondary)
                             }
                         }
                     }
@@ -167,10 +160,7 @@ struct ReviewSessionView: View {
                     backDivider
                     backLabel("Similar words")
                     ForEach(Array(card.synonymGroups.enumerated()), id: \.offset) { _, group in
-                        Text("\(group.sense) · \(group.words.joined(separator: ", "))")
-                            .font(KaiFont.body(14))
-                            .foregroundStyle(KaiColor.sumi)
-                            .fixedSize(horizontal: false, vertical: true)
+                        RubyText("\(group.sense) · \(group.words.joined(separator: ", "))", size: 14)
                     }
                 }
 
@@ -182,9 +172,7 @@ struct ReviewSessionView: View {
                         HStack(alignment: .bottom, spacing: KaiSpacing.s) {
                             RubyText(c.phrase, size: 14, weight: .semibold)
                                 .fixedSize()
-                            Text(c.meaning)
-                                .font(KaiFont.body(12))
-                                .foregroundStyle(KaiColor.inkSecondary)
+                            RubyText(c.meaning, size: 12, color: KaiColor.inkSecondary)
                         }
                     }
                 }

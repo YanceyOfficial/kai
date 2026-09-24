@@ -5,7 +5,8 @@ import KaiServices
 import KaiUI
 
 /// A word's detail page: every field laid out directly (no flip card — the list row
-/// already shows the word and meaning, so this is the full reference).
+/// already shows the word and meaning, so this is the full reference). Reading text is
+/// `RubyText`, so a long press selects it for Copy, Look Up, Translate.
 struct WordDetailView: View {
     let entry: VocabularyEntry
 
@@ -41,9 +42,7 @@ struct WordDetailView: View {
                         VStack(alignment: .leading, spacing: KaiSpacing.xs) {
                             RubyText(example.sentence, size: 15)
                             if !example.translation.isEmpty {
-                                Text(example.translation)
-                                    .font(KaiFont.body(14))
-                                    .foregroundStyle(KaiColor.inkSecondary)
+                                RubyText(example.translation, size: 14, color: KaiColor.inkSecondary)
                             }
                         }
                         .padding(.vertical, 2)
@@ -198,9 +197,7 @@ struct WordDetailView: View {
             Section("Meaning") {
                 VStack(alignment: .leading, spacing: KaiSpacing.xs) {
                     if !entry.explanation.isEmpty {
-                        Text(entry.explanation)
-                            .font(KaiFont.body(16))
-                            .foregroundStyle(KaiColor.sumi)
+                        RubyText(entry.explanation, size: 16)
                     }
                     if !en.isEmpty {
                         RubyText(en, size: 14, color: KaiColor.inkSecondary)
@@ -215,11 +212,10 @@ struct WordDetailView: View {
     private var headerSection: some View {
         Section {
             VStack(alignment: .leading, spacing: KaiSpacing.s) {
-                HStack(alignment: .firstTextBaseline, spacing: KaiSpacing.s) {
-                    Text(entry.lemma)
-                        .font(KaiFont.display(30, weight: .bold))
-                        .foregroundStyle(KaiColor.sumi)
-                    Spacer(minLength: 0)
+                // Centred: a text view has no baseline to align on. The word takes the
+                // row's width, which keeps the speaker at the trailing edge.
+                HStack(alignment: .center, spacing: KaiSpacing.s) {
+                    RubyText(entry.lemma, size: 30, weight: .bold, design: .serif)
                     Button {
                         KaiHaptics.impact(.light)
                         pronouncer.say(entry.lemma, phonetic: entry.phonetic, language: entry.language, accent: accent)
@@ -282,16 +278,12 @@ struct WordDetailView: View {
                         HStack(alignment: .bottom, spacing: KaiSpacing.s) {
                             RubyText(c.phrase, size: 15, weight: .semibold)
                                 .fixedSize()
-                            Text(c.meaning)
-                                .font(KaiFont.body(13))
-                                .foregroundStyle(KaiColor.inkSecondary)
+                            RubyText(c.meaning, size: 13, color: KaiColor.inkSecondary)
                         }
                         if !c.example.isEmpty {
                             RubyText(c.example, size: 14)
                             if !c.exampleTranslation.isEmpty {
-                                Text(c.exampleTranslation)
-                                    .font(KaiFont.body(13))
-                                    .foregroundStyle(KaiColor.inkSecondary)
+                                RubyText(c.exampleTranslation, size: 13, color: KaiColor.inkSecondary)
                             }
                         }
                     }
@@ -339,10 +331,7 @@ struct WordDetailView: View {
                     Text(note.createdAt.formatted(date: .abbreviated, time: .omitted))
                         .font(KaiFont.body(11, weight: .semibold))
                         .foregroundStyle(KaiColor.inkSecondary)
-                    Text(note.text)
-                        .font(KaiFont.body(15))
-                        .foregroundStyle(KaiColor.sumi)
-                        .fixedSize(horizontal: false, vertical: true)
+                    RubyText(note.text, size: 15)
                 }
                 .padding(.vertical, 2)
             }
@@ -432,10 +421,7 @@ struct WordDetailView: View {
                 .foregroundStyle(KaiColor.vermilion)
                 .textCase(.uppercase)
                 .tracking(1.2)
-            Text(value)
-                .font(KaiFont.body(15))
-                .foregroundStyle(KaiColor.sumi)
-                .fixedSize(horizontal: false, vertical: true)
+            RubyText(value, size: 15)
         }
         .padding(.vertical, 2)
     }

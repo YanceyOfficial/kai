@@ -201,6 +201,9 @@ struct ReviewSessionView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        // iOS 26 blurs content scrolling under a scroll view's edge — meant for bars, not a
+        // card, and inside the card's 3D turn the blur spreads over most of the back.
+        .withoutScrollEdgeEffect()
     }
 
     private func backLabel(_ text: String) -> some View {
@@ -399,6 +402,18 @@ private extension KaiUI.ReviewRating {
         case .hard: return .hard
         case .good: return .good
         case .easy: return .easy
+        }
+    }
+}
+
+private extension View {
+    /// Turns off the iOS 26 scroll edge effect; earlier systems have none.
+    @ViewBuilder
+    func withoutScrollEdgeEffect() -> some View {
+        if #available(iOS 26, *) {
+            scrollEdgeEffectHidden(true, for: .all)
+        } else {
+            self
         }
     }
 }

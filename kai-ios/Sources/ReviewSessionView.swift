@@ -75,6 +75,10 @@ struct ReviewSessionView: View {
     /// How far the card in hand has been swiped towards a rating (0…1); the next card
     /// rises to meet it.
     @State private var swipeProgress: Double = 0
+    /// A rating chosen with a button: the card is thrown off in its direction (`fling`)
+    /// and the rating is applied once it has left, as a swipe's would be.
+    @State private var pendingRating: KaiUI.ReviewRating?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showDone = false
     @State private var showingStory = false
     /// The entry shown in the full-details sheet (opened from the revealed card).
@@ -223,14 +227,15 @@ struct ReviewSessionView: View {
             if index < cards.count {
                 let card = cards[index]
                 ZStack {
-                    // The next card waits underneath, and rises as this one is swiped
-                    // away, so the deck reads as one stack.
+                    // The next card rises into place only as this one is swiped or thrown
+                    // away. At rest it is not there at all: the card in hand turns edge-on
+                    // as it flips, and nothing may show through behind it.
                     if index + 1 < cards.count {
                         let next = cards[index + 1]
                         FlipCardFace(word: next.word, phonetic: next.phonetic)
                             .scaleEffect(0.94 + 0.06 * swipeProgress)
                             .offset(y: 16 * (1 - swipeProgress))
-                            .opacity(0.5 + 0.5 * swipeProgress)
+                            .opacity(swipeProgress)
                     }
                     FlipCard(
                         word: card.word,
@@ -240,8 +245,15 @@ struct ReviewSessionView: View {
                         isRevealed: $revealed,
                         onSpeak: { pronouncer.say(card.word, phonetic: card.phonetic, language: language, accent: accent) },
                         // Right is Good, left is Again; Hard and Easy stay on the buttons.
-                        onSwipe: { direction in rate(card, direction == .right ? .good : .again, swiped: true) },
-                        onSwipeProgress: { swipeProgress = $0 }
+                        // A swipe rates Good (right) or Again (left); a thrown card carries
+                        // the rating its button chose.
+                        onSwipe: { direction in
+                            let rating = pendingRating ?? (direction == .right ? .good : .again)
+                            pendingRating = nil
+                            rate(card, rating, swiped: !reduceMotion)
+                        },
+                        onSwipeProgress: { swipeProgress = $0 },
+                        fling: pendingRating.map { $0 == .again || $0 == .hard ? .left : .right }
                     ) {
                         cardBack(card)
                     }
@@ -309,8 +321,12 @@ struct ReviewSessionView: View {
     private func controls(for card: ReviewCardData) -> some View {
         if revealed {
             RatingBar(interval: { store.previewInterval(for: card, rating: $0.core) }) { rating in
-                rate(card, rating)
+                // Again and Hard throw the card left, Good and Easy right — the same way
+                // the swipes go — and the next card rises as it leaves.
+                guard pendingRating == nil else { return }
+                pendingRating = rating
             }
+            .allowsHitTesting(pendingRating == nil)
         } else {
             KaiPrimaryButton("Show answer") {
                 withAnimation(KaiMotion.flip) { revealed = true }

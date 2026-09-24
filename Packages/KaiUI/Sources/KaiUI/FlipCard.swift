@@ -12,6 +12,8 @@ import SwiftUI
 ///   release commits only if the throw is projected past a third of the width in the
 ///   direction it was dragged (`KaiMotion.swipeOutcome`); otherwise it springs home.
 ///   Drags lock to one axis first, so the back still scrolls vertically.
+/// - **Throw it** from outside with `fling` (a rating button does): the card leaves
+///   the same way a committed swipe does, so buttons and swipes read as one gesture.
 /// - With Reduce Motion the card cross-fades instead of turning, and swipes are off
 ///   (the rating buttons remain).
 ///
@@ -31,6 +33,9 @@ public struct FlipCard<Back: View>: View {
     private let onSwipe: ((KaiMotion.SwipeDirection) -> Void)?
     /// How far a swipe has gone towards committing (0…1), for the card waiting behind.
     private let onSwipeProgress: (Double) -> Void
+    /// Set by the owner to throw the revealed card off the screen, as a swipe would —
+    /// how a rating button carries it away. `onSwipe` follows once it has left.
+    private let fling: KaiMotion.SwipeDirection?
     /// The revealed side: rich, domain-specific content supplied by the app.
     private let back: Back
 
@@ -46,6 +51,8 @@ public struct FlipCard<Back: View>: View {
     @State private var dragAxis: Axis?
     /// Whether the current swipe has crossed the commit distance (for one haptic tick).
     @State private var pastThreshold = false
+    /// True once the card is on its way out (a committed swipe or a fling).
+    @State private var leaving = false
     @State private var width: Double = 350
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -58,6 +65,7 @@ public struct FlipCard<Back: View>: View {
         onSpeak: @escaping () -> Void = {},
         onSwipe: ((KaiMotion.SwipeDirection) -> Void)? = nil,
         onSwipeProgress: @escaping (Double) -> Void = { _ in },
+        fling: KaiMotion.SwipeDirection? = nil,
         @ViewBuilder back: () -> Back
     ) {
         self.word = word
@@ -68,6 +76,7 @@ public struct FlipCard<Back: View>: View {
         self.onSpeak = onSpeak
         self.onSwipe = onSwipe
         self.onSwipeProgress = onSwipeProgress
+        self.fling = fling
         self.back = back()
     }
 
@@ -91,6 +100,9 @@ public struct FlipCard<Back: View>: View {
             }
             .simultaneousGesture(drag, including: reduceMotion ? .subviews : .all)
             .onAppear { if autoPlays { onSpeak() } }   // auto-play once per card
+            .onChange(of: fling) { _, direction in
+                if let direction { leave(direction, velocity: 0) }
+            }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(word)
             .accessibilityHint(isRevealed ? "" : "Double-tap to reveal the meaning")
@@ -162,7 +174,8 @@ public struct FlipCard<Back: View>: View {
     /// its outcome before the finger lifts.
     @ViewBuilder
     private var swipeHint: some View {
-        if swipe != 0 {
+        // Only while a finger is on it: a thrown card has already been rated.
+        if swipe != 0, !leaving {
             let rating: ReviewRating = swipe > 0 ? .good : .again
             let progress = min(1, abs(swipe) / (width * 0.35))
             Text(rating.label)
@@ -242,19 +255,31 @@ public struct FlipCard<Back: View>: View {
         }
     }
 
+    /// Sends the card off the screen towards `direction`, carrying `velocity` (points per
+    /// second; 0 for a fling), while the card behind rises to take its place; then
+    /// reports the swipe. With Reduce Motion it reports at once (the owner crossfades).
+    private func leave(_ direction: KaiMotion.SwipeDirection, velocity: Double) {
+        guard let onSwipe, !leaving else { return }
+        leaving = true
+        guard !reduceMotion else { onSwipe(direction); return }
+        let target = (direction == .right ? 1.0 : -1.0) * width * 1.4
+        withAnimation(KaiMotion.handoff(velocity: velocity, remaining: target - swipe)) {
+            swipe = target
+            onSwipeProgress(1)
+        }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(220))
+            onSwipe(direction)
+        }
+    }
+
     private func endSwipe(velocity: Double) {
         guard let onSwipe else { return }
         pastThreshold = false
         switch KaiMotion.swipeOutcome(translation: swipe, velocity: velocity, width: width) {
         case .commit(let direction):
-            let target = (direction == .right ? 1.0 : -1.0) * width * 1.4
             if direction == .left { KaiHaptics.impact(.rigid) } else { KaiHaptics.impact(.medium) }
-            onSwipeProgress(1)
-            withAnimation(KaiMotion.handoff(velocity: velocity, remaining: target - swipe)) { swipe = target }
-            Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(220))
-                onSwipe(direction)
-            }
+            leave(direction, velocity: velocity)
         case .cancel:
             onSwipeProgress(0)
             withAnimation(KaiMotion.handoff(velocity: velocity, remaining: -swipe, bounce: 0.15)) { swipe = 0 }
@@ -324,6 +349,8 @@ public struct FlipCardFace: View {
     }
 
     public var body: some View {
+        // Everything the live face shows — speaker, hint, shadow — so nothing pops in
+        // when it takes this card's place.
         VStack(spacing: KaiSpacing.m) {
             Text(word)
                 .font(KaiFont.display(46, weight: .bold))
@@ -331,11 +358,20 @@ public struct FlipCardFace: View {
                 .foregroundStyle(KaiColor.sumi)
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
-            Text(phonetic)
-                .font(KaiFont.phonetic(17))
-                .foregroundStyle(KaiColor.inkSecondary)
+            HStack(spacing: KaiSpacing.s) {
+                Text(phonetic)
+                    .font(KaiFont.phonetic(17))
+                    .foregroundStyle(KaiColor.inkSecondary)
+                SpeakerButton(action: {})
+                    .allowsHitTesting(false)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .overlay(alignment: .bottom) {
+            Text("Tap or drag to reveal")
+                .font(KaiFont.body(13, weight: .medium))
+                .foregroundStyle(KaiColor.inkSecondary.opacity(0.7))
+        }
         .frame(height: 380)
         .padding(KaiSpacing.l)
         .background(
@@ -345,6 +381,7 @@ public struct FlipCardFace: View {
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .strokeBorder(KaiColor.hairline, lineWidth: 1)
                 )
+                .shadow(color: KaiColor.shadow, radius: 18, x: 0, y: 12)
         )
         .accessibilityHidden(true)
     }

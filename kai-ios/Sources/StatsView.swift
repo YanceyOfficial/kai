@@ -93,7 +93,7 @@ struct StatsView: View {
                 if !curve.isEmpty {
                     Text("\(atRisk) at risk · 7d")
                         .font(KaiFont.body(13, weight: .medium))
-                        .foregroundStyle(atRisk > 0 ? KaiColor.vermilion : KaiColor.inkSecondary)
+                        .foregroundStyle(atRisk > 0 ? KaiColor.danger : KaiColor.inkSecondary)
                 }
             }
 
@@ -106,27 +106,37 @@ struct StatsView: View {
                             x: .value("Day", point.dayOffset),
                             y: .value("Recall", point.recall)
                         )
-                        .foregroundStyle(KaiColor.vermilion)
+                        .foregroundStyle(KaiColor.accent)
                         .interpolationMethod(.monotone)
                         .lineStyle(StrokeStyle(lineWidth: 2))
                     }
                     RuleMark(y: .value("Target", requestRetention))
                         .foregroundStyle(KaiColor.inkSecondary.opacity(0.5))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
-                        .annotation(position: .top, alignment: .trailing) {
+                        // Leading, so it never meets the 100% label on the trailing axis.
+                        .annotation(position: .top, alignment: .leading, spacing: 2) {
                             Text("\(Int(requestRetention * 100))% target")
                                 .font(KaiFont.body(10))
                                 .foregroundStyle(KaiColor.inkSecondary)
                         }
                 }
                 .chartYScale(domain: 0...1)
-                .chartYAxis { AxisMarks(position: .leading, values: [0, 0.5, 1]) { value in
-                    AxisValueLabel {
+                .chartXScale(domain: 0...30)
+                // Labels sit outside the plot, on the trailing side (as in Health), each on
+                // its own gridline; the week ticks stop short of the trailing edge so the
+                // last one is not clipped and never meets the 0% label in the corner.
+                .chartYAxis { AxisMarks(position: .trailing, values: [0, 0.5, 1]) { value in
+                    AxisGridLine().foregroundStyle(KaiColor.hairline)
+                    AxisValueLabel(horizontalSpacing: 8) {
                         if let d = value.as(Double.self) { Text("\(Int(d * 100))%") }
                     }
+                    .font(KaiFont.body(11))
+                    .foregroundStyle(KaiColor.inkSecondary)
                 } }
-                .chartXAxis { AxisMarks(values: [0, 7, 14, 21, 30]) { value in
-                    AxisValueLabel { if let d = value.as(Int.self) { Text("\(d)d") } }
+                .chartXAxis { AxisMarks(values: [0, 7, 14, 21, 28]) { value in
+                    AxisValueLabel(verticalSpacing: 8) { if let d = value.as(Int.self) { Text("\(d)d") } }
+                        .font(KaiFont.body(11))
+                        .foregroundStyle(KaiColor.inkSecondary)
                 } }
                 .frame(height: 180)
             }
@@ -146,22 +156,36 @@ struct StatsView: View {
             if maturityCounts.allSatisfy({ $0.count == 0 }) {
                 emptyHint("Add words to see your deck's maturity.")
             } else {
-                Chart(maturityCounts) { item in
-                    BarMark(
-                        x: .value("Count", item.count),
-                        y: .value("Maturity", item.bucket.rawValue)
-                    )
-                    .foregroundStyle(maturityColor(item.bucket))
-                    .cornerRadius(4)
-                    .annotation(position: .trailing) {
-                        Text("\(item.count)")
-                            .font(KaiFont.body(11, weight: .medium))
-                            .foregroundStyle(KaiColor.inkSecondary)
+                // Laid out by hand rather than as a Chart: Swift Charts moves a horizontal
+                // bar chart's category labels on top of the bars when the card is narrow.
+                // Here each name has its own column, each count follows its bar.
+                let peak = Double(max(1, maturityCounts.map(\.count).max() ?? 1))
+                Grid(alignment: .leading, horizontalSpacing: KaiSpacing.s, verticalSpacing: 10) {
+                    ForEach(MaturityBucket.allCases.reversed(), id: \.self) { bucket in
+                        let count = maturityCounts.first { $0.bucket == bucket }?.count ?? 0
+                        GridRow {
+                            Text(bucket.rawValue)
+                                .font(KaiFont.body(12, weight: .medium))
+                                .foregroundStyle(KaiColor.inkSecondary)
+                                .gridColumnAlignment(.leading)
+                            GeometryReader { proxy in
+                                HStack(spacing: 6) {
+                                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                        // An empty bucket keeps a neutral sliver, so the row still reads as a bar.
+                                        .fill(count == 0 ? KaiColor.hairline : maturityColor(bucket))
+                                        .frame(width: max(3, (proxy.size.width - 30) * Double(count) / peak))
+                                    Text("\(count)")
+                                        .font(KaiFont.body(11, weight: .medium))
+                                        .monospacedDigit()
+                                        .foregroundStyle(KaiColor.inkSecondary)
+                                }
+                                .frame(maxHeight: .infinity)
+                            }
+                            .frame(height: 22)
+                        }
+                        .accessibilityElement(children: .combine)
                     }
                 }
-                .chartYScale(domain: MaturityBucket.allCases.reversed().map(\.rawValue))
-                .chartXAxis(.hidden)
-                .frame(height: 150)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -169,13 +193,13 @@ struct StatsView: View {
         .background(cardBackground)
     }
 
-    /// Single-hue sequential ramp: new (light) → mature (full vermilion).
+    /// Single-hue sequential ramp: new (light) → mature (full accent).
     private func maturityColor(_ bucket: MaturityBucket) -> Color {
         switch bucket {
-        case .new: return KaiColor.vermilion.opacity(0.30)
-        case .learning: return KaiColor.vermilion.opacity(0.50)
-        case .young: return KaiColor.vermilion.opacity(0.72)
-        case .mature: return KaiColor.vermilion
+        case .new: return KaiColor.accent.opacity(0.30)
+        case .learning: return KaiColor.accent.opacity(0.50)
+        case .young: return KaiColor.accent.opacity(0.72)
+        case .mature: return KaiColor.accent
         }
     }
 
@@ -196,21 +220,30 @@ struct StatsView: View {
 
             if totalReviews == 0 {
                 emptyHint("No reviews yet — rate a few cards to see your history.")
+            } else if bars.allSatisfy({ $0.count == 0 }) {
+                emptyHint("No reviews in the last 7 days.")
             } else {
                 Chart(bars) { bar in
                     BarMark(
                         x: .value("Day", bar.date, unit: .day),
                         y: .value("Reviews", bar.count)
                     )
-                    .foregroundStyle(KaiColor.vermilion)
+                    .foregroundStyle(KaiColor.accent)
                     .cornerRadius(4)
                 }
                 .chartXAxis {
-                    AxisMarks(values: .stride(by: .day)) { value in
-                        AxisValueLabel(format: .dateTime.weekday(.narrow))
+                    AxisMarks(values: .stride(by: .day)) { _ in
+                        AxisValueLabel(format: .dateTime.weekday(.narrow), centered: true, verticalSpacing: 8)
+                            .font(KaiFont.body(11))
+                            .foregroundStyle(KaiColor.inkSecondary)
                     }
                 }
-                .chartYAxis { AxisMarks(position: .leading) }
+                .chartYAxis { AxisMarks(position: .trailing, values: .automatic(desiredCount: 3)) { _ in
+                    AxisGridLine().foregroundStyle(KaiColor.hairline)
+                    AxisValueLabel(horizontalSpacing: 8)
+                        .font(KaiFont.body(11))
+                        .foregroundStyle(KaiColor.inkSecondary)
+                } }
                 .frame(height: 160)
             }
         }

@@ -5,10 +5,11 @@ import UIKit
 
 // MARK: - Palette
 
-/// A neutral, mainstream palette with one vermilion accent, adapting to light and
-/// dark mode. Names are kept from the earlier "Ink & Paper" system for stability,
-/// but map to semantic roles: `washi` = app background, `cardFace` = surface,
-/// `sumi` = primary text, `inkSecondary` = secondary text, `vermilion` = accent.
+/// A neutral, mainstream palette with one Tokiwa green accent (常磐色, "evergreen",
+/// nipponcolors.com #1B813E), adapting to light and dark mode. Names are kept from
+/// the earlier "Ink & Paper" system for stability, but map to semantic roles:
+/// `washi` = app background, `cardFace` = surface, `sumi` = primary text,
+/// `inkSecondary` = secondary text, `accent` = the brand accent.
 public enum KaiColor {
     /// App background — light neutral gray / near-black.
     public static let washi = adaptive(light: 0xF2F2F6, dark: 0x111113)
@@ -18,9 +19,13 @@ public enum KaiColor {
     public static let sumi = adaptive(light: 0x1A1A1E, dark: 0xF3F3F6)
     /// Secondary / muted text.
     public static let inkSecondary = adaptive(light: 0x6C6C74, dark: 0x9A9AA2)
-    /// The brand accent — a touch brighter in dark mode for contrast.
-    public static let vermilion = adaptive(light: 0xC8402F, dark: 0xE45A44)
-    /// Error/destructive signal — distinct from the vermilion accent.
+    /// The brand accent, Tokiwa green — the same hue lifted in dark mode for contrast
+    /// (4.9:1 on white, 6.0:1 on the dark background).
+    public static let accent = adaptive(light: 0x1B813E, dark: 0x23A750)
+    /// The accent under its former name, from when it was vermilion. App views still
+    /// use it and move to `accent` as they are redesigned; it is not a second colour.
+    public static var vermilion: Color { accent }
+    /// Error/destructive signal, and the "Again" rating — red, distinct from the accent.
     public static let danger = adaptive(light: 0xB3261E, dark: 0xE5584B)
     /// Soft elevation shadow.
     public static let shadow = adaptiveTranslucent(light: (0x000000, 0.10), dark: (0x000000, 0.55))
@@ -57,7 +62,7 @@ private func uiColor(_ hex: UInt, _ alpha: Double) -> UIColor {
 #endif
 
 public extension Color {
-    /// Creates a color from a 24-bit hex value, e.g. `Color(hex: 0xC8402F)`.
+    /// Creates a color from a 24-bit hex value, e.g. `Color(hex: 0x1B813E)`.
     init(hex: UInt, alpha: Double = 1) {
         let c = KaiColor.rgbComponents(hex: hex)
         self.init(.sRGB, red: c.red, green: c.green, blue: c.blue, opacity: alpha)

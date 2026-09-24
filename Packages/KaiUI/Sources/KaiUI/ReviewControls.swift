@@ -16,7 +16,7 @@ public enum ReviewRating: String, CaseIterable, Sendable {
     /// Restrained, difficulty-coded tint per rating (red → amber → pine → blue).
     var tint: Color {
         switch self {
-        case .again: return KaiColor.vermilion
+        case .again: return KaiColor.danger
         case .hard: return Color(hex: 0xB07A2E)   // muted amber
         case .good: return Color(hex: 0x3E7C63)   // muted pine
         case .easy: return Color(hex: 0x3E6D8C)   // muted slate blue
@@ -76,7 +76,7 @@ public struct RatingBar: View {
     }
 }
 
-/// A thin ink track with a vermilion fill showing session progress (0...1).
+/// A thin ink track with an accent fill showing session progress (0...1).
 public struct SessionProgressBar: View {
     private let progress: Double
     public init(progress: Double) { self.progress = min(max(progress, 0), 1) }
@@ -86,7 +86,7 @@ public struct SessionProgressBar: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(KaiColor.hairline)
                 Capsule()
-                    .fill(KaiColor.vermilion)
+                    .fill(KaiColor.accent)
                     .frame(width: max(8, geo.size.width * progress))
             }
         }

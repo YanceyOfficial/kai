@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// The signature study card in the "Ink & Paper" aesthetic: a washi-paper card
-/// showing a word with a vermilion brush underline; flipping springs it over in
-/// 3D to reveal the meaning. A small vermilion checkmark marks it once learned.
+/// showing a word with an accent brush underline; flipping springs it over in
+/// 3D to reveal the meaning. A small accent checkmark marks it once learned.
 ///
 /// The reveal state is externally controlled via `isRevealed` so a review session
 /// can coordinate the card with its rating controls.
@@ -116,7 +116,7 @@ public struct FlipCard<Back: View>: View {
 
 // MARK: - Details
 
-/// A small vermilion speaker that replays the word's pronunciation on tap.
+/// A small accent speaker that replays the word's pronunciation on tap.
 /// Its own tap is consumed here, so it never flips the card underneath.
 struct SpeakerButton: View {
     let action: () -> Void
@@ -128,7 +128,7 @@ struct SpeakerButton: View {
         } label: {
             Image(systemName: "speaker.wave.2.fill")
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(KaiColor.vermilion)
+                .foregroundStyle(KaiColor.accent)
                 .frame(width: 32, height: 32)
                 .contentShape(Rectangle())
         }
@@ -137,12 +137,12 @@ struct SpeakerButton: View {
     }
 }
 
-/// A simple vermilion checkmark marking a card as learned — no badge, just the tick.
+/// A simple accent checkmark marking a card as learned — no badge, just the tick.
 struct LearnedMark: View {
     var body: some View {
         Image(systemName: "checkmark")
             .font(.system(size: 17, weight: .bold))
-            .foregroundStyle(KaiColor.vermilion)
+            .foregroundStyle(KaiColor.accent)
             .accessibilityLabel("Learned")
     }
 }

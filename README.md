@@ -151,7 +151,7 @@ workspace is generated (`tuist generate`), not committed.
     generates cards, batched, and the daily story. Produces Codable DTOs, not SwiftData.
   - **`KaiServices`** — logging + in-app diagnostics, Keychain, notification scheduling,
     pronunciation, and (formerly) Vision OCR. Protocol + pure logic + thin platform adapter.
-  - **`KaiUI`** — the design system (Ink & Paper palette + vermilion accent) and shared
+  - **`KaiUI`** — the design system (Ink & Paper palette + Tokiwa green accent) and shared
     components (flip card, rating bar, toast).
 
 The app is a `MainTabView` shell — **Review / Words / Stats / Settings** — over one

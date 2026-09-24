@@ -104,11 +104,12 @@ struct AddWordsView: View {
         generating = true
         defer { generating = false }
 
-        // Chunked so a large batch can't blow the model's token budget; best-effort so a
-        // failed chunk doesn't lose the words that did generate.
+        // Chunked so a large batch can't blow the model's output budget, the chunks in
+        // flight together; best-effort so a failed chunk doesn't lose the words that did
+        // generate.
         let provider = ProviderFactory.make(config)
         let outcome = await provider.generateCards(
-            lemmas: words, language: language, literaryExamples: false, chunkSize: Self.aiChunkSize)
+            lemmas: words, language: language, literaryExamples: false, chunkSize: Self.aiChunkSize(for: language))
 
         var added = 0
         for card in outcome.cards {
@@ -132,6 +133,10 @@ struct AddWordsView: View {
     }
 
     /// Words per AI request. Cards are content-rich (bilingual, collocations, quizzes),
-    /// so keep chunks small to stay well under output-token limits.
-    private static let aiChunkSize = 8
+    /// so chunks stay small — and smaller for Japanese, whose furigana markup roughly
+    /// doubles the output (eight Japanese cards in one request ran past the output limit
+    /// and came back cut off). Small chunks also finish sooner, since they run together.
+    private static func aiChunkSize(for language: LanguageDomain) -> Int {
+        language == .japanese ? 2 : 4
+    }
 }

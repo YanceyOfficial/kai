@@ -72,3 +72,20 @@ func claudeMissingAPIKey() async throws {
         _ = try await provider.generateCards(lemmas: ["x"], language: .english, literaryExamples: false)
     }
 }
+
+@Test("ClaudeProvider reports a reply cut off at max_tokens as truncated")
+func claudeTruncated() async throws {
+    let envelope: [String: Any] = ["content": [["type": "text", "text": "{\"cards\":[{\"lemma\":"]], "stop_reason": "max_tokens"]
+    let body = try JSONSerialization.data(withJSONObject: envelope)
+    final class OKTransport: HTTPTransport, @unchecked Sendable {
+        let body: Data
+        init(body: Data) { self.body = body }
+        func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+            (body, HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+        }
+    }
+    let provider = ClaudeProvider(apiKey: "k", transport: OKTransport(body: body))
+    await #expect(throws: AIError.truncated) {
+        _ = try await provider.generateCards(lemmas: ["x"], language: .japanese, literaryExamples: false)
+    }
+}

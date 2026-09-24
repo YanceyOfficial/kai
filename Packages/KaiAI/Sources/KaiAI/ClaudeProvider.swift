@@ -9,7 +9,7 @@ public struct ClaudeProvider: LLMProvider {
     private let maxTokens: Int
     private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
 
-    public init(apiKey: String, model: String = "claude-opus-4-8", transport: HTTPTransport, maxTokens: Int = 8000) {
+    public init(apiKey: String, model: String = "claude-opus-4-8", transport: HTTPTransport, maxTokens: Int = 16000) {
         self.apiKey = apiKey
         self.model = model
         self.transport = transport
@@ -73,10 +73,16 @@ public struct ClaudeProvider: LLMProvider {
         let data = try await transportSend(request)
 
         // Anthropic returns the JSON string inside content[0].text.
-        struct Envelope: Decodable { struct Block: Decodable { let type: String; let text: String? }; let content: [Block] }
+        struct Envelope: Decodable {
+            struct Block: Decodable { let type: String; let text: String? }
+            let content: [Block]
+            let stop_reason: String?
+        }
         let envelope: Envelope
         do { envelope = try JSONDecoder().decode(Envelope.self, from: data) }
         catch { throw AIError.decoding("Envelope: \(error)") }
+        // Cut off at the token limit: the JSON is incomplete, and would only fail to decode.
+        if envelope.stop_reason == "max_tokens" { throw AIError.truncated }
         guard let text = envelope.content.first(where: { $0.type == "text" })?.text,
               let jsonData = text.data(using: .utf8) else {
             throw AIError.emptyResponse

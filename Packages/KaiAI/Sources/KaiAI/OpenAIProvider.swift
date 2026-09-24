@@ -9,7 +9,9 @@ public struct OpenAIProvider: LLMProvider {
     private let maxTokens: Int
     private let endpoint = URL(string: "https://api.openai.com/v1/chat/completions")!
 
-    public init(apiKey: String, model: String = "gpt-5.5", transport: HTTPTransport, maxTokens: Int = 8000) {
+    /// `maxTokens` bounds reasoning tokens as well as the answer on reasoning models, so
+    /// it is generous: a batch of cards is long, and an early stop loses all of it.
+    public init(apiKey: String, model: String = "gpt-5.5", transport: HTTPTransport, maxTokens: Int = 32000) {
         self.apiKey = apiKey
         self.model = model
         self.transport = transport
@@ -73,12 +75,18 @@ public struct OpenAIProvider: LLMProvider {
         let data = try await transportSend(request)
 
         struct Envelope: Decodable {
-            struct Choice: Decodable { struct Message: Decodable { let content: String? }; let message: Message }
+            struct Choice: Decodable {
+                struct Message: Decodable { let content: String? }
+                let message: Message
+                let finish_reason: String?
+            }
             let choices: [Choice]
         }
         let envelope: Envelope
         do { envelope = try JSONDecoder().decode(Envelope.self, from: data) }
         catch { throw AIError.decoding("Envelope: \(error)") }
+        // Cut off at the token limit: the JSON is incomplete, and would only fail to decode.
+        if envelope.choices.first?.finish_reason == "length" { throw AIError.truncated }
         guard let text = envelope.choices.first?.message.content,
               let jsonData = text.data(using: .utf8) else {
             throw AIError.emptyResponse

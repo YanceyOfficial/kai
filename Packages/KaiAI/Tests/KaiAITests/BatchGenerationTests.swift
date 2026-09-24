@@ -45,7 +45,7 @@ func batchesIntoChunks() async {
     let outcome = await provider.generateCards(lemmas: lemmas, language: .english, literaryExamples: false, chunkSize: 10)
 
     #expect(outcome.cards.count == 25)
-    #expect(recorder.sizes == [10, 10, 5])   // 25 split into 10/10/5
+    #expect(recorder.sizes.sorted() == [5, 10, 10])   // 25 split into 10/10/5 (chunks run concurrently)
     #expect(outcome.failures.isEmpty)
     #expect(outcome.cards.map(\.lemma) == lemmas)   // input order preserved
 }
@@ -67,4 +67,42 @@ func clampsChunkSize() async {
     let provider = MockProvider(chunkSizesSeen: .init())
     let outcome = await provider.generateCards(lemmas: ["a", "b"], language: .english, literaryExamples: false, chunkSize: 0)
     #expect(outcome.cards.count == 2)
+}
+
+@Test("Chunks run concurrently, and order still follows the input")
+func chunksRunConcurrently() async {
+    let clock = ContinuousClock()
+    let provider = SlowProvider()
+    let lemmas = (1...8).map { "w\($0)" }
+    let start = clock.now
+    let outcome = await provider.generateCards(lemmas: lemmas, language: .english, literaryExamples: false, chunkSize: 2, concurrency: 4)
+    let elapsed = clock.now - start
+    #expect(outcome.cards.map(\.lemma) == lemmas)
+    // Four chunks of 200 ms each: together about 200 ms, one after another 800 ms.
+    #expect(elapsed < .milliseconds(600))
+}
+
+@Test("Truncation reads as advice, not an error code")
+func truncationDescription() {
+    #expect(AIError.truncated.localizedDescription.contains("fewer words"))
+    #expect(!AIError.decoding("x").localizedDescription.contains("error 2"))
+}
+
+/// Answers each chunk after a fixed delay, the later lemmas first, to show ordering holds.
+private struct SlowProvider: LLMProvider {
+    func generateCards(lemmas: [String], language: LanguageDomain, literaryExamples: Bool) async throws -> [GeneratedCard] {
+        try await Task.sleep(for: .milliseconds(200))
+        return lemmas.map { lemma in
+            let json = """
+            {"lemma":"\(lemma)","kind":"word","phonetic":"","syllables":[],"explanation":"",
+            "explanationEn":"","partsOfSpeech":[],"examples":[],"mnemonic":"","etymology":"",
+            "synonyms":[],"collocations":[],"confusables":[],"quizzes":[]}
+            """
+            return try! JSONDecoder().decode(GeneratedCard.self, from: Data(json.utf8))
+        }
+    }
+
+    func generateStory(words: [String], language: LanguageDomain) async throws -> GeneratedStory {
+        GeneratedStory(story: "", translation: "")
+    }
 }

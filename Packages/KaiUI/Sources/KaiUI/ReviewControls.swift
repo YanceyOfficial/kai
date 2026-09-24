@@ -17,14 +17,15 @@ public enum ReviewRating: String, CaseIterable, Sendable {
     var tint: Color {
         switch self {
         case .again: return KaiColor.danger
-        case .hard: return Color(hex: 0xB07A2E)   // muted amber
-        case .good: return Color(hex: 0x3E7C63)   // muted pine
-        case .easy: return Color(hex: 0x3E6D8C)   // muted slate blue
+        // Muted in light mode; lifted in dark, where the muted tones sank into the glass.
+        case .hard: return adaptive(light: 0xB07A2E, dark: 0xE0A553)   // amber
+        case .good: return adaptive(light: 0x3E7C63, dark: 0x62B690)   // pine
+        case .easy: return adaptive(light: 0x3E6D8C, dark: 0x72A6CC)   // slate blue
         }
     }
 }
 
-/// The four-way rating row shown once the card is revealed: consistent soft-tinted
+/// The four-way rating row shown once the card is revealed (Liquid Glass on iOS 26): consistent soft-tinted
 /// cards, color-coded by difficulty, each with an optional next-interval caption so the
 /// learner knows what each choice schedules.
 public struct RatingBar: View {
@@ -42,35 +43,61 @@ public struct RatingBar: View {
     }
 
     public var body: some View {
-        HStack(spacing: KaiSpacing.s) {
-            ForEach(ReviewRating.allCases, id: \.self) { rating in
-                Button {
-                    // "Again" earns a firmer thud; the rest get a crisp selection tick.
-                    if rating == .again { KaiHaptics.impact(.rigid) } else { KaiHaptics.selection() }
-                    onRate(rating)
-                } label: {
-                    VStack(spacing: 2) {
-                        Text(rating.label)
-                            .font(KaiFont.body(15, weight: .semibold))
-                            .foregroundStyle(rating.tint)
-                        if let caption = interval(rating), !caption.isEmpty {
-                            Text(caption)
-                                .font(KaiFont.body(11, weight: .medium))
-                                .foregroundStyle(rating.tint.opacity(0.65))
+        if #available(iOS 26, macOS 26, *) {
+            // Liquid Glass, as the system's own controls are: one glass container so the
+            // four read as a group (and merge as they press), each rating in its colour.
+            GlassEffectContainer(spacing: KaiSpacing.s) {
+                HStack(spacing: KaiSpacing.s) {
+                    ForEach(ReviewRating.allCases, id: \.self) { rating in
+                        Button { rate(rating) } label: {
+                            // The glass style pads the label itself; this keeps the
+                            // capsule about as tall as the other controls on screen.
+                            label(rating)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 34)
                         }
+                        .buttonStyle(.glass)
+                        .buttonBorderShape(.capsule)
                     }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 60)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(rating.tint.opacity(0.14))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .strokeBorder(rating.tint.opacity(0.22), lineWidth: 1)
-                    )
                 }
-                .buttonStyle(KaiPressStyle())
+            }
+        } else {
+            HStack(spacing: KaiSpacing.s) {
+                ForEach(ReviewRating.allCases, id: \.self) { rating in
+                    Button { rate(rating) } label: {
+                        label(rating)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 60)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(rating.tint.opacity(0.14))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .strokeBorder(rating.tint.opacity(0.22), lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(KaiPressStyle())
+                }
+            }
+        }
+    }
+
+    private func rate(_ rating: ReviewRating) {
+        // "Again" earns a firmer thud; the rest get a crisp selection tick.
+        if rating == .again { KaiHaptics.impact(.rigid) } else { KaiHaptics.selection() }
+        onRate(rating)
+    }
+
+    private func label(_ rating: ReviewRating) -> some View {
+        VStack(spacing: 2) {
+            Text(rating.label)
+                .font(KaiFont.body(15, weight: .semibold))
+                .foregroundStyle(rating.tint)
+            if let caption = interval(rating), !caption.isEmpty {
+                Text(caption)
+                    .font(KaiFont.body(11, weight: .medium))
+                    .foregroundStyle(rating.tint.opacity(0.7))
             }
         }
     }

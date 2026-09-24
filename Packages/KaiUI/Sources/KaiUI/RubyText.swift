@@ -142,7 +142,7 @@ private struct SelectableTextView: UIViewRepresentable {
         let paragraph = NSMutableParagraphStyle()
         // Lines with furigana need the gap the readings take, or a reading crowds the
         // line above it.
-        paragraph.lineSpacing = size * (hasRuby ? 0.5 : 0.15)
+        paragraph.lineSpacing = size * (hasRuby ? 0.6 : 0.15)
         paragraph.alignment = switch alignment {
         case .center: .center
         case .trailing: .right

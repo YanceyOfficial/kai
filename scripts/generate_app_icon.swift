@@ -1,6 +1,12 @@
-// Generates Kai's app icon as an Icon Composer document: `AppIcon.icon`, a folder
-// of SVG layers plus `icon.json`. Xcode 26 compiles it (Liquid Glass on iOS 26+,
-// and the flat PNGs older iOS needs), so no bitmaps are written here.
+// Generates Kai's app icon and launch screen assets from one geometry:
+//
+// - `AppIcon.icon` — an Icon Composer document (SVG layers + `icon.json`). Xcode 26
+//   compiles it (Liquid Glass on iOS 26+, the flat PNGs older iOS needs).
+// - `Assets.xcassets/LaunchMark.imageset` — the mark on its own, flat, as @2x/@3x PNGs
+//   (light and dark; actool cannot read these SVGs), which `UILaunchScreen` shows
+//   centred; `LaunchSplash` in the app picks up from that exact frame.
+// - `Assets.xcassets/LaunchBackground.colorset` — the launch screen's background, the
+//   app's own (`KaiColor.washi`).
 //
 // The mark is a "sliced sun": a Tokiwa-green (常磐色) sun cut by four widening
 // lines above a horizon — the effort, and the result coming up over it (甲斐,
@@ -9,8 +15,9 @@
 // each layer. `KaiMark` in KaiUI draws the same geometry in SwiftUI; keep the two
 // in step.
 //
-// Usage: swift scripts/generate_app_icon.swift kai-ios/Resources/AppIcon.icon
+// Usage: swift scripts/generate_app_icon.swift kai-ios/Resources
 
+import AppKit
 import Foundation
 
 // MARK: Geometry (a 1024 × 1024 canvas)
@@ -98,7 +105,8 @@ func layer(_ name: String, darkOnly: Bool) -> [String: Any] {
     ]
 }
 
-let out = URL(fileURLWithPath: CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "AppIcon.icon")
+let resources = URL(fileURLWithPath: CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : ".")
+let out = resources.appendingPathComponent("AppIcon.icon")
 let assets = out.appendingPathComponent("Assets")
 try? FileManager.default.removeItem(at: out)
 try FileManager.default.createDirectory(at: assets, withIntermediateDirectories: true)
@@ -128,3 +136,89 @@ let document: [String: Any] = [
 let json = try JSONSerialization.data(withJSONObject: document, options: [.prettyPrinted, .sortedKeys])
 try json.write(to: out.appendingPathComponent("icon.json"))
 print("wrote \(out.path)")
+
+// MARK: Launch screen
+
+/// The launch mark's point size: `LaunchSplash` draws `KaiMark(height:)` at the same height.
+let launchHeight = 84.0
+let markBox = (x: 170.0, y: 298.0, width: 684.0, height: 522.0)
+
+/// The mark alone, flat (the accent and the text colour, as `KaiMark` draws it), cropped
+/// to its own bounds, as a transparent PNG `launchHeight` points tall at `scale`.
+func launchMarkPNG(sun: NSColor, horizonColour: NSColor, scale: Double) -> Data {
+    let unit = launchHeight * scale / markBox.height
+    let size = NSSize(width: (markBox.width * unit).rounded(), height: (markBox.height * unit).rounded())
+    let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width), pixelsHigh: Int(size.height),
+                               bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                               colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    let cg = NSGraphicsContext.current!.cgContext
+    // Canvas units, y down, origin at the mark's top-left.
+    cg.translateBy(x: 0, y: size.height)
+    cg.scaleBy(x: unit, y: -unit)
+    cg.translateBy(x: -markBox.x, y: -markBox.y)
+    let circle = CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)
+    for band in bands() {
+        cg.saveGState()
+        cg.clip(to: CGRect(x: 0, y: band.top, width: 1024, height: band.bottom - band.top))
+        cg.addEllipse(in: circle)
+        cg.setFillColor(sun.cgColor)
+        cg.fillPath()
+        cg.restoreGState()
+    }
+    let bar = CGRect(x: horizon.x, y: horizon.y, width: horizon.width, height: horizon.height)
+    cg.addPath(CGPath(roundedRect: bar, cornerWidth: horizon.height / 2, cornerHeight: horizon.height / 2, transform: nil))
+    cg.setFillColor(horizonColour.cgColor)
+    cg.fillPath()
+    NSGraphicsContext.restoreGraphicsState()
+    return rep.representation(using: .png, properties: [:])!
+}
+
+func srgb(_ hex: UInt32) -> NSColor {
+    NSColor(srgbRed: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255,
+            blue: Double(hex & 0xFF) / 255, alpha: 1)
+}
+
+let catalog = resources.appendingPathComponent("Assets.xcassets")
+let imageset = catalog.appendingPathComponent("LaunchMark.imageset")
+try? FileManager.default.removeItem(at: imageset)
+try FileManager.default.createDirectory(at: imageset, withIntermediateDirectories: true)
+// KaiColor.accent and KaiColor.sumi, light and dark.
+let darkAppearance: [[String: String]] = [["appearance": "luminosity", "value": "dark"]]
+var images: [[String: Any]] = []
+for (suffix, sun, line, dark) in [("", srgb(0x1B813E), srgb(0x1A1A1E), false), ("-dark", srgb(0x23A750), srgb(0xF3F3F6), true)] {
+    for scale in [2, 3] {
+        let name = "launch-mark\(suffix)@\(scale)x.png"
+        try launchMarkPNG(sun: sun, horizonColour: line, scale: Double(scale))
+            .write(to: imageset.appendingPathComponent(name))
+        var entry: [String: Any] = ["filename": name, "idiom": "universal", "scale": "\(scale)x"]
+        if dark { entry["appearances"] = darkAppearance }
+        images.append(entry)
+    }
+}
+let imagesetJSON: [String: Any] = ["images": images, "info": ["author": "xcode", "version": 1]]
+try JSONSerialization.data(withJSONObject: imagesetJSON, options: [.prettyPrinted, .sortedKeys])
+    .write(to: imageset.appendingPathComponent("Contents.json"))
+
+/// An sRGB colour entry for a colorset, from a 24-bit hex.
+func colourEntry(_ hex: UInt32, dark: Bool) -> [String: Any] {
+    let c = ["red": (hex >> 16) & 0xFF, "green": (hex >> 8) & 0xFF, "blue": hex & 0xFF]
+        .mapValues { String(format: "%.3f", Double($0) / 255) }
+    var entry: [String: Any] = [
+        "color": ["color-space": "srgb", "components": c.merging(["alpha": "1.000"]) { $1 }],
+        "idiom": "universal",
+    ]
+    if dark { entry["appearances"] = darkAppearance }
+    return entry
+}
+let colorset = catalog.appendingPathComponent("LaunchBackground.colorset")
+try FileManager.default.createDirectory(at: colorset, withIntermediateDirectories: true)
+// KaiColor.washi.
+let colorsetJSON: [String: Any] = [
+    "colors": [colourEntry(0xF2F2F6, dark: false), colourEntry(0x111113, dark: true)],
+    "info": ["author": "xcode", "version": 1],
+]
+try JSONSerialization.data(withJSONObject: colorsetJSON, options: [.prettyPrinted, .sortedKeys])
+    .write(to: colorset.appendingPathComponent("Contents.json"))
+print("wrote \(imageset.path) and \(colorset.path)")

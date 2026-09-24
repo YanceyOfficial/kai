@@ -29,3 +29,14 @@ func markScalesIntoRect() {
     #expect(abs(horizon.maxY - rect.maxY) < 0.01)
     #expect(abs(KaiMarkGeometry.aspectRatio - 684.0 / 522.0) < 1e-9)
 }
+
+@Test("Lowering the sun keeps it cut off at the horizon")
+func sunSinksBehindHorizon() {
+    let lowered = KaiMarkGeometry.sunPath(sunk: 100).boundingRect
+    #expect(abs(lowered.minY - 398) < 0.5)
+    // Never below the horizon (the lowest band showing may end at a cut, above it).
+    #expect(lowered.maxY <= 804 + 0.5)
+    #expect(lowered.maxY > 700)
+    // Sunk by more than its full height, nothing is left above the horizon.
+    #expect(KaiMarkGeometry.sunPath(sunk: 600).isEmpty)
+}

@@ -19,9 +19,11 @@ let project = Project(
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
                 with: [
+                    // The mark on the app's background, from scripts/generate_app_icon.swift;
+                    // LaunchSplash picks up from this exact frame.
                     "UILaunchScreen": [
-                        "UIColorName": "",
-                        "UIImageName": "",
+                        "UIColorName": "LaunchBackground",
+                        "UIImageName": "LaunchMark",
                     ],
                     "CFBundleDisplayName": "Kai",
                 ]

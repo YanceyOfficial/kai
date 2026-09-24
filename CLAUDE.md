@@ -15,10 +15,12 @@ Native Apple rewrite of the "Kai" flashcard app for memorizing difficult vocabul
   - `KaiServices` — logging (`os.Logger`), Keychain (`SecretStore`), FSRS-driven forgetting-push scheduling + quiet hours, Vision OCR, word pronunciation (Youdao dictvoice URL + `AVPlayer`). Depends on KaiFSRS. Pattern: **protocol + pure (tested) logic + thin platform adapter (compiled, not unit-tested)**.
 - `docs/superpowers/` — design spec (`specs/`) and per-package TDD implementation plans (`plans/`).
 - App icon: `kai-ios/Resources/AppIcon.icon`, an Icon Composer document (SVG layers + `icon.json`;
-  Xcode 26 compiles Liquid Glass for iOS 26+ and flat PNGs for older iOS). It is generated —
-  `swift scripts/generate_app_icon.swift kai-ios/Resources/AppIcon.icon` — never edited by hand.
+  Xcode 26 compiles Liquid Glass for iOS 26+ and flat PNGs for older iOS), plus the launch screen's
+  `LaunchMark` (vector SVG) and `LaunchBackground` in `Assets.xcassets`. All generated —
+  `swift scripts/generate_app_icon.swift kai-ios/Resources` — never edited by hand.
   The mark is a Tokiwa-green "sliced sun"; `KaiMark` (KaiUI) draws the same geometry in SwiftUI for
-  onboarding and the widget, so change both together.
+  onboarding, the widget and `LaunchSplash` (the launch sunrise, which holds onboarding back until it
+  ends), so change the two together.
 
 ## Build / run / test
 

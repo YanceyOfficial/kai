@@ -269,7 +269,8 @@ public extension KaiMotion {
 
 /// Both faces of a card and the turn between them. The face shown follows the
 /// *animated* angle — the back appears only once the card is past edge-on — so a
-/// turn released at 60° never shows the back early.
+/// turn released at 60° never shows the back early. Mid-turn the card frosts over
+/// (a veil and a blur, strongest edge-on), which softens the turn.
 // `@preconcurrency`: View is main-actor isolated and Animatable is not; SwiftUI only
 // reads and writes `animatableData` on the main actor.
 private struct FlipFaces<Front: View, Back: View>: View, @preconcurrency Animatable {
@@ -282,9 +283,15 @@ private struct FlipFaces<Front: View, Back: View>: View, @preconcurrency Animata
         set { angle = newValue }
     }
 
+    /// Peak blur, edge-on (points).
+    private var maxFrost: CGFloat { 9 }
+
     var body: some View {
         let turned = abs(angle.truncatingRemainder(dividingBy: 360))
         let showsBack = turned > 90 && turned < 270
+        // How far the card is from lying flat: 0 face-on (either side), 1 edge-on. It
+        // follows the animated angle, so the frost tracks a drag as well as a spring.
+        let frost = abs(sin(angle * .pi / 180))
         ZStack {
             if showsBack {
                 back.rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
@@ -292,6 +299,15 @@ private struct FlipFaces<Front: View, Back: View>: View, @preconcurrency Animata
                 front
             }
         }
+        // Frosted glass while it turns: the face mists over and softens towards the
+        // edge, so the swap of faces at 90° happens under the frost instead of as a cut.
+        .overlay {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(KaiColor.cardFace)
+                .opacity(0.45 * frost)
+                .allowsHitTesting(false)
+        }
+        .blur(radius: maxFrost * frost)
         .rotation3DEffect(.degrees(angle), axis: (x: 0, y: 1, z: 0), perspective: 0.4)
     }
 }

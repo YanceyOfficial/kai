@@ -117,13 +117,16 @@ struct ReviewSessionView: View {
     private func cardBack(_ card: ReviewCardData) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: KaiSpacing.m) {
-                HStack(alignment: .firstTextBaseline, spacing: KaiSpacing.s) {
+                VStack(alignment: .leading, spacing: KaiSpacing.xs) {
                     Text(card.word)
                         .font(KaiFont.display(22, weight: .semibold))
                         .foregroundStyle(KaiColor.sumi)
-                    Text(card.phonetic)
-                        .font(KaiFont.phonetic(13))
-                        .foregroundStyle(KaiColor.inkSecondary)
+                    if !card.phonetic.isEmpty {
+                        Text(card.phonetic)
+                            .font(KaiFont.phonetic(13))
+                            .foregroundStyle(KaiColor.inkSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
 
                 Text(card.explanation)

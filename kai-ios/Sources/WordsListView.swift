@@ -132,15 +132,14 @@ struct WordsListView: View {
 
     private func row(_ entry: VocabularyEntry) -> some View {
         VStack(alignment: .leading, spacing: KaiSpacing.xs) {
-            HStack(spacing: KaiSpacing.s) {
-                Text(entry.lemma)
-                    .font(KaiFont.display(19, weight: .semibold))
-                    .foregroundStyle(KaiColor.sumi)
-                if !entry.phonetic.isEmpty {
-                    Text(entry.phonetic)
-                        .font(KaiFont.phonetic(12))
-                        .foregroundStyle(KaiColor.inkSecondary)
-                }
+            Text(entry.lemma)
+                .font(KaiFont.display(19, weight: .semibold))
+                .foregroundStyle(KaiColor.sumi)
+            if !entry.phonetic.isEmpty {
+                Text(entry.phonetic)
+                    .font(KaiFont.phonetic(12))
+                    .foregroundStyle(KaiColor.inkSecondary)
+                    .lineLimit(1)
             }
             if !entry.explanation.isEmpty {
                 Text(entry.explanation)

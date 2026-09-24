@@ -224,11 +224,6 @@ struct WordDetailView: View {
                     Text(entry.lemma)
                         .font(KaiFont.display(30, weight: .bold))
                         .foregroundStyle(KaiColor.sumi)
-                    if !entry.phonetic.isEmpty {
-                        Text(entry.phonetic)
-                            .font(KaiFont.phonetic(14))
-                            .foregroundStyle(KaiColor.inkSecondary)
-                    }
                     Spacer(minLength: 0)
                     Button {
                         KaiHaptics.impact(.light)
@@ -239,6 +234,12 @@ struct WordDetailView: View {
                             .foregroundStyle(KaiColor.vermilion)
                     }
                     .buttonStyle(KaiPressStyle())
+                }
+                if !entry.phonetic.isEmpty {
+                    Text(entry.phonetic)
+                        .font(KaiFont.phonetic(14))
+                        .foregroundStyle(KaiColor.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 if !entry.partsOfSpeech.isEmpty {
                     Text(entry.partsOfSpeech.joined(separator: " · "))

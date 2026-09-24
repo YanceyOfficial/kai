@@ -23,6 +23,7 @@ struct WordDetailView: View {
     /// Add-tag alert state.
     @State private var showingAddTag = false
     @State private var newTag = ""
+    @FocusState private var tagFieldFocused: Bool
 
     /// Tap-through: navigate to a related word, or offer to add one that's not in the deck.
     @State private var linkedLemma: String?
@@ -63,12 +64,9 @@ struct WordDetailView: View {
         .navigationTitle(entry.lemma)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingAddNote) { addNoteSheet }
-        .alert("Add tag", isPresented: $showingAddTag) {
-            TextField("e.g. GRE", text: $newTag)
-                .textInputAutocapitalization(.never)
-            Button("Add") { addTag() }
-            Button("Cancel", role: .cancel) { newTag = "" }
-        }
+        // A sheet, like "Add note": iOS 26's text-field alert lets its field run past
+        // the alert's edge.
+        .sheet(isPresented: $showingAddTag) { addTagSheet }
         .overlay {
             if adding {
                 ProgressView().tint(KaiColor.vermilion)
@@ -128,9 +126,38 @@ struct WordDetailView: View {
         .listRowBackground(KaiColor.cardFace)
     }
 
+    private var addTagSheet: some View {
+        NavigationStack {
+            Form {
+                Section("New tag") {
+                    TextField("e.g. GRE", text: $newTag)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .submitLabel(.done)
+                        .focused($tagFieldFocused)
+                        .onSubmit { addTag() }
+                }
+            }
+            .navigationTitle("Add tag")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showingAddTag = false }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") { addTag() }
+                        .disabled(newTag.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .task { tagFieldFocused = true }
+        }
+        .presentationDetents([.height(220)])
+    }
+
     private func addTag() {
         let tag = newTag.trimmingCharacters(in: .whitespacesAndNewlines)
         newTag = ""
+        showingAddTag = false
         guard !tag.isEmpty, !entry.tags.contains(where: { $0.caseInsensitiveCompare(tag) == .orderedSame }) else { return }
         entry.tags.append(tag)
         save()

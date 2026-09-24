@@ -8,6 +8,11 @@ public extension EnvironmentValues {
     /// Whether `RubyText` prints readings over annotated bases (the "Show furigana"
     /// setting). Off, it shows the plain text.
     @Entry var showsFurigana: Bool = true
+
+    /// Told when a `RubyText` gains or loses a selection: the text view's identity and
+    /// whether it now has one. A container whose own gestures would fight the selection
+    /// handles (the flip card's swipe) holds them while any selection is active.
+    @Entry var textSelectionChanged: ((AnyHashable, Bool) -> Void)? = nil
 }
 
 /// Reading text: selectable, and with furigana when it carries ruby markup
@@ -72,6 +77,28 @@ private struct SelectableTextView: UIViewRepresentable {
     let color: Color
     let alignment: TextAlignment
 
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    /// Reports selection changes to the environment's `textSelectionChanged`.
+    final class Coordinator: NSObject, UITextViewDelegate {
+        var onChange: ((AnyHashable, Bool) -> Void)?
+        private var selected = false
+
+        func textViewDidChangeSelection(_ textView: UITextView) {
+            report(textView.selectedRange.length > 0)
+        }
+
+        func report(_ now: Bool) {
+            guard now != selected else { return }
+            selected = now
+            onChange?(ObjectIdentifier(self), now)
+        }
+    }
+
+    static func dismantleUIView(_ view: UITextView, coordinator: Coordinator) {
+        coordinator.report(false)
+    }
+
     func makeUIView(context: Context) -> UITextView {
         // TextKit 2 explicitly: it is the one that draws ruby.
         let view = UITextView(usingTextLayoutManager: true)
@@ -82,11 +109,19 @@ private struct SelectableTextView: UIViewRepresentable {
         view.textContainerInset = .zero
         view.textContainer.lineFragmentPadding = 0
         view.dataDetectorTypes = []
+        view.delegate = context.coordinator
         view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return view
     }
 
     func updateUIView(_ view: UITextView, context: Context) {
+        context.coordinator.onChange = context.environment.textSelectionChanged
+        // Readings sit between lines: give them room above the first line too, so they
+        // never touch the text above this view.
+        let top = hasRuby ? (size * 0.6).rounded() : 0
+        if view.textContainerInset.top != top {
+            view.textContainerInset = UIEdgeInsets(top: top, left: 0, bottom: 0, right: 0)
+        }
         let resolved = color.resolve(in: context.environment)
         let text = attributedString(color: UIColor(red: CGFloat(resolved.red), green: CGFloat(resolved.green),
                                                    blue: CGFloat(resolved.blue), alpha: CGFloat(resolved.opacity)))
@@ -105,7 +140,9 @@ private struct SelectableTextView: UIViewRepresentable {
         let font = UIFont(descriptor: descriptor, size: size)
 
         let paragraph = NSMutableParagraphStyle()
-        paragraph.lineSpacing = size * 0.15
+        // Lines with furigana need the gap the readings take, or a reading crowds the
+        // line above it.
+        paragraph.lineSpacing = size * (hasRuby ? 0.5 : 0.15)
         paragraph.alignment = switch alignment {
         case .center: .center
         case .trailing: .right
@@ -129,6 +166,10 @@ private struct SelectableTextView: UIViewRepresentable {
             }
         }
         return result
+    }
+
+    private var hasRuby: Bool {
+        segments.contains { if case .ruby = $0 { true } else { false } }
     }
 
     private var uiWeight: UIFont.Weight {

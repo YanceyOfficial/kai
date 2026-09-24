@@ -11,7 +11,8 @@ import SwiftUI
 ///   tracks the finger, a hint for the rating grows in the direction of travel, and a
 ///   release commits only if the throw is projected past a third of the width in the
 ///   direction it was dragged (`KaiMotion.swipeOutcome`); otherwise it springs home.
-///   Drags lock to one axis first, so the back still scrolls vertically.
+///   Drags lock to one axis first, so the back still scrolls vertically, and the card
+///   holds still while text on its back is selected (see `textSelectionChanged`).
 /// - **Throw it** from outside with `fling` (a rating button does): the card leaves
 ///   the same way a committed swipe does, so buttons and swipes read as one gesture.
 /// - With Reduce Motion the card cross-fades instead of turning, and swipes are off
@@ -53,6 +54,9 @@ public struct FlipCard<Back: View>: View {
     @State private var pastThreshold = false
     /// True once the card is on its way out (a committed swipe or a fling).
     @State private var leaving = false
+    /// Text views on the back that hold a selection. While any does, the card stays
+    /// put: dragging a selection handle must not swipe the card away.
+    @State private var selections: Set<AnyHashable> = []
     @State private var width: Double = 350
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -115,13 +119,20 @@ public struct FlipCard<Back: View>: View {
         if reduceMotion {
             ZStack {
                 if isRevealed {
-                    card(back).transition(.opacity)
+                    card(backWithSelectionLock).transition(.opacity)
                 } else {
                     card(front).transition(.opacity)
                 }
             }
         } else {
-            FlipFaces(angle: angle, front: card(front), back: card(back))
+            FlipFaces(angle: angle, front: card(front), back: card(backWithSelectionLock))
+        }
+    }
+
+    /// The back, telling the card when its text is being selected.
+    private var backWithSelectionLock: some View {
+        back.environment(\.textSelectionChanged) { id, selected in
+            if selected { selections.insert(id) } else { selections.remove(id) }
         }
     }
 
@@ -197,6 +208,7 @@ public struct FlipCard<Back: View>: View {
     private var drag: some Gesture {
         DragGesture(minimumDistance: 10)
             .onChanged { value in
+                guard selections.isEmpty else { return }   // selecting text: the card holds still
                 if dragAxis == nil {
                     dragAxis = abs(value.translation.width) > abs(value.translation.height) ? .horizontal : .vertical
                 }

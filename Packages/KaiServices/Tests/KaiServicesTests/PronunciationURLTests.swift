@@ -47,4 +47,31 @@ struct PronunciationURLTests {
         #expect(PronunciationURL.youdao(for: "   ", accent: .us) == nil)
         #expect(PronunciationURL.youdao(for: "", accent: .uk) == nil)
     }
+
+    @Test("Japanese uses le=jap instead of an accent type")
+    func japanese() throws {
+        let url = try #require(PronunciationURL.youdao(for: "懐かしい", voice: .japanese))
+        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        #expect(items.contains(URLQueryItem(name: "audio", value: "懐かしい")))
+        #expect(items.contains(URLQueryItem(name: "le", value: "jap")))
+        #expect(!items.contains { $0.name == "type" })
+        #expect(!url.absoluteString.contains("懐"))   // percent-encoded on the wire
+    }
 }
+
+@Suite("JapaneseSpeech")
+struct JapaneseSpeechTests {
+    @Test("Speaks the kana reading, without its pitch-accent mark")
+    func speaksReading() {
+        #expect(JapaneseSpeech.text(word: "懐かしい", phonetic: "なつかしい ④") == "なつかしい")
+        #expect(JapaneseSpeech.text(word: "生物", phonetic: "せいぶつ") == "せいぶつ")
+        #expect(JapaneseSpeech.text(word: "コーヒー", phonetic: "コーヒー ③") == "コーヒー")
+    }
+
+    @Test("Falls back to the word when there is no kana reading")
+    func fallsBackToWord() {
+        #expect(JapaneseSpeech.text(word: "曖昧", phonetic: "") == "曖昧")
+        #expect(JapaneseSpeech.text(word: "曖昧", phonetic: "aimai") == "曖昧")
+    }
+}
+

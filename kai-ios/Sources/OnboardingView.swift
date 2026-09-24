@@ -33,9 +33,8 @@ struct OnboardingView: View {
 
     private var brand: some View {
         VStack(alignment: .leading, spacing: KaiSpacing.s) {
-            Text("甲")
-                .font(KaiFont.display(56, weight: .bold))
-                .foregroundStyle(KaiColor.vermilion)
+            KaiMark(height: 46)
+                .padding(.bottom, KaiSpacing.xs)
             Text("Welcome to Kai")
                 .font(KaiFont.display(30, weight: .bold))
                 .foregroundStyle(KaiColor.sumi)

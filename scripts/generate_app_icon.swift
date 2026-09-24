@@ -1,59 +1,130 @@
-import AppKit
+// Generates Kai's app icon as an Icon Composer document: `AppIcon.icon`, a folder
+// of SVG layers plus `icon.json`. Xcode 26 compiles it (Liquid Glass on iOS 26+,
+// and the flat PNGs older iOS needs), so no bitmaps are written here.
+//
+// The mark is a "sliced sun": a Tokiwa-green (常磐色) sun cut by four widening
+// lines above a horizon — the effort, and the result coming up over it (甲斐,
+// "worth it"). Every band is a plain path (the circle clipped between two
+// horizontals, computed below), not an SVG mask, so Icon Composer can render
+// each layer. `KaiMark` in KaiUI draws the same geometry in SwiftUI; keep the two
+// in step.
+//
+// Usage: swift scripts/generate_app_icon.swift kai-ios/Resources/AppIcon.icon
 
-let vermilion = NSColor(srgbRed: 0xC8/255.0, green: 0x40/255.0, blue: 0x2F/255.0, alpha: 1)
-let white = NSColor(srgbRed: 0xFA/255.0, green: 0xF7/255.0, blue: 0xF2/255.0, alpha: 1)
+import Foundation
 
-/// Render the glyph into an exact pixel-size, alpha-backed bitmap (a 4-sample context is
-/// valid, unlike a 3-sample one; drawing at native size avoids lockFocus's 2x scaling).
-func renderRGBA(size: Int, text: String, bg: NSColor?, fg: NSColor, weightFraction: CGFloat) -> NSBitmapImageRep {
-    let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: size, pixelsHigh: size,
-                               bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
-                               colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
-    NSGraphicsContext.saveGraphicsState()
-    let ctx = NSGraphicsContext(bitmapImageRep: rep)!
-    NSGraphicsContext.current = ctx
-    let s = CGFloat(size)
-    if let bg { bg.setFill(); NSBezierPath(rect: NSRect(x: 0, y: 0, width: s, height: s)).fill() }
-    let font = NSFont.systemFont(ofSize: s * weightFraction, weight: .heavy)
-    let para = NSMutableParagraphStyle(); para.alignment = .center
-    let attr = NSAttributedString(string: text, attributes: [.font: font, .foregroundColor: fg, .paragraphStyle: para])
-    let ts = attr.size()
-    attr.draw(in: NSRect(x: (s - ts.width) / 2, y: (s - ts.height) / 2 + s * 0.01, width: ts.width, height: ts.height))
-    ctx.flushGraphics()
-    NSGraphicsContext.restoreGraphicsState()
-    return rep
-}
+// MARK: Geometry (a 1024 × 1024 canvas)
 
-/// Copy an RGBA rep into a true 24-bit RGB rep (PNG color type 2, no alpha channel) —
-/// what actool requires for app icons.
-func toOpaqueRGB(_ src: NSBitmapImageRep) -> NSBitmapImageRep {
-    let w = src.pixelsWide, h = src.pixelsHigh
-    let dst = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: w, pixelsHigh: h,
-                               bitsPerSample: 8, samplesPerPixel: 3, hasAlpha: false, isPlanar: false,
-                               colorSpaceName: .deviceRGB, bytesPerRow: w * 3, bitsPerPixel: 24)!
-    let s = src.bitmapData!, d = dst.bitmapData!
-    let sSpp = src.samplesPerPixel, sRow = src.bytesPerRow
-    for y in 0..<h {
-        for x in 0..<w {
-            let si = y * sRow + x * sSpp
-            let di = y * (w * 3) + x * 3
-            d[di] = s[si]; d[di + 1] = s[si + 1]; d[di + 2] = s[si + 2]
-        }
+let cx = 512.0, cy = 560.0, r = 262.0
+/// The four cuts through the sun, top to bottom, as (y, height); each wider than the last.
+let cuts: [(y: Double, h: Double)] = [(548, 18), (608, 24), (672, 32), (744, 42)]
+/// The horizon: the sun is cut off where it starts.
+let horizon = (x: 170.0, y: 804.0, width: 684.0, height: 16.0)
+
+/// The y-ranges of the visible bands, from the top of the sun down to the horizon.
+func bands() -> [(top: Double, bottom: Double)] {
+    var result: [(Double, Double)] = []
+    var top = cy - r
+    for cut in cuts {
+        result.append((top, cut.y))
+        top = cut.y + cut.h
     }
-    return dst
+    result.append((top, horizon.y))
+    return result
 }
 
-func writePNG(_ rep: NSBitmapImageRep, to path: String) {
-    try? rep.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: path))
+func fmt(_ v: Double) -> String { String(format: "%.2f", v) }
+
+/// The part of the circle between two horizontals, as one closed path: across
+/// the top chord, down the right-hand arc, back along the bottom chord, and up the
+/// left-hand arc. A chord at the very top of the circle is a single point.
+func bandPath(top: Double, bottom: Double) -> String {
+    func half(_ y: Double) -> Double { (max(0, r * r - (y - cy) * (y - cy))).squareRoot() }
+    let (t, b) = (half(top), half(bottom))
+    return "M\(fmt(cx - t)) \(fmt(top))L\(fmt(cx + t)) \(fmt(top))"
+        + "A\(fmt(r)) \(fmt(r)) 0 0 1 \(fmt(cx + b)) \(fmt(bottom))"
+        + "L\(fmt(cx - b)) \(fmt(bottom))"
+        + "A\(fmt(r)) \(fmt(r)) 0 0 1 \(fmt(cx - t)) \(fmt(top))Z"
 }
 
-let out = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "."
-for px in [20, 29, 40, 58, 60, 76, 80, 87, 120, 152, 167, 180, 1024] {
-    let rgba = renderRGBA(size: px, text: "甲", bg: vermilion, fg: white, weightFraction: 0.66)
-    writePNG(toOpaqueRGB(rgba), to: "\(out)/Icon-\(px).png")
+// MARK: Palette
+
+struct Scheme {
+    let background: (String, String)
+    let sun: (String, String)
+    let horizon: String
 }
-// Launch logo keeps transparency (imageset, not an app icon).
-for (name, px) in [("LaunchLogo", 360), ("LaunchLogo@2x", 720), ("LaunchLogo@3x", 1080)] {
-    writePNG(renderRGBA(size: px, text: "甲", bg: nil, fg: vermilion, weightFraction: 0.9), to: "\(out)/\(name).png")
+
+let light = Scheme(background: ("#F8F8FA", "#E9E9EE"), sun: ("#2DAA57", "#136A30"), horizon: "#1A1A1E")
+let dark = Scheme(background: ("#1D1D1E", "#0A0A0A"), sun: ("#43C774", "#1B813E"), horizon: "#F3F3F6")
+
+// MARK: Layers
+
+func svg(_ body: String) -> String {
+    #"<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">"#
+        + body + "</svg>\n"
 }
-print("done")
+
+func verticalGradient(_ id: String, _ stops: (String, String), from y1: Double, to y2: Double) -> String {
+    #"<defs><linearGradient id="\#(id)" gradientUnits="userSpaceOnUse" x1="0" y1="\#(fmt(y1))" x2="0" y2="\#(fmt(y2))">"#
+        + #"<stop offset="0" stop-color="\#(stops.0)"/><stop offset="1" stop-color="\#(stops.1)"/></linearGradient></defs>"#
+}
+
+func backgroundLayer(_ s: Scheme) -> String {
+    svg(verticalGradient("g", s.background, from: 0, to: 1024) + #"<rect width="1024" height="1024" fill="url(#g)"/>"#)
+}
+
+func sunLayer(_ s: Scheme) -> String {
+    let paths = bands().map { #"<path d="\#(bandPath(top: $0.top, bottom: $0.bottom))"/>"# }.joined()
+    return svg(verticalGradient("g", s.sun, from: cy - r, to: horizon.y) + #"<g fill="url(#g)">\#(paths)</g>"#)
+}
+
+func horizonLayer(_ s: Scheme) -> String {
+    svg(#"<rect x="\#(fmt(horizon.x))" y="\#(fmt(horizon.y))" width="\#(fmt(horizon.width))" height="\#(fmt(horizon.height))" rx="\#(fmt(horizon.height / 2))" fill="\#(s.horizon)"/>"#)
+}
+
+// MARK: Document
+
+/// A layer shown in one appearance only: the light one is hidden in dark, and the
+/// dark one everywhere else (the same swap the Exodus icon uses; actool honours it).
+func layer(_ name: String, darkOnly: Bool) -> [String: Any] {
+    [
+        "image-name": "\(name).svg",
+        "name": name,
+        "hidden-specializations": [
+            ["value": darkOnly],
+            ["appearance": "dark", "value": !darkOnly],
+        ],
+    ]
+}
+
+let out = URL(fileURLWithPath: CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "AppIcon.icon")
+let assets = out.appendingPathComponent("Assets")
+try? FileManager.default.removeItem(at: out)
+try FileManager.default.createDirectory(at: assets, withIntermediateDirectories: true)
+
+let files: [(String, String)] = [
+    ("background", backgroundLayer(light)), ("background-dark", backgroundLayer(dark)),
+    ("sun", sunLayer(light)), ("sun-dark", sunLayer(dark)),
+    ("horizon", horizonLayer(light)), ("horizon-dark", horizonLayer(dark)),
+]
+for (name, body) in files {
+    try body.write(to: assets.appendingPathComponent("\(name).svg"), atomically: true, encoding: .utf8)
+}
+
+// Top to bottom, as Icon Composer lists layers.
+let document: [String: Any] = [
+    "groups": [[
+        "layers": [
+            layer("horizon", darkOnly: false), layer("horizon-dark", darkOnly: true),
+            layer("sun", darkOnly: false), layer("sun-dark", darkOnly: true),
+            layer("background", darkOnly: false), layer("background-dark", darkOnly: true),
+        ],
+        "shadow": ["kind": "neutral", "opacity": 0.5],
+        "translucency": ["enabled": true, "value": 0.3],
+    ]],
+    "supported-platforms": ["circles": ["watchOS"], "squares": "shared"],
+]
+let json = try JSONSerialization.data(withJSONObject: document, options: [.prettyPrinted, .sortedKeys])
+try json.write(to: out.appendingPathComponent("icon.json"))
+print("wrote \(out.path)")

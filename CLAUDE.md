@@ -14,6 +14,11 @@ Native Apple rewrite of the "Kai" flashcard app for memorizing difficult vocabul
   - `KaiAI` — `LLMProvider` protocol + Claude/OpenAI structured-output over `URLSession` (`HTTPTransport` is injectable). Produces Codable DTOs, not SwiftData. Depends on KaiCore (enums only).
   - `KaiServices` — logging (`os.Logger`), Keychain (`SecretStore`), FSRS-driven forgetting-push scheduling + quiet hours, Vision OCR, word pronunciation (Youdao dictvoice URL + `AVPlayer`). Depends on KaiFSRS. Pattern: **protocol + pure (tested) logic + thin platform adapter (compiled, not unit-tested)**.
 - `docs/superpowers/` — design spec (`specs/`) and per-package TDD implementation plans (`plans/`).
+- App icon: `kai-ios/Resources/AppIcon.icon`, an Icon Composer document (SVG layers + `icon.json`;
+  Xcode 26 compiles Liquid Glass for iOS 26+ and flat PNGs for older iOS). It is generated —
+  `swift scripts/generate_app_icon.swift kai-ios/Resources/AppIcon.icon` — never edited by hand.
+  The mark is a Tokiwa-green "sliced sun"; `KaiMark` (KaiUI) draws the same geometry in SwiftUI for
+  onboarding and the widget, so change both together.
 
 ## Build / run / test
 
@@ -63,7 +68,9 @@ Kernel green: KaiCore (20 tests), KaiFSRS (23), KaiAI (18), KaiServices (18). Ap
 
 The app is a `MainTabView` shell — Review / Quiz / Words / Stats / Settings — over one
 SwiftData store (starter deck seeded once at launch by `StarterSeed`). Neutral palette
-with light/dark support (`KaiColor` adaptive) and a vermilion accent.
+with light/dark support (`KaiColor` adaptive) and a Tokiwa green accent (常磐色,
+`KaiColor.accent`, #1B813E / #23A750 dark; `vermilion` is a legacy alias of it that app
+views drop as they are redesigned). The "Again" rating is red (`KaiColor.danger`).
 - **Review** — `ReviewStore.load(newLimit:)` composes a session (up to N new words
   interleaved with due review words via `SessionComposer`); each rating reschedules
   through `ReviewScheduler`/FSRS, persists, and writes a `ReviewLog`. Flip card has

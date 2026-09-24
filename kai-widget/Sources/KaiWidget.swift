@@ -33,9 +33,7 @@ struct ReviewWidgetView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: KaiSpacing.xs) {
-            Text("甲")
-                .font(.system(size: 15, weight: .heavy))
-                .foregroundStyle(KaiColor.vermilion)
+            KaiMark(height: 14)
             Spacer(minLength: 0)
             Text("\(due)")
                 .font(KaiFont.display(42, weight: .bold))

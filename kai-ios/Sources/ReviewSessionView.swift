@@ -243,7 +243,7 @@ struct ReviewSessionView: View {
                         isRevealed: $revealed,
                         onSpeak: { pronouncer.play(card.word, accent: accent) },
                         // Right is Good, left is Again; Hard and Easy stay on the buttons.
-                        onSwipe: { direction in rate(card, direction == .right ? .good : .again) },
+                        onSwipe: { direction in rate(card, direction == .right ? .good : .again, swiped: true) },
                         onSwipeProgress: { swipeProgress = $0 }
                     ) {
                         cardBack(card)
@@ -302,14 +302,14 @@ struct ReviewSessionView: View {
     }
 
     /// Records a rating (from a button or a swipe) and moves to the next card.
-    private func rate(_ card: ReviewCardData, _ rating: KaiUI.ReviewRating) {
+    private func rate(_ card: ReviewCardData, _ rating: KaiUI.ReviewRating, swiped: Bool = false) {
         // On a replay pass, just advance — don't re-rate or re-feed FSRS.
         if !isReplay {
             store.rate(card, rating.core)
             // A re-drilled (lapsed) card can be rated more than once; count it once.
             if !reviewedIDs.contains(card.id) { reviewedIDs.append(card.id) }
         }
-        advance()
+        advance(swiped: swiped)
     }
 
     private var completed: some View {
@@ -341,8 +341,13 @@ struct ReviewSessionView: View {
         .padding(.horizontal, KaiSpacing.l)
     }
 
-    private func advance() {
-        withAnimation(KaiMotion.standard) {
+    /// Moves to the next card. After a swipe the card in hand has already left and the
+    /// next one has risen into its place, so the swap is instant: animating it faded the
+    /// new card in over the one after it, which flashed through for a few frames.
+    private func advance(swiped: Bool = false) {
+        var transaction = Transaction(animation: swiped ? nil : KaiMotion.standard)
+        transaction.disablesAnimations = swiped
+        withTransaction(transaction) {
             revealed = false
             swipeProgress = 0
             index += 1

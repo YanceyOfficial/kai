@@ -41,9 +41,9 @@ struct WordDetailView: View {
                 Section("Examples") {
                     ForEach(Array(entry.examples.enumerated()), id: \.offset) { _, example in
                         VStack(alignment: .leading, spacing: KaiSpacing.xs) {
-                            RubyText(example.sentence, size: 15)
+                            RubyText(example.sentence, size: 17)
                             if !example.translation.isEmpty {
-                                RubyText(example.translation, size: 14, color: KaiColor.inkSecondary)
+                                RubyText(example.translation, size: 15, color: KaiColor.inkSecondary)
                             }
                         }
                         .padding(.vertical, 2)
@@ -196,13 +196,19 @@ struct WordDetailView: View {
     }
 
     private func addWord(_ word: String) {
-        guard let config = AIConfigStore.configuration() else {
+        guard AIConfigStore.hasKey else {
             toast.error("Add an API key in Settings first", category: "words")
             return
         }
         Task { @MainActor in
             adding = true
             defer { adding = false }
+            let config: AIConfiguration
+            do { config = try await AIConfigStore.readyConfiguration() }
+            catch {
+                toast.error(error.localizedDescription, category: "ai")
+                return
+            }
             let outcome = await ProviderFactory.make(config)
                 .generateCards(lemmas: [word], language: entry.language, literaryExamples: false, chunkSize: 1)
             guard let card = outcome.cards.first else {
@@ -224,10 +230,10 @@ struct WordDetailView: View {
             Section("Meaning") {
                 VStack(alignment: .leading, spacing: KaiSpacing.xs) {
                     if !entry.explanation.isEmpty {
-                        RubyText(entry.explanation, size: 16)
+                        RubyText(entry.explanation, size: 17)
                     }
                     if !en.isEmpty {
-                        RubyText(en, size: 14, color: KaiColor.inkSecondary)
+                        RubyText(en, size: 16, color: KaiColor.inkSecondary)
                     }
                 }
                 .padding(.vertical, 2)
@@ -303,14 +309,14 @@ struct WordDetailView: View {
                     VStack(alignment: .leading, spacing: KaiSpacing.xs) {
                         // Bottom-aligned: a phrase with furigana is taller than its gloss.
                         HStack(alignment: .bottom, spacing: KaiSpacing.s) {
-                            RubyText(c.phrase, size: 15, weight: .semibold)
+                            RubyText(c.phrase, size: 17, weight: .semibold)
                                 .fixedSize()
-                            RubyText(c.meaning, size: 13, color: KaiColor.inkSecondary)
+                            RubyText(c.meaning, size: 14, color: KaiColor.inkSecondary)
                         }
                         if !c.example.isEmpty {
-                            RubyText(c.example, size: 14)
+                            RubyText(c.example, size: 16)
                             if !c.exampleTranslation.isEmpty {
-                                RubyText(c.exampleTranslation, size: 13, color: KaiColor.inkSecondary)
+                                RubyText(c.exampleTranslation, size: 14, color: KaiColor.inkSecondary)
                             }
                         }
                     }
@@ -358,7 +364,7 @@ struct WordDetailView: View {
                     Text(note.createdAt.formatted(date: .abbreviated, time: .omitted))
                         .font(KaiFont.body(11, weight: .semibold))
                         .foregroundStyle(KaiColor.inkSecondary)
-                    RubyText(note.text, size: 15)
+                    RubyText(note.text, size: 16)
                 }
                 .padding(.vertical, 2)
             }
@@ -448,7 +454,7 @@ struct WordDetailView: View {
                 .foregroundStyle(KaiColor.vermilion)
                 .textCase(.uppercase)
                 .tracking(1.2)
-            RubyText(value, size: 15)
+            RubyText(value, size: 16)
         }
         .padding(.vertical, 2)
     }

@@ -129,18 +129,18 @@ struct ReviewSessionView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: KaiSpacing.m) {
                 VStack(alignment: .leading, spacing: KaiSpacing.xs) {
-                    RubyText(card.word, size: 22, weight: .semibold, design: .serif)
+                    RubyText(card.word, size: 24, weight: .semibold, design: .serif)
                     if !card.phonetic.isEmpty {
                         Text(card.phonetic)
-                            .font(KaiFont.phonetic(13))
+                            .font(KaiFont.phonetic(14))
                             .foregroundStyle(KaiColor.inkSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
 
-                RubyText(card.explanation, size: 20, design: .serif)
+                RubyText(card.explanation, size: 21, design: .serif)
                 if let en = card.explanationEn, !en.isEmpty {
-                    RubyText(en, size: 14, color: KaiColor.inkSecondary)
+                    RubyText(en, size: 16, color: KaiColor.inkSecondary)
                 }
 
                 if !card.examples.isEmpty {
@@ -148,9 +148,9 @@ struct ReviewSessionView: View {
                     backLabel("Examples")
                     ForEach(Array(card.examples.enumerated()), id: \.offset) { _, ex in
                         VStack(alignment: .leading, spacing: 2) {
-                            RubyText(ex.sentence, size: 15)
+                            RubyText(ex.sentence, size: 17)
                             if !ex.translation.isEmpty {
-                                RubyText(ex.translation, size: 14, color: KaiColor.inkSecondary)
+                                RubyText(ex.translation, size: 15, color: KaiColor.inkSecondary)
                             }
                         }
                     }
@@ -160,7 +160,7 @@ struct ReviewSessionView: View {
                     backDivider
                     backLabel("Similar words")
                     ForEach(Array(card.synonymGroups.enumerated()), id: \.offset) { _, group in
-                        RubyText("\(group.sense) · \(group.words.joined(separator: ", "))", size: 14)
+                        RubyText("\(group.sense) · \(group.words.joined(separator: ", "))", size: 15)
                     }
                 }
 
@@ -170,9 +170,9 @@ struct ReviewSessionView: View {
                     ForEach(Array(card.collocations.enumerated()), id: \.offset) { _, c in
                         // Bottom-aligned: a phrase with furigana is taller than its gloss.
                         HStack(alignment: .bottom, spacing: KaiSpacing.s) {
-                            RubyText(c.phrase, size: 14, weight: .semibold)
+                            RubyText(c.phrase, size: 16, weight: .semibold)
                                 .fixedSize()
-                            RubyText(c.meaning, size: 12, color: KaiColor.inkSecondary)
+                            RubyText(c.meaning, size: 14, color: KaiColor.inkSecondary)
                         }
                     }
                 }

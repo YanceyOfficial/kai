@@ -81,7 +81,7 @@ struct StoryView: View {
                 if store.language == .japanese {
                     // Furigana and highlighting do not mix (a conjugated word is not the
                     // lemma's text), so the passage reads as it is and the words sit below it.
-                    RubyText(store.text, size: 17)
+                    RubyText(store.text, size: 18)
                     storyWords
                 } else {
                     Text(attributedStory)

@@ -37,7 +37,7 @@ func claudeStory() async throws {
     let inner = #"{"story":"A short tale.","translation":"一个短故事。"}"#
     let envelope: [String: Any] = ["content": [["type": "text", "text": inner]]]
     let body = try JSONSerialization.data(withJSONObject: envelope)
-    let provider = ClaudeProvider(apiKey: "sk", transport: StubTransport(responseBody: body))
+    let provider = ClaudeProvider(apiKey: "sk", model: "claude-test", transport: StubTransport(responseBody: body), maxTokens: 4096)
 
     let story = try await provider.generateStory(words: ["tale"], language: .english)
     #expect(story.story == "A short tale.")
@@ -49,7 +49,7 @@ func openAIStory() async throws {
     let inner = #"{"story":"A short tale.","translation":"一个短故事。"}"#
     let envelope: [String: Any] = ["choices": [["message": ["content": inner]]]]
     let body = try JSONSerialization.data(withJSONObject: envelope)
-    let provider = OpenAIProvider(apiKey: "sk", transport: StubTransport(responseBody: body))
+    let provider = OpenAIProvider(apiKey: "sk", model: "gpt-test", transport: StubTransport(responseBody: body))
 
     let story = try await provider.generateStory(words: ["tale"], language: .english)
     #expect(story.story == "A short tale.")
@@ -60,7 +60,7 @@ func storyMissingKey() async throws {
     final class Never: HTTPTransport, @unchecked Sendable {
         func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) { fatalError() }
     }
-    let provider = ClaudeProvider(apiKey: "", transport: Never())
+    let provider = ClaudeProvider(apiKey: "", model: "claude-test", transport: Never(), maxTokens: 4096)
     await #expect(throws: AIError.missingAPIKey) {
         _ = try await provider.generateStory(words: ["x"], language: .english)
     }

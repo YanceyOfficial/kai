@@ -48,11 +48,11 @@ final class StoryStore {
     func generate(newLimit: Int, now: Date = .now) async {
         let lemmas = todayWords(newLimit: newLimit, now: now)
         guard !lemmas.isEmpty else { state = .empty; return }
-        guard let config = AIConfigStore.configuration() else { state = .needsKey; return }
+        guard AIConfigStore.hasKey else { state = .needsKey; return }
 
         state = .loading
         do {
-            let provider = ProviderFactory.make(config)
+            let provider = ProviderFactory.make(try await AIConfigStore.readyConfiguration())
             let story = try await provider.generateStory(words: lemmas, language: language)
             let model = DailyStory(day: now, language: language,
                                    text: story.story, translation: story.translation, wordLemmas: lemmas)

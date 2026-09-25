@@ -23,7 +23,7 @@ struct AddWordsView: View {
     /// One lemma per non-empty line.
     private var lemmas: [String] { PastedWordsParser.lemmas(from: pasted) }
 
-    private var hasKey: Bool { AIConfigStore.configuration() != nil }
+    private var hasKey: Bool { AIConfigStore.hasKey }
     private var canGenerate: Bool { !generating && hasKey && !lemmas.isEmpty }
     private var providerName: String { AIConfigStore.currentKind() == .openai ? "OpenAI" : "Claude" }
 
@@ -93,16 +93,20 @@ struct AddWordsView: View {
 
     @MainActor
     private func run() async {
-        guard let config = AIConfigStore.configuration() else {
-            errorMessage = "Add an API key in Settings first."
-            return
-        }
         let words = lemmas
         let language = AppSettings.studyLanguage
         guard !words.isEmpty else { return }
 
         generating = true
         defer { generating = false }
+
+        let config: AIConfiguration
+        do { config = try await AIConfigStore.readyConfiguration() }
+        catch {
+            AppLog.shared.error("Generation failed: \(error.localizedDescription)", category: "ai")
+            errorMessage = error.localizedDescription
+            return
+        }
 
         // Chunked so a large batch can't blow the model's output budget, the chunks in
         // flight together; best-effort so a failed chunk doesn't lose the words that did

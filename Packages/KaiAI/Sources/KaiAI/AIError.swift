@@ -16,6 +16,8 @@ public enum AIError: Error, Equatable, Sendable {
     case transport(String)
     /// The model stopped at its output-token limit, so the JSON was cut off.
     case truncated
+    /// The model's list entry gave no output limit, and the request needs one.
+    case noOutputLimit(String)
 }
 
 extension AIError: LocalizedError {
@@ -42,6 +44,8 @@ extension AIError: LocalizedError {
             return "Couldn't reach the provider — \(what.prefix(160))"
         case .truncated:
             return "The answer was too long and got cut off. Try fewer words at once."
+        case .noOutputLimit(let model):
+            return "\(model) reports no output limit. Reload models in Settings, or pick another model."
         }
     }
 }

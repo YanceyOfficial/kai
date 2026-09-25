@@ -25,7 +25,7 @@ private let anthropicBody: Data = {
 @Test("ClaudeProvider builds a correct Messages request and decodes cards")
 func claudeGenerateCards() async throws {
     let transport = CapturingTransport(responseBody: anthropicBody)
-    let provider = ClaudeProvider(apiKey: "sk-test", model: "claude-opus-4-8", transport: transport)
+    let provider = ClaudeProvider(apiKey: "sk-test", model: "claude-opus-4-8", transport: transport, maxTokens: 4096)
     let cards = try await provider.generateCards(lemmas: ["eccentric"], language: .english, literaryExamples: false)
 
     #expect(cards.count == 1)
@@ -54,7 +54,7 @@ func claudeHTTPError() async throws {
             return (Data("unauthorized".utf8), resp)
         }
     }
-    let provider = ClaudeProvider(apiKey: "bad", transport: ErrorTransport())
+    let provider = ClaudeProvider(apiKey: "bad", model: "claude-test", transport: ErrorTransport(), maxTokens: 4096)
     await #expect(throws: AIError.http(status: 401, body: "unauthorized")) {
         _ = try await provider.generateCards(lemmas: ["x"], language: .english, literaryExamples: false)
     }
@@ -67,7 +67,7 @@ func claudeMissingAPIKey() async throws {
             fatalError("Should not be called")
         }
     }
-    let provider = ClaudeProvider(apiKey: "", transport: StubTransport())
+    let provider = ClaudeProvider(apiKey: "", model: "claude-test", transport: StubTransport(), maxTokens: 4096)
     await #expect(throws: AIError.missingAPIKey) {
         _ = try await provider.generateCards(lemmas: ["x"], language: .english, literaryExamples: false)
     }
@@ -84,7 +84,7 @@ func claudeTruncated() async throws {
             (body, HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
         }
     }
-    let provider = ClaudeProvider(apiKey: "k", transport: OKTransport(body: body))
+    let provider = ClaudeProvider(apiKey: "k", model: "claude-test", transport: OKTransport(body: body), maxTokens: 4096)
     await #expect(throws: AIError.truncated) {
         _ = try await provider.generateCards(lemmas: ["x"], language: .japanese, literaryExamples: false)
     }

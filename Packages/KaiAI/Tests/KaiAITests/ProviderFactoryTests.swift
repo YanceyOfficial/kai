@@ -15,7 +15,7 @@ private final class OKTransport: HTTPTransport, @unchecked Sendable {
 func factoryClaude() async throws {
     let inner = #"{"cards":[{"lemma":"x","kind":"word","phonetic":"","syllables":[],"explanation":"","explanationEn":"","partsOfSpeech":[],"examples":[],"mnemonic":"","etymology":"","synonyms":[],"collocations":[],"confusables":[],"quizzes":[]}]}"#
     let env = try JSONSerialization.data(withJSONObject: ["content": [["type": "text", "text": inner]]])
-    let config = AIConfiguration(kind: .claude, apiKey: "k", model: nil)
+    let config = AIConfiguration(kind: .claude, apiKey: "k", model: "claude-test", maxOutputTokens: 4096)
     let provider = ProviderFactory.make(config, transport: OKTransport(env))
     let cards = try await provider.generateCards(lemmas: ["x"], language: .english, literaryExamples: false)
     #expect(cards.first?.lemma == "x")
@@ -97,4 +97,23 @@ func factoryUsesModelCeiling() async throws {
     let json = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
     #expect(json["max_tokens"] as? Int == 128000)
     #expect(transport.requests.first?.timeoutInterval == 600)
+}
+
+@Test("Claude without an output limit fails plainly instead of guessing one")
+func claudeNeedsALimit() async {
+    let config = AIConfiguration(kind: .claude, apiKey: "k", model: "claude-x")
+    await #expect(throws: AIError.noOutputLimit("claude-x")) {
+        _ = try await ProviderFactory.make(config, transport: JSONTransport([])).generateCards(lemmas: ["x"], language: .english, literaryExamples: false)
+    }
+}
+
+@Test("OpenAI sends no max_completion_tokens when the model list gave none")
+func openAIOmitsLimit() async throws {
+    let env = try JSONSerialization.data(withJSONObject: ["choices": [["message": ["content": #"{"cards":[]}"#]]]])
+    let transport = JSONTransport([("completions", env)])
+    let config = AIConfiguration(kind: .openai, apiKey: "k", model: "gpt-5.5")
+    _ = try await ProviderFactory.make(config, transport: transport).generateCards(lemmas: ["x"], language: .english, literaryExamples: false)
+    let body = try #require(transport.requests.first?.httpBody)
+    let json = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+    #expect(json["max_completion_tokens"] == nil)
 }

@@ -95,7 +95,12 @@ views drop as they are redesigned). The "Again" rating is red (`KaiColor.danger`
   API key (`AIConfigStore`, key stored in the Keychain). As in Exodus, a key is checked by
   fetching the provider's live model list (`KaiAI.ModelListing`, Anthropic paged by
   `after_id`, OpenAI filtered to chat models); the model is picked from that list, and its
-  own output ceiling (Anthropic's `max_tokens`) becomes the request's `max_tokens`. Requests
+  own output ceiling (Anthropic's `max_tokens`) becomes the request's `max_tokens` — nothing
+  is hardcoded: `AIConfigStore.readyConfiguration()` fetches the list first if the chosen
+  model's ceiling is unknown, Claude without one fails with `noOutputLimit`, and OpenAI (whose
+  list reports none) sends no `max_completion_tokens` at all. The AI layer is our own REST
+  client: Anthropic's Swift package (ClaudeForFoundationModels) needs iOS 27 and is a
+  Foundation Models provider, not a Messages client — revisit once iOS 27 ships. Requests
   are non-streaming, so they time out at 600 s, not URLSession's 60.
 
 Next: share extension + OCR intake, more quiz types, the daily story, and iCloud sync.

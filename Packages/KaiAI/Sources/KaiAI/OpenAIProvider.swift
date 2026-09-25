@@ -6,12 +6,13 @@ public struct OpenAIProvider: LLMProvider {
     private let apiKey: String
     private let model: String
     private let transport: HTTPTransport
-    private let maxTokens: Int
+    private let maxTokens: Int?
     private let endpoint = URL(string: "https://api.openai.com/v1/chat/completions")!
 
-    /// `maxTokens` bounds reasoning tokens as well as the answer on reasoning models, so
-    /// it is generous: a batch of cards is long, and an early stop loses all of it.
-    public init(apiKey: String, model: String = "gpt-5.5", transport: HTTPTransport, maxTokens: Int = 32000) {
+    /// `maxTokens` caps reasoning and answer together on reasoning models. OpenAI's model
+    /// list reports no ceiling, so it is normally nil and the request sends no limit —
+    /// the model's own maximum applies.
+    public init(apiKey: String, model: String, transport: HTTPTransport, maxTokens: Int? = nil) {
         self.apiKey = apiKey
         self.model = model
         self.transport = transport
@@ -51,7 +52,7 @@ public struct OpenAIProvider: LLMProvider {
             let model: String
             let messages: [[String: String]]
             let response_format: ResponseFormat
-            let max_completion_tokens: Int
+            let max_completion_tokens: Int?   // nil is omitted from the JSON
         }
         struct ResponseFormat: Encodable { let type = "json_schema"; let json_schema: Schema }
         struct Schema: Encodable { let name: String; let strict = true; let schema: JSONSchema }

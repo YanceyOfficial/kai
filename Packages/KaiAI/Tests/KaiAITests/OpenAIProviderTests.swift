@@ -46,7 +46,7 @@ func openAIHTTPError() async throws {
             return (Data("unauthorized".utf8), resp)
         }
     }
-    let provider = OpenAIProvider(apiKey: "bad", transport: ErrorTransport())
+    let provider = OpenAIProvider(apiKey: "bad", model: "gpt-test", transport: ErrorTransport())
     await #expect(throws: AIError.http(status: 401, body: "unauthorized")) {
         _ = try await provider.generateCards(lemmas: ["x"], language: .english, literaryExamples: false)
     }
@@ -63,7 +63,7 @@ func openAIEmptyChoices() async throws {
         }
     }
     let env = try JSONSerialization.data(withJSONObject: ["choices": []])
-    let provider = OpenAIProvider(apiKey: "k", transport: StubTransport(responseBody: env))
+    let provider = OpenAIProvider(apiKey: "k", model: "gpt-test", transport: StubTransport(responseBody: env))
     await #expect(throws: AIError.emptyResponse) {
         _ = try await provider.generateCards(lemmas: ["x"], language: .english, literaryExamples: false)
     }

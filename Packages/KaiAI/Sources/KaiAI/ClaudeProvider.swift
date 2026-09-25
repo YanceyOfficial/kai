@@ -6,12 +6,13 @@ public struct ClaudeProvider: LLMProvider {
     private let apiKey: String
     private let model: String
     private let transport: HTTPTransport
-    private let maxTokens: Int
+    private let maxTokens: Int?
     private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
 
-    /// `maxTokens` is the model's own output ceiling when the settings know it (from
-    /// `ModelListing`); the default is a safe floor for any current model.
-    public init(apiKey: String, model: String = "claude-opus-4-8", transport: HTTPTransport, maxTokens: Int = 16000) {
+    /// `maxTokens` is the model's own output ceiling from its list entry (`ModelListing`).
+    /// The Messages API requires one; without it a request fails with `noOutputLimit`
+    /// rather than guessing.
+    public init(apiKey: String, model: String, transport: HTTPTransport, maxTokens: Int?) {
         self.apiKey = apiKey
         self.model = model
         self.transport = transport
@@ -49,6 +50,7 @@ public struct ClaudeProvider: LLMProvider {
     /// Builds the Messages request, sends it, and returns the inner JSON string (which the
     /// caller decodes against its schema type).
     private func send(system: String, user: String, schema: JSONSchema) async throws -> Data {
+        guard let maxTokens else { throw AIError.noOutputLimit(model) }
         struct Body: Encodable {
             let model: String
             let max_tokens: Int

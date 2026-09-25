@@ -48,14 +48,30 @@ enum AIConfigStore {
         UserDefaults.standard.set(try? JSONEncoder().encode(models), forKey: modelsKey(kind))
     }
 
-    /// The current configuration, or `nil` if no API key has been entered. Carries the
-    /// chosen model's own output ceiling when its list entry reported one.
-    static func configuration() -> AIConfiguration? {
+    /// Whether the current provider has a key (without checking it).
+    static var hasKey: Bool { !apiKey(for: currentKind()).isEmpty }
+
+    /// The configuration to generate with: the chosen model and its own output ceiling,
+    /// both from the provider's model list. If the list was never fetched or no longer
+    /// carries the chosen model, it is fetched now (a quick call) — Kai never guesses a
+    /// model or a limit. Throws `AIError.missingAPIKey` without a key.
+    static func readyConfiguration() async throws -> AIConfiguration {
         let kind = currentKind()
         let key = apiKey(for: kind)
-        guard !key.isEmpty else { return nil }
-        let model = model(for: kind)
-        let limit = cachedModels(for: kind).first { $0.id == model }?.maxOutputTokens
-        return AIConfiguration(kind: kind, apiKey: key, model: model.isEmpty ? nil : model, maxOutputTokens: limit)
+        guard !key.isEmpty else { throw AIError.missingAPIKey }
+
+        var models = cachedModels(for: kind)
+        var chosen = model(for: kind)
+        if !models.contains(where: { $0.id == chosen }) {
+            models = try await ModelListing.models(for: kind, apiKey: key)
+            setCachedModels(models, for: kind)
+            if !models.contains(where: { $0.id == chosen }) {
+                guard let first = models.first else { throw AIError.emptyResponse }
+                chosen = first.id
+                setModel(chosen, for: kind)
+            }
+        }
+        let limit = models.first { $0.id == chosen }?.maxOutputTokens
+        return AIConfiguration(kind: kind, apiKey: key, model: chosen, maxOutputTokens: limit)
     }
 }

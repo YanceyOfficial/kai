@@ -55,9 +55,17 @@ public struct RubyText: View {
 
     public var body: some View {
         #if canImport(UIKit)
+        let segments = showsFurigana ? Ruby.parse(markup) : [.text(Ruby.plain(markup))]
+        let hasRuby = segments.contains { if case .ruby = $0 { true } else { false } }
+        // A reading wider than its base hangs past it, and at the start or end of a line
+        // past the text view's edge, where it was clipped (むかし over a line-initial 昔).
+        // The view gets that much room on each side, and gives it back as negative
+        // padding, so the text itself stays aligned with its neighbours.
+        let hangRoom = hasRuby ? (size * 0.35).rounded(.up) : 0
         SelectableTextView(
-            segments: showsFurigana ? Ruby.parse(markup) : [.text(Ruby.plain(markup))],
-            size: size, weight: weight, design: design, color: color, alignment: alignment)
+            segments: segments, size: size, weight: weight, design: design, color: color,
+            alignment: alignment, hangRoom: hangRoom)
+            .padding(.horizontal, -hangRoom)
         #else
         Text(Ruby.plain(markup))
             .font(.system(size: size, weight: weight, design: design))
@@ -76,6 +84,8 @@ private struct SelectableTextView: UIViewRepresentable {
     let design: Font.Design
     let color: Color
     let alignment: TextAlignment
+    /// Room at each side for readings that hang past the text (see `RubyText.body`).
+    let hangRoom: CGFloat
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -119,9 +129,8 @@ private struct SelectableTextView: UIViewRepresentable {
         // Readings sit between lines: give them room above the first line too, so they
         // never touch the text above this view.
         let top = hasRuby ? (size * 0.7).rounded() : 0
-        if view.textContainerInset.top != top {
-            view.textContainerInset = UIEdgeInsets(top: top, left: 0, bottom: 0, right: 0)
-        }
+        let insets = UIEdgeInsets(top: top, left: hangRoom, bottom: 0, right: hangRoom)
+        if view.textContainerInset != insets { view.textContainerInset = insets }
         let resolved = color.resolve(in: context.environment)
         let text = attributedString(color: UIColor(red: CGFloat(resolved.red), green: CGFloat(resolved.green),
                                                    blue: CGFloat(resolved.blue), alpha: CGFloat(resolved.opacity)))

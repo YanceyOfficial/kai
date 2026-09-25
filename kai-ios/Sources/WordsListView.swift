@@ -142,8 +142,7 @@ struct WordsListView: View {
                 .font(KaiFont.display(19, weight: .semibold))
                 .foregroundStyle(KaiColor.sumi)
             if !entry.phonetic.isEmpty {
-                Text(entry.phonetic)
-                    .font(KaiFont.phonetic(12))
+                PhoneticText(entry.phonetic, size: 12)
                     .foregroundStyle(KaiColor.inkSecondary)
                     .lineLimit(1)
             }

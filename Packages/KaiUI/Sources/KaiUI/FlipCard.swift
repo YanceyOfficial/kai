@@ -145,8 +145,7 @@ public struct FlipCard<Back: View>: View {
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
             HStack(spacing: KaiSpacing.s) {
-                Text(phonetic)
-                    .font(KaiFont.phonetic(17))
+                PhoneticText(phonetic, size: 17)
                     .foregroundStyle(KaiColor.inkSecondary)
                 SpeakerButton(action: onSpeak)
             }
@@ -371,8 +370,7 @@ public struct FlipCardFace: View {
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
             HStack(spacing: KaiSpacing.s) {
-                Text(phonetic)
-                    .font(KaiFont.phonetic(17))
+                PhoneticText(phonetic, size: 17)
                     .foregroundStyle(KaiColor.inkSecondary)
                 SpeakerButton(action: {})
                     .allowsHitTesting(false)

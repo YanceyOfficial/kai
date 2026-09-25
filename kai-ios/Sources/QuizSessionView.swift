@@ -117,8 +117,7 @@ struct QuizSessionView: View {
                     .lineLimit(1)
                 HStack(spacing: KaiSpacing.s) {
                     if !question.phonetic.isEmpty {
-                        Text(question.phonetic)
-                            .font(KaiFont.phonetic(14))
+                        PhoneticText(question.phonetic, size: 14)
                             .foregroundStyle(KaiColor.inkSecondary)
                     }
                     Button {

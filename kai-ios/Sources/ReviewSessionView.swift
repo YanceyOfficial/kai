@@ -131,8 +131,7 @@ struct ReviewSessionView: View {
                 VStack(alignment: .leading, spacing: KaiSpacing.xs) {
                     RubyText(card.word, size: 23, weight: .semibold, design: .serif)
                     if !card.phonetic.isEmpty {
-                        Text(card.phonetic)
-                            .font(KaiFont.phonetic(13))
+                        PhoneticText(card.phonetic, size: 13)
                             .foregroundStyle(KaiColor.inkSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -189,7 +188,11 @@ struct ReviewSessionView: View {
                 .padding(.top, KaiSpacing.xs)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            // Room at the sides inside the scroll view, which clips: furigana may hang a
+            // little past the text (see RubyText).
+            .padding(.horizontal, 8)
         }
+        .padding(.horizontal, -8)
         // iOS 26 blurs content scrolling under a scroll view's edge — meant for bars, not a
         // card, and inside the card's 3D turn the blur spreads over most of the back.
         .withoutScrollEdgeEffect()

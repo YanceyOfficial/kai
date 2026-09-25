@@ -260,8 +260,7 @@ struct WordDetailView: View {
                     .buttonStyle(KaiPressStyle())
                 }
                 if !entry.phonetic.isEmpty {
-                    Text(entry.phonetic)
-                        .font(KaiFont.phonetic(14))
+                    PhoneticText(entry.phonetic, size: 14)
                         .foregroundStyle(KaiColor.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }

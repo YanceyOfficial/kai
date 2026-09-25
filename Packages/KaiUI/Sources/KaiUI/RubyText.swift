@@ -118,7 +118,7 @@ private struct SelectableTextView: UIViewRepresentable {
         context.coordinator.onChange = context.environment.textSelectionChanged
         // Readings sit between lines: give them room above the first line too, so they
         // never touch the text above this view.
-        let top = hasRuby ? (size * 0.75).rounded() : 0
+        let top = hasRuby ? (size * 0.7).rounded() : 0
         if view.textContainerInset.top != top {
             view.textContainerInset = UIEdgeInsets(top: top, left: 0, bottom: 0, right: 0)
         }
@@ -142,7 +142,7 @@ private struct SelectableTextView: UIViewRepresentable {
         let paragraph = NSMutableParagraphStyle()
         // Lines with furigana need the gap the readings take, or a reading crowds the
         // line above it.
-        paragraph.lineSpacing = size * (hasRuby ? 0.75 : 0.15)
+        paragraph.lineSpacing = size * (hasRuby ? 0.7 : 0.15)
         paragraph.alignment = switch alignment {
         case .center: .center
         case .trailing: .right
@@ -160,9 +160,10 @@ private struct SelectableTextView: UIViewRepresentable {
                 attributes[NSAttributedString.Key(kCTRubyAnnotationAttributeName as String)] =
                     CTRubyAnnotationCreateWithAttributes(
                         .center, .auto, .before, reading as CFString,
-                        // 0.6 of the base, a little over the typographic half: at reading sizes
-                        // half-size kana are too small to read on a phone.
-                        [kCTRubyAnnotationSizeFactorAttributeName: 0.6,
+                        // 0.55 of the base, a little over the typographic half: half-size kana
+                        // are too small to read on a phone, and much more pushes kanji apart
+                        // wherever a reading is wider than its base.
+                        [kCTRubyAnnotationSizeFactorAttributeName: 0.55,
                          kCTForegroundColorAttributeName: color.withAlphaComponent(0.7).cgColor] as CFDictionary)
                 result.append(NSAttributedString(string: text, attributes: attributes))
             }

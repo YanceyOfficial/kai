@@ -41,9 +41,9 @@ struct WordDetailView: View {
                 Section("Examples") {
                     ForEach(Array(entry.examples.enumerated()), id: \.offset) { _, example in
                         VStack(alignment: .leading, spacing: KaiSpacing.xs) {
-                            RubyText(example.sentence, size: 17)
+                            RubyText(example.sentence, size: 16)
                             if !example.translation.isEmpty {
-                                RubyText(example.translation, size: 15, color: KaiColor.inkSecondary)
+                                RubyText(example.translation, size: 14, color: KaiColor.inkSecondary)
                             }
                         }
                         .padding(.vertical, 2)
@@ -230,10 +230,10 @@ struct WordDetailView: View {
             Section("Meaning") {
                 VStack(alignment: .leading, spacing: KaiSpacing.xs) {
                     if !entry.explanation.isEmpty {
-                        RubyText(entry.explanation, size: 17)
+                        RubyText(entry.explanation, size: 16)
                     }
                     if !en.isEmpty {
-                        RubyText(en, size: 16, color: KaiColor.inkSecondary)
+                        RubyText(en, size: 15, color: KaiColor.inkSecondary)
                     }
                 }
                 .padding(.vertical, 2)
@@ -309,14 +309,14 @@ struct WordDetailView: View {
                     VStack(alignment: .leading, spacing: KaiSpacing.xs) {
                         // Bottom-aligned: a phrase with furigana is taller than its gloss.
                         HStack(alignment: .bottom, spacing: KaiSpacing.s) {
-                            RubyText(c.phrase, size: 17, weight: .semibold)
+                            RubyText(c.phrase, size: 16, weight: .semibold)
                                 .fixedSize()
-                            RubyText(c.meaning, size: 14, color: KaiColor.inkSecondary)
+                            RubyText(c.meaning, size: 13, color: KaiColor.inkSecondary)
                         }
                         if !c.example.isEmpty {
-                            RubyText(c.example, size: 16)
+                            RubyText(c.example, size: 15)
                             if !c.exampleTranslation.isEmpty {
-                                RubyText(c.exampleTranslation, size: 14, color: KaiColor.inkSecondary)
+                                RubyText(c.exampleTranslation, size: 13, color: KaiColor.inkSecondary)
                             }
                         }
                     }
@@ -364,7 +364,7 @@ struct WordDetailView: View {
                     Text(note.createdAt.formatted(date: .abbreviated, time: .omitted))
                         .font(KaiFont.body(11, weight: .semibold))
                         .foregroundStyle(KaiColor.inkSecondary)
-                    RubyText(note.text, size: 16)
+                    RubyText(note.text, size: 15)
                 }
                 .padding(.vertical, 2)
             }
@@ -454,7 +454,7 @@ struct WordDetailView: View {
                 .foregroundStyle(KaiColor.vermilion)
                 .textCase(.uppercase)
                 .tracking(1.2)
-            RubyText(value, size: 16)
+            RubyText(value, size: 15)
         }
         .padding(.vertical, 2)
     }

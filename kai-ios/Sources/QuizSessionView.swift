@@ -134,7 +134,7 @@ struct QuizSessionView: View {
             }
 
             if !question.question.isEmpty {
-                RubyText(question.question, size: 17, alignment: .center)
+                RubyText(question.question, size: 16, alignment: .center)
                     .padding(.top, KaiSpacing.xs)
             }
         }

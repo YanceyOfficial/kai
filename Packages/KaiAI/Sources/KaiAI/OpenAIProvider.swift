@@ -68,6 +68,9 @@ public struct OpenAIProvider: LLMProvider {
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
+        // A non-streaming reply arrives all at once, when the model has written it —
+        // a batch of cards can take minutes, well past URLSession's 60-second default.
+        request.timeoutInterval = 600
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.httpBody = try JSONEncoder().encode(body)

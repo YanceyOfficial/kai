@@ -92,6 +92,10 @@ views drop as they are redesigned). The "Again" rating is red (`KaiColor.danger`
   `PastedWordsParser`, or **AI** generation via KaiAI); swipe to delete.
 - **Stats** — Swift Charts dashboard (`StatsAggregator` pure): counts, 7-day bars, accuracy.
 - **Settings** — new-words-per-session, pronunciation accent/auto-play, and AI provider +
-  API key (`AIConfigStore`, key stored in the Keychain).
+  API key (`AIConfigStore`, key stored in the Keychain). As in Exodus, a key is checked by
+  fetching the provider's live model list (`KaiAI.ModelListing`, Anthropic paged by
+  `after_id`, OpenAI filtered to chat models); the model is picked from that list, and its
+  own output ceiling (Anthropic's `max_tokens`) becomes the request's `max_tokens`. Requests
+  are non-streaming, so they time out at 600 s, not URLSession's 60.
 
 Next: share extension + OCR intake, more quiz types, the daily story, and iCloud sync.

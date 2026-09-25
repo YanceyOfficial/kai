@@ -9,6 +9,8 @@ public struct ClaudeProvider: LLMProvider {
     private let maxTokens: Int
     private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
 
+    /// `maxTokens` is the model's own output ceiling when the settings know it (from
+    /// `ModelListing`); the default is a safe floor for any current model.
     public init(apiKey: String, model: String = "claude-opus-4-8", transport: HTTPTransport, maxTokens: Int = 16000) {
         self.apiKey = apiKey
         self.model = model
@@ -65,6 +67,9 @@ public struct ClaudeProvider: LLMProvider {
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
+        // A non-streaming reply arrives all at once, when the model has written it —
+        // a batch of cards can take minutes, well past URLSession's 60-second default.
+        request.timeoutInterval = 600
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")

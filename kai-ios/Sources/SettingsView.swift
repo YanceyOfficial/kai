@@ -27,6 +27,14 @@ struct SettingsView: View {
 
     @State private var apiKey = ""
     @State private var model = ""
+    /// The provider's models, live from its list API (cached between launches).
+    @State private var models: [ModelInfo] = []
+    @State private var modelCheck: ModelCheck = .idle
+
+    /// Fetching the model list is also how the key is checked.
+    private enum ModelCheck: Equatable {
+        case idle, checking, connected, failed(String)
+    }
 
     private let newWordOptions = [5, 10, 15, 20, 30]
     private var aiKind: LLMProviderKind { LLMProviderKind(rawValue: aiProviderRaw) ?? .claude }
@@ -130,15 +138,25 @@ struct SettingsView: View {
                     SecureField("API key", text: $apiKey)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
-                    Picker("Model", selection: $model) {
-                        ForEach(AIModelCatalog.models(for: aiKind), id: \.self) { Text($0).tag($0) }
+                    if !apiKey.isEmpty, !models.isEmpty {
+                        Picker("Model", selection: $model) {
+                            ForEach(models) { Text($0.displayName).tag($0.id) }
+                        }
+                    }
+                    if !apiKey.isEmpty {
+                        Button { Task { await checkKey() } } label: {
+                            HStack {
+                                Text(models.isEmpty ? "Check key & load models" : "Reload models")
+                                Spacer()
+                                if modelCheck == .checking { ProgressView() }
+                            }
+                        }
+                        .disabled(modelCheck == .checking)
                     }
                 } header: {
                     Text("AI enrichment")
                 } footer: {
-                    Text(apiKey.isEmpty
-                         ? "Add an API key to auto-generate phonetics, meanings, and examples when adding words. Stored in the Keychain."
-                         : "Key stored in the Keychain.")
+                    aiFooter
                 }
 
                 Section {
@@ -173,6 +191,14 @@ struct SettingsView: View {
             .onAppear(perform: loadAIFields)
             .onChange(of: aiProviderRaw) { loadAIFields() }
             .onChange(of: apiKey) { AIConfigStore.setApiKey(apiKey, for: aiKind) }
+            // A key typed or pasted is checked once typing pauses: its model list loads,
+            // or the provider's refusal shows.
+            .task(id: "\(aiProviderRaw)|\(apiKey)") {
+                guard !apiKey.isEmpty else { modelCheck = .idle; return }
+                try? await Task.sleep(for: .milliseconds(700))
+                guard !Task.isCancelled else { return }
+                await checkKey()
+            }
             .onChange(of: model) { AIConfigStore.setModel(model, for: aiKind) }
             .onChange(of: reminderEnabled) { _, enabled in Task { await reminderToggled(enabled) } }
             .onChange(of: reminderMinutes) { Task { await applyReminder() } }
@@ -200,11 +226,47 @@ struct SettingsView: View {
         await ReviewReminder.apply(enabled: reminderEnabled, minutes: reminderMinutes, hasWords: hasWords)
     }
 
-    /// Loads the stored key/model for the currently selected provider into the fields,
-    /// resolving the model to a valid catalog entry so the picker has a selection.
+    /// Loads the stored key, model and cached model list for the selected provider.
     private func loadAIFields() {
         apiKey = AIConfigStore.apiKey(for: aiKind)
-        model = AIModelCatalog.resolved(AIConfigStore.model(for: aiKind), for: aiKind)
+        models = AIConfigStore.cachedModels(for: aiKind)
+        model = AIConfigStore.model(for: aiKind)
+        modelCheck = .idle
+    }
+
+    /// Fetches the provider's model list with the key — which is also the check that the
+    /// key works — and keeps the chosen model if it is still offered, else the newest.
+    private func checkKey() async {
+        let kind = aiKind
+        modelCheck = .checking
+        do {
+            let fetched = try await ModelListing.models(for: kind, apiKey: apiKey)
+            guard kind == aiKind else { return }   // the provider changed meanwhile
+            models = fetched
+            AIConfigStore.setCachedModels(fetched, for: kind)
+            if !fetched.contains(where: { $0.id == model }), let first = fetched.first {
+                model = first.id
+            }
+            modelCheck = fetched.isEmpty ? .failed("The key works, but no models were listed.") : .connected
+        } catch {
+            guard kind == aiKind else { return }
+            modelCheck = .failed(error.localizedDescription)
+        }
+    }
+
+    @ViewBuilder
+    private var aiFooter: some View {
+        switch modelCheck {
+        case .failed(let message):
+            Text(message).foregroundStyle(KaiColor.danger)
+        case .connected:
+            let limit = models.first { $0.id == model }?.maxOutputTokens
+            Text("Connected — \(models.count) models. " + (limit.map { "This one writes up to \($0.formatted()) tokens per reply. " } ?? "") + "Key stored in the Keychain.")
+        default:
+            Text(apiKey.isEmpty
+                 ? "Add an API key to auto-generate readings, meanings, and examples when adding words. The key is checked by loading its models, and stored in the Keychain."
+                 : "Key stored in the Keychain.")
+        }
     }
 
     private static var appVersion: String {

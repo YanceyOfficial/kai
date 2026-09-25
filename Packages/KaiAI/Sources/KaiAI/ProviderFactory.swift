@@ -17,10 +17,17 @@ public enum ProviderFactory {
     ) -> LLMProvider {
         let retrying = RetryingTransport(wrapping: transport, policy: retry)
         let model = config.model ?? defaultModel(for: config.kind)
+        // The model's own ceiling when its list entry gave one; else the provider default.
         switch config.kind {
         case .claude:
+            if let limit = config.maxOutputTokens {
+                return ClaudeProvider(apiKey: config.apiKey, model: model, transport: retrying, maxTokens: limit)
+            }
             return ClaudeProvider(apiKey: config.apiKey, model: model, transport: retrying)
         case .openai:
+            if let limit = config.maxOutputTokens {
+                return OpenAIProvider(apiKey: config.apiKey, model: model, transport: retrying, maxTokens: limit)
+            }
             return OpenAIProvider(apiKey: config.apiKey, model: model, transport: retrying)
         }
     }

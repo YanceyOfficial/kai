@@ -2,8 +2,8 @@ import SwiftUI
 
 /// A word's phonetic line: IPA for English, a kana reading for Japanese — where a
 /// trailing pitch-accent mark (`なつかしい ④`, the circled number of dictionaries such as
-/// NHK's) is set larger than the reading: in the phonetic face a circled digit comes out
-/// much smaller than the kana beside it.
+/// NHK's) is set at the reading's size in the system face: in the phonetic face a circled
+/// digit comes out much smaller than the kana beside it.
 public struct PhoneticText: View {
     private let phonetic: String
     private let size: CGFloat
@@ -16,7 +16,7 @@ public struct PhoneticText: View {
     public var body: some View {
         let parts = Self.split(phonetic)
         if let accent = parts.accent {
-            Text("\(Text(parts.reading).font(KaiFont.phonetic(size))) \(Text(accent).font(.system(size: size * 1.3)))")
+            Text("\(Text(parts.reading).font(KaiFont.phonetic(size))) \(Text(accent).font(.system(size: size)))")
         } else {
             Text(phonetic).font(KaiFont.phonetic(size))
         }
